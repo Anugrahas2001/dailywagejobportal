@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+
+  jobs       Job[]
+  employer   Employer?
+
+  createdAt DateTime @default(now())
+}
+
+model Employer {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  company   String
+
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+
+  jobs      Job[]
+}
+
+model Job {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+
+  employerId  String   @db.ObjectId
+  employer    Employer @relation(fields: [employerId], references: [id])
+
+  createdAt   DateTime @default(now())
+}
