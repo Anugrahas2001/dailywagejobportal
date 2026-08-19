@@ -18,27 +18,26 @@ export async function POST(request) {
     const updatedUser = await User.findByIdAndUpdate(
       uid,
       {
-        $set: { ...validation.data, isOnboardingPage: false },
+        $set: { ...validation.data, isOnboardingComplete: false },
         $inc: {
-      onboardPage: 1,
-    },
+          onboardPage: 1,
+        },
       },
-       
+
       {
         new: true,
         lean: true,
-        select: "onboardPage isOnboardingPage role",
+        select: "onboardPage isOnboardingComplete role",
       },
     );
-    console.log(updatedUser, "CHECK THIS UPDATED USER");
 
     return NextResponse.json(
       {
         message: "Successfully created skills and bio.",
-        result:{
+        result: {
           onboardPage: updatedUser?.onboardPage,
-        isOnboardingPage: updatedUser?.isOnboardingPage,
-        role:updatedUser?.role,
+          isOnboardingComplete: updatedUser?.isOnboardingComplete,
+          role: updatedUser?.role,
         },
         success: true,
       },

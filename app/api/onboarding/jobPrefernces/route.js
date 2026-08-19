@@ -12,7 +12,6 @@ export async function POST(request) {
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
-    console.log(uid, "USERID");
     const body = await request.json();
     const jobObj = {
       _id: generateId(),
@@ -20,7 +19,6 @@ export async function POST(request) {
       ...body,
     };
 
-    console.log(jobObj, "JOB OBJECT DATA");
     const validation = validate(jobPreferencesSchema, jobObj);
 
     if (!validation.success) {
@@ -32,8 +30,7 @@ export async function POST(request) {
       uid,
       {
         $set: {
-          // onboardPage: 3, // e.g. 3
-          isOnboardingPage: false,
+          isOnboardingComplete: false,
         },
         $inc: {
           onboardPage: 1,
@@ -42,7 +39,7 @@ export async function POST(request) {
       {
         new: true,
         lean: true,
-        select: "onboardPage isOnboardingPage role jobCategory",
+        select: "onboardPage isOnboardingComplete role jobCategory",
       },
     );
 
@@ -58,7 +55,7 @@ export async function POST(request) {
         message: "Successfully created Job Preferences.",
         result: {
           onboardPage: updatedUser?.onboardPage,
-          isOnboardingPage: updatedUser?.isOnboardingPage,
+          isOnboardingComplete: updatedUser?.isOnboardingComplete,
           role: updatedUser?.role,
         },
         success: true,

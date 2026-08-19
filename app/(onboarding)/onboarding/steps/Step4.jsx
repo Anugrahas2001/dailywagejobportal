@@ -1,95 +1,11 @@
-//============= END
-
-// "use client";
-// import { auth } from "@/lib/firebaseClient";
-// import { supabase } from "@/lib/supabase";
-// import { useRouter } from "next/navigation";
-// import React, { useState } from "react";
-
-// const Step2 = () => {
-//   const [file, setFile] = useState(null);
-//   const [uploading, setUploading] = useState(false);
-//   const [fileURL, setFileURL] = useState("");
-//   const router = useRouter();
-
-//   const handleImageChange = (e) => {
-//     setFile(e.target.files[0]);
-//   };
-
-//   const handleUpload = async () => {
-//     try {
-//       setUploading(true);
-//       if (!file) {
-//         alert("Please select a file to upload");
-//         return;
-//       }
-//       const fileExt = file.name.split(".").pop();
-//       const fileName = `${Math.random()}.${fileExt}`;
-//       const filePath = `${fileName}`;
-
-//       let { data, error } = await supabase.storage
-//         .from("ImageBucket")
-//         .upload(filePath, file);
-
-//       if (error) {
-//         throw error;
-//       }
-//       const { data: url } = await supabase.storage
-//         .from("ImageBucket")
-//         .getPublicUrl(filePath);
-
-//       console.log(url.publicUrl, "PUBLIC URL");
-
-//       const user = auth.currentUser;
-//       const token = await user.getIdToken();
-//       const response = await fetch("/api/onboarding/ImageUpload", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           profileImage: url.publicUrl,
-//           onboardPage: 3,
-//           isOnboardingComplete: false,
-//         }),
-//       });
-//       console.log(response, "IMAGE UPLOADER RESPOSNE");
-//       setFileURL(url.publicUrl);
-//       router.push("/onboarding/3");
-//     } catch (error) {
-//       console.log(error, "IMAGE UPLOAD ERROR");
-//       alert(`Error uploading file:${error.message}`);
-//     } finally {
-//       setUploading(false);
-//     }
-//   };
-
-//   return (
-//     <div>
-//       <input type="file" accept="image/*" onChange={handleImageChange} />
-//       <button onClick={handleUpload} disabled={uploading}>
-//         {uploading ? "Uploading..." : "Upload"}
-//       </button>
-//       {fileURL && (
-//         <div>
-//           {/* <p>File uploaded to:{fileURL}</p> */}
-//           {/* <Image src={fileURL} alt="Uploaded File" width={50} height={40}  /> */}
-//           <img src={fileURL} alt="Uploaded File" width={50} height={40} />
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default Step2;
-
 "use client";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
 import { Upload, X, ImageIcon } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
+import Loading from "@/components/Loading";
+import { step4Onboarding } from "@/lib/features/profiles/userThunk";
 
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -102,7 +18,8 @@ const Step4 = () => {
   const router = useRouter();
   const fileInputRef = useRef(null);
   const dispatch = useDispatch();
-  // const onboardPage = useSelector((state) => state.user.onboardPage);
+  const status = useSelector((state) => state.user.status);
+  const role = useSelector((state) => state.user.role);
 
   // Clean up object URL when file changes or component unmounts
   useEffect(() => {
@@ -110,7 +27,6 @@ const Step4 = () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
-
 
   const validateFile = (selectedFile) => {
     if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
@@ -171,7 +87,9 @@ const Step4 = () => {
         .from("ImageBucket")
         .getPublicUrl(filePath);
 
-      const {onboardPage}=await dispatch(step4Onboarding({ profileImage: urlData.publicUrl })).unwrap();
+      const { onboardPage } = await dispatch(
+        step4Onboarding({ profileImage: urlData.publicUrl }),
+      ).unwrap();
       router.push(`/onboarding/${onboardPage}`);
     } catch (err) {
       console.error("Image upload error:", err);
@@ -277,7 +195,11 @@ const Step4 = () => {
           {!uploading && (
             <button
               type="button"
-              onClick={() => router.push(`/onboarding/${onboardPage + 1}`)}
+              onClick={() =>
+                router.push(
+                  role === "worker" ? "/workerDashboard" : "/employerDashboard",
+                )
+              }
               className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
             >
               Skip for now
@@ -285,6 +207,7 @@ const Step4 = () => {
           )}
         </div>
       </div>
+      {status === "pending" && <Loading />}
     </div>
   );
 };

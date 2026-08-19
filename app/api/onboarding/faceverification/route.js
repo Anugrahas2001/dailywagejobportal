@@ -99,7 +99,8 @@ export async function POST(request) {
       similarity: similarityRounded,
       result: {
         onboardPage: updatedUser?.onboardPage,
-        isOnboardingPage: updatedUser?.isOnboardingPage,
+        isOnboardingComplete: updatedUser?.isOnboardingComplete,
+        profileImage:updatedUser?.profileImage,
         role: updatedUser?.role,
       },
 

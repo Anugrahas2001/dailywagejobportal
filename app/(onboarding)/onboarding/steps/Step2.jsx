@@ -10,7 +10,7 @@ import {
 } from "@/constants/constant";
 import { step2Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -37,13 +37,13 @@ const Step2 = () => {
   const jobCategory = watch("jobCategory");
   console.log(jobCategory, "CATEGORY FROM THE FORM");
   const dispatch = useDispatch();
-  // const role = useSelector((state) => state.user.role);
-  // const onboardPage = useSelector((state) => state.user.onboardPage);
   const status = useSelector((state) => state.user.status);
 
   const onSubmit = async (data) => {
     try {
-      const {role,onboardPage}=await dispatch(step2Onboarding({ body: data })).unwrap();
+      const { onboardPage } = await dispatch(
+        step2Onboarding({ body: data }),
+      ).unwrap();
       router.push(`/onboarding/${onboardPage}?category=${jobCategory}`);
     } catch (error) {
       console.error(error);
@@ -73,16 +73,6 @@ const Step2 = () => {
           })}
           error={errors.jobTitle?.message}
         />
-
-        {/* <InputField
-          label="Job Category"
-          placeholder="Job Category"
-          {...register("jobCategory", {
-            required: "Category is required",
-            minLength: { value: 3, message: "At least 3 characters" },
-          })}
-          error={errors.jobCategory?.message}
-        /> */}
 
         <SelectField
           label="Job Category"
@@ -136,15 +126,6 @@ const Step2 = () => {
           <p className="text-red-500">{errors.shiftType?.message}</p>
         )}
 
-        {/* <SelectField
-          label="Salary Type"
-          options={SALARY_TYPES}
-          {...register("salaryType")}
-        />
-        {errors.salaryType && (
-          <p className="text-red-500">{errors.salaryType?.message}</p>
-        )} */}
-
         <SelectField
           label="Salary Credit Type"
           options={SALARY_CREDIT_TYPES}
@@ -166,10 +147,11 @@ const Step2 = () => {
 
         <div className="flex justify-center w-full">
           <button
+            disabled={status === "pending"}
             type="submit"
             className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            Submit
+            {status === "pending" ? "Submitting..." : "Submit"}
           </button>
         </div>
       </form>

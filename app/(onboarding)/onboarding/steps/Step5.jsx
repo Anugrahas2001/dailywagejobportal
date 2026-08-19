@@ -111,28 +111,32 @@ const Step5 = () => {
     try {
       setVerifying(true);
 
-      const response =await dispatch(
+      const result = await dispatch(
         step5Onboarding({ profileImage: photo }),
       ).unwrap();
 
-      const { onboardPage, role } = await response.json();
+      console.log(result,"RESULT DATA")
 
-      if (role === "worker") {
-        router.push("/workerDashboard");
-      } else {
-        router.push("/employerDashboard");
-      }
+      // if (isOnboardingComplete) {
+      //   if (role === "worker") {
+      
+      //     router.push("/workerDashboard");
+      //   } else {
+      //     router.push("/employerDashboard");
+      //   }
 
-      if (!response.ok) {
-        setVerificationStatus("failed");
-        console.error("Failed to save profile details.");
-        throw new Error("Failed to save profile details.");
-      }
-      setVerificationStatus("success");
+      //   setVerificationStatus("success");
 
-      console.log("Face verification result:");
+      //   console.log("Face verification result:");
+      // }
+
+      // if (!response.ok) {
+      //   setVerificationStatus("failed");
+      //   console.error("Failed to save profile details.");
+      //   throw new Error("Failed to save profile details.");
+      // }
     } catch (error) {
-      console.error(err);
+      console.error(error);
       setVerificationStatus("failed");
     } finally {
       setVerifying(false);
@@ -206,8 +210,8 @@ const Step5 = () => {
                 </div>
 
                 <button
+                disabled={status === "pending" || loading}
                   onClick={capturePhoto}
-                  disabled={loading}
                   className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:bg-gray-400"
                 >
                   Capture Selfie

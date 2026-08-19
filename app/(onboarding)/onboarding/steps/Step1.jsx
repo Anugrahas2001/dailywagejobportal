@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import DatePicker from "../DatePicker";
-import {  useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Loading from "@/components/Loading";
 import { Controller, useForm } from "react-hook-form";
 import InputField from "@/components/form/InputField";
@@ -43,7 +43,7 @@ const Step1 = () => {
   const { getLocation } = useCurrentLocationHook();
   const dispatch = useDispatch();
   const router = useRouter();
-const status=useSelector((state)=>state.user.status);
+  const status = useSelector((state) => state.user.status);
 
   const handleToggle = () => {
     const enabled = !useCurrentLocation;
@@ -100,7 +100,6 @@ const status=useSelector((state)=>state.user.status);
     }
   };
 
-
   const handleStep1Onboarding = async (data) => {
     console.log(data, "DATA FOR THE BACKEND");
 
@@ -115,15 +114,15 @@ const status=useSelector((state)=>state.user.status);
       mobileNumber: data.mobileNumber,
     };
 
-    const result=await dispatch(step1Onboarding({ data: body })).unwrap();
-     console.log("================ STEP1",result);
-  if (result.role === "employer") {
-      router.push(`/onboarding/${result.onboardPage}`);
+    const { role, onboardPage } = await dispatch(
+      step1Onboarding({ data: body }),
+    ).unwrap();
+    console.log("================ STEP1");
+    if (role === "employer") {
+      router.push(`/onboarding/${onboardPage}`);
     } else {
-      router.push(`/onboarding/${result.onboardPage}`);
-     
+      router.push(`/onboarding/${onboardPage}`);
     }
-
   };
 
   return (
@@ -364,244 +363,20 @@ const status=useSelector((state)=>state.user.status);
             error={errors.country?.message}
           />
         </div>
-        {/* <div>
-          <InputField
-            type="number"
-            {...register("experience", {
-              required: "Experience is required",
-              valueAsNumber: true,
-              min: {
-                value: 0,
-                message: "Experience cannot be negative",
-              },
-              max: {
-                value: 50,
-                message: "Maximum experience is 50 years",
-              },
-            })}
-            error={errors.experience?.message}
-          />
-        </div> */}
 
         <div className="flex justify-center w-full">
           <button
+            disabled={status === "pending"}
             type="submit"
             className="w-72 rounded-lg cursor-pointer bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            Submit
+            {status === "pending" ? "Submitting..." : "Submit"}
           </button>
         </div>
       </form>
-      {status==="pending" || loading && <Loading />}
+      {status === "pending" || (loading && <Loading />)}
     </div>
   );
 };
 
 export default Step1;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// "use client";
-// import React, { useState } from "react";
-// import DatePicker from "../DatePicker";
-// import { auth } from "@/lib/firebaseClient";
-// import { useRouter } from "next/navigation";
-// import useLoading from "@/components/hooks/useLoading";
-// import Loading from "@/components/Loading";
-
-// const Step1 = () => {
-//   const [dob, setDob] = useState(null);
-//   const [name, setName] = useState("");
-//   const [gender, setGender] = useState("");
-//   const [city, setCity] = useState("");
-//   const [state, setState] = useState("");
-//   const [country, setCountry] = useState("");
-//   const [experience, setExperience] = useState(0);
-//   const {loading,setLoading}=useLoading();
-//   const [location, setLocation] = useState({
-//     type: "Point",
-//     coordinates: [],
-//   });
-//   const router = useRouter();
-
-//   const handleCurrentLocation = () => {
-//     if (!navigator.geolocation) {
-//       alert("Geolocation is not supported by your browser.");
-//       return;
-//     }
-
-//     navigator.geolocation.getCurrentPosition(
-//       async (position) => {
-//         const latitude = position.coords.latitude;
-//         const longitude = position.coords.longitude;
-
-//         console.log(latitude, longitude, "LAT AND LONG");
-
-//         setLocation({
-//           type: "Point",
-//           coordinates: [longitude, latitude], // GeoJSON format
-//         });
-
-//         await reverseGeocode(latitude, longitude);
-//       },
-//       (error) => {
-//         console.error(error);
-//         alert("Unable to get your location.");
-//       },
-//       {
-//         enableHighAccuracy: true,
-//         timeout: 10000,
-//         maximumAge: 0,
-//       },
-//     );
-//   };
-
-//   const reverseGeocode = async (latitude, longitude) => {
-//     try {
-//       const response = await fetch(
-//         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
-//       );
-
-//       const data = await response.json();
-//       console.log(data.address, "ADDRESS OF THE USER");
-//       // setCity(data.address.city || data.address.town || "");
-//       setState(data.address.state || "");
-//       setCountry(data.address.country || "");
-//     } catch (error) {
-//       console.error(error);
-//     }
-//   };
-
-//   const handleStep1Onboarding = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       setLoading(true);
-
-//       const user = auth.currentUser;
-
-//       if (!user) {
-//         console.error("User is not logged in.");
-//         return;
-//       }
-
-//       const token = await user.getIdToken();
-//       console.log(token, "CURRENNT USER TOKEN");
-//       const body = {
-//         name,
-//         gender,
-//         dob: dob ? dob.toISOString().split("T")[0] : null,
-//         city,
-//         state,
-//         onboardPage:2,
-//         isOnboardingComplete:false,
-//         loc: location,
-//         country,
-//         yearsOfExperience: experience,
-//       };
-
-//       const response = await fetch("/api/onboarding/profiledetails", {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify(body),
-//       });
-
-//       const result = await response.json();
-
-//       if (!response.ok) {
-//         console.error(result.message);
-//         return;
-//       }
-//       router.push(`/onboarding/2`);
-
-//       console.log("Profile updated:", result);
-//     } catch (error) {
-//       console.error("Failed to submit onboarding:", error);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="bg-slate-50">
-//       <form onSubmit={handleStep1Onboarding}>
-//         <div className="w-40 h-8">
-//           <label className="text-center font-medium w-20 bg-red-400">Name</label>
-//           <input
-//             type="text"
-//             value={name}
-//             onChange={(e) => setName(e.target.value)} className="bg-red-500"
-//           />
-//         </div>
-//         <div>
-//           <label>Gender</label>
-//           <input
-//             type="text"
-//             value={gender}
-//             onChange={(e) => setGender(e.target.value)}
-//           />
-//         </div>
-//         <div>
-//           <label>Date of Birth</label>
-
-//           <DatePicker value={dob} onChange={setDob} />
-//         </div>
-//         <button type="button" onClick={handleCurrentLocation}>
-//           Use Current Location
-//         </button>
-//         <div>
-//           <label>City</label>
-//           <input
-//             type="text"
-//             value={city}
-//             onChange={(e) => setCity(e.target.value)} className=""
-//           />
-//         </div>
-//         <div>
-//           <label>State</label>
-//           <input
-//             type="text"
-//             value={state}
-//             onChange={(e) => setState(e.target.value)}
-//           />
-//         </div>
-//         <div>
-//           <label>Country</label>
-//           <input
-//             type="text"
-//             value={country}
-//             onChange={(e) => setCountry(e.target.value)}
-//           />
-//         </div>
-//         <div>
-//           <label>Experience</label>
-//           <input
-//             type="number"
-//             value={experience}
-//             onChange={(e) => setExperience(Number(e.target.value))}
-//           />
-//         </div>
-
-//         <button>Submit</button>
-//       </form>
-//       {loading&&<Loading/>}
-//     </div>
-//   );
-// };
-
-// export default Step1;

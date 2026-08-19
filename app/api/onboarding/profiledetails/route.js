@@ -12,7 +12,6 @@ export async function POST(request) {
 
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
-    console.log(body, "BODY DATAAA");
     const validation = validate(step1Schema, body);
 
     if (!validation.success) {
@@ -22,7 +21,7 @@ export async function POST(request) {
     const updatedUser = await User.findByIdAndUpdate(
       uid,
       {
-        $set: { ...validation.data, isOnboardingPage: false },
+        $set: { ...validation.data, isOnboardingComplete: false },
         $inc: {
           onboardPage: 1,
         },
@@ -30,10 +29,9 @@ export async function POST(request) {
       {
         new: true,
         lean: true,
-        select: "onboardPage isOnboardingPage role name profileImage",
+        select: "onboardPage isOnboardingComplete role name profileImage",
       },
     );
-    console.log(updatedUser, "UPDATED USER");
     if (!updatedUser) {
       return NextResponse.json(
         {
@@ -51,7 +49,7 @@ export async function POST(request) {
         name: updatedUser?.name,
         profileImage: updatedUser?.updatedUser,
         onboardPage: updatedUser?.onboardPage,
-        isOnboardingPage: updatedUser?.isOnboardingPage,
+        isOnboardingComplete: updatedUser?.isOnboardingComplete,
         role: updatedUser?.role,
       },
     });

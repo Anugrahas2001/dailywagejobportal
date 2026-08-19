@@ -30,6 +30,8 @@ const LoginForm = () => {
   const isOnboardingComplete = useSelector(
     (state) => state.user.isOnboardingCompleted,
   );
+  const status = useSelector((state) => state.user.status);
+
   const userRole = useSelector((state) => state.user.role);
   console.log(
     onboardPage,
@@ -59,6 +61,7 @@ const LoginForm = () => {
         return;
       }
       setLoading(true);
+      localStorage.setItem("role", role);
       if (auth.currentUser) {
         const token = await auth.currentUser.getIdToken();
 
@@ -134,25 +137,6 @@ const LoginForm = () => {
     }
   };
 
-  // useEffect(async () => {
-  //   if (role !== userRole) {
-  //     await signOut(auth);
-  //     alert(`You selected the wrong role. Your actual role is: ${role}`);
-  //     sessionStorage.setItem("selectedRole", role);
-  //     router.replace("/");
-  //     return;
-  //   }
-
-  //   if (!isOnboardingComplete) {
-  //     router.replace(`/onboarding/${userRole}/${onboardPage}`);
-  //     return;
-  //   }
-
-  //   router.replace(
-  //     userRole === "worker" ? "/workerDashboard" : "/employerDashboard",
-  //   );
-  // }, [userRole, isOnboardingComplete, onboardPage]);
-
   useEffect(() => {
     const handleRedirect = async () => {
       if (!userRole) return;
@@ -160,7 +144,9 @@ const LoginForm = () => {
       if (role !== userRole) {
         await signOut(auth);
         alert(`You selected the wrong role. Your actual role is: ${userRole}`);
-        sessionStorage.setItem("selectedRole", userRole);
+        // sessionStorage.setItem("selectedRole", userRole);
+        localStorage.removeItem("role");
+        localStorage.clear();
         router.replace("/");
         return;
       }
@@ -207,10 +193,9 @@ const LoginForm = () => {
              */}
             <button
               disabled={loading}
-              className="bg-blue-700 w-36 mt-4 h-12 rounded-sm text-white font-semibold"
+              className="bg-blue-700 w-36 mt-4 h-12 rounded-sm cursor-pointer text-white font-semibold"
             >
-              Login
-              {/* {loading ? "Please wait..." : "Login"} */}
+              {loading ? "Please wait..." : "Login"}
             </button>
           </div>
         </form>
@@ -231,7 +216,7 @@ const LoginForm = () => {
           </button>
         </div>
       </div>
-      {loading && <Loading />}
+      {status === "pending" || loading && <Loading />}
     </div>
   );
 };

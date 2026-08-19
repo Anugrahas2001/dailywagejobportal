@@ -1,10 +1,10 @@
 "use client";
-import useLoading from "@/components/hooks/useLoading";
+
 import Loading from "@/components/Loading";
 import { EXPERIENCE_LEVELS, JOB_SKILLS } from "@/constants/constant";
 import { step3Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const Step3 = () => {
@@ -15,10 +15,7 @@ const Step3 = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jobCategory = searchParams.get("category");
-  console.log(jobCategory, "CHEK THIS AS WELL");
   const dispatch = useDispatch();
-  // const role = useSelector((state) => state.user.role);
-  // const onboardPage = useSelector((state) => state.user.onboardPage);
   const status = useSelector((state) => state.user.status);
 
   const skillsRequired = JOB_SKILLS[jobCategory] || [];
@@ -40,14 +37,14 @@ const Step3 = () => {
     setExperience("Beginner");
   };
 
-
   const handleSubmission = async () => {
     const data = {
       bio,
       skills,
     };
-    console.log(data, "DATA SENT TO THE BACKEND");
-    const {onboardPage} =await dispatch(step3Onboarding({ body: data })).unwrap();
+    const { onboardPage } = await dispatch(
+      step3Onboarding({ body: data }),
+    ).unwrap();
     router.push(`/onboarding/${onboardPage}`);
   };
 
@@ -78,14 +75,6 @@ const Step3 = () => {
       {/* Skills */}
       <div className="space-y-4 px-4">
         <label className="font-semibold">Add Skill</label>
-
-        {/* <input
-          type="text"
-          placeholder="Enter Your Skill"
-          className="w-full rounded-lg border p-3"
-          value={skill}
-          onChange={(e) => setSkill(e.target.value)}
-        /> */}
 
         <div className="md:col-span-2 mt-4">
           <label className="mb-2 block text-sm font-medium">
@@ -170,11 +159,12 @@ const Step3 = () => {
 
       <div className="flex justify-center w-full">
         <button
+          disabled={status === "pending"}
           type="submit"
           onClick={handleSubmission}
           className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
-          Submit
+          {status === "pending" ? "Submitting..." : "Submit"}
         </button>
       </div>
       {status === "pending" && <Loading />}

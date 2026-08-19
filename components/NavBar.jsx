@@ -33,6 +33,8 @@ const NavBar = () => {
 
       console.log(data, "LOGOUT DATA");
       await signOut(auth);
+      localStorage.removeItem("role");
+      localStorage.clear();
       router.replace("/");
     }
     setLoading(false);

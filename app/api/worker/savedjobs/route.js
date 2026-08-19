@@ -51,7 +51,7 @@ export async function POST(request) {
     const savedJobObj = isNew ? validation.data : savedJob.value;
 
     const savedJobDoc = await JobDetails.findById(savedJobObj?.jobId).lean();
-console.log(savedJobDoc,"CHECK THIS DOC")
+    console.log(savedJobDoc, "CHECK THIS DOC");
     return NextResponse.json(
       {
         success: true,
@@ -59,7 +59,7 @@ console.log(savedJobDoc,"CHECK THIS DOC")
           ? "Saved job created successfully."
           : "Job already saved.",
         data: savedJobDoc,
-        deletedJob:savedJob?.isDeleted
+        deletedJob: savedJob?.isDeleted,
       },
       { status: isNew ? 201 : 200 },
     );

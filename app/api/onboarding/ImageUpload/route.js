@@ -11,7 +11,6 @@ export async function POST(request) {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
-    console.log(body, "BODY DATA");
     const validation = validate(profileImageSchema, body);
 
     if (!validation.success) {
@@ -26,8 +25,7 @@ export async function POST(request) {
       {
         $set: {
           profileImage: data.profileImage,
-          // onboardPage: 5,
-          isOnboardingPage: false,
+          isOnboardingComplete: false,
         },
         $inc: {
           onboardPage: 1,
@@ -36,7 +34,7 @@ export async function POST(request) {
       {
         new: true,
         lean: true,
-        select: "onboardPage isOnboardingPage role profileImage",
+        select: "onboardPage isOnboardingComplete role profileImage",
       },
     );
 
@@ -49,7 +47,7 @@ export async function POST(request) {
         result: {
           onboardPage: updatedUser?.onboardPage,
           profileImage: updatedUser?.profileImage,
-          isOnboardingPage: updatedUser?.isOnboardingPage,
+          isOnboardingComplete: updatedUser?.isOnboardingComplete,
           role: updatedUser?.role,
         },
       },
