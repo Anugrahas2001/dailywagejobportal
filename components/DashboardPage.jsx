@@ -65,8 +65,6 @@ const DashboardPage = ({ role }) => {
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
 
-
-
   useEffect(() => {
     if (role === "employer") {
       if (status) {
@@ -110,7 +108,18 @@ const DashboardPage = ({ role }) => {
         toggle: isSavedValue,
       }),
     ).unwrap();
+    setPage(1);
+    await dispatch(fetchActiveJobs({ page: 1 })).unwrap();
+  };
 
+  const handleAppliedJob = async (jobId) => {
+    console.log(jobId, "JOB ID DATA");
+    await dispatch(
+      applyToJob({
+        jobId,
+      }),
+    ).unwrap();
+    setPage(1);
     await dispatch(fetchActiveJobs({ page: 1 })).unwrap();
   };
 
@@ -448,7 +457,9 @@ const DashboardPage = ({ role }) => {
                       <button
                         className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
                         // disabled={loading}
-                        onClick={() => dispatch(applyToJob({jobId:job._id}))}
+                        onClick={() => {
+                          handleAppliedJob({ jobId: job._id });
+                        }}
                       >
                         Apply Now
                       </button>
@@ -493,7 +504,6 @@ const DashboardPage = ({ role }) => {
         totalCount={totalCount}
       />
 
-      {/* {loading && <Loading />} */}
     </main>
   );
 };

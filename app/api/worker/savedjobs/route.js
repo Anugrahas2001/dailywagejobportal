@@ -19,11 +19,13 @@ export async function POST(request) {
       jobId: body.jobId,
       isDeleted: body.toggle,
     };
+
+    console.log(savedObj, "CHECK THE SAVED OBJECT");
     const validation = validate(savedJobApplicationSchema, savedObj);
     if (!validation.success) {
       return validationError(validation);
     }
-
+    console.log(validation.data.isDeleted, "VALIDATE VALIDAT");
     // const savedJob=await SavedJobs.create(validation.data);
     const savedJob = await SavedJobs.findOneAndUpdate(
       {
@@ -41,7 +43,7 @@ export async function POST(request) {
         },
       },
       {
-        new: false,
+        returnDocument: "after",
         upsert: true,
         includeResultMetadata: true,
       },
@@ -49,7 +51,7 @@ export async function POST(request) {
 
     const isNew = !savedJob?.lastErrorObject?.updatedExisting;
     const savedJobObj = isNew ? validation.data : savedJob.value;
-
+    console.log(savedJob, "SAVED SAVED");
     const savedJobDoc = await JobDetails.findById(savedJobObj?.jobId).lean();
     console.log(savedJobDoc, "CHECK THIS DOC");
     return NextResponse.json(
@@ -59,7 +61,7 @@ export async function POST(request) {
           ? "Saved job created successfully."
           : "Job already saved.",
         data: savedJobDoc,
-        deletedJob: savedJob?.isDeleted,
+        deletedJob: savedJobObj?.isDeleted,
       },
       { status: isNew ? 201 : 200 },
     );

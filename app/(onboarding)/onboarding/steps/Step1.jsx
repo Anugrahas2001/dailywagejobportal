@@ -114,15 +114,16 @@ const Step1 = () => {
       mobileNumber: data.mobileNumber,
     };
 
-    const { role, onboardPage } = await dispatch(
+    const { role, onboardPage, isOnboardingComplete } = await dispatch(
       step1Onboarding({ data: body }),
     ).unwrap();
+   
     console.log("================ STEP1");
-    if (role === "employer") {
+    // if (role === "employer") {
       router.push(`/onboarding/${onboardPage}`);
-    } else {
-      router.push(`/onboarding/${onboardPage}`);
-    }
+    // } else {
+    //   router.push(`/onboarding/${onboardPage}`);
+    // }
   };
 
   return (

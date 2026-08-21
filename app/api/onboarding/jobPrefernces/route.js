@@ -30,11 +30,12 @@ export async function POST(request) {
       uid,
       {
         $set: {
+          onboardPage:3,
           isOnboardingComplete: false,
         },
-        $inc: {
-          onboardPage: 1,
-        },
+        // $inc: {
+        //   onboardPage: 1,
+        // },
       },
       {
         new: true,

@@ -141,25 +141,33 @@ const LoginForm = () => {
     const handleRedirect = async () => {
       if (!userRole) return;
 
+      // User selected the wrong role
       if (role !== userRole) {
         await signOut(auth);
+
         alert(`You selected the wrong role. Your actual role is: ${userRole}`);
-        // sessionStorage.setItem("selectedRole", userRole);
+
         localStorage.removeItem("role");
-        localStorage.clear();
+        localStorage.removeItem("profileImage");
         router.replace("/");
         return;
       }
 
+      // Onboarding is not completed
       if (!isOnboardingComplete) {
-        console.log("INSIDE INDIA");
+        console.log("Redirecting to onboarding:", onboardPage);
+
         router.replace(`/onboarding/${onboardPage}`);
         return;
       }
 
-      router.replace(
-        userRole === "worker" ? "/workerDashboard" : "/employerDashboard",
-      );
+      // Onboarding completed
+      if (isOnboardingComplete) {
+        console.log(userRole,role, "USER ROLE DATA");
+        router.replace(
+          role === "worker" ? "/workerDashboard" : "/employerDashboard",
+        );
+      }
     };
 
     handleRedirect();
@@ -216,7 +224,7 @@ const LoginForm = () => {
           </button>
         </div>
       </div>
-      {status === "pending" || loading && <Loading />}
+      {status === "pending" || (loading && <Loading />)}
     </div>
   );
 };

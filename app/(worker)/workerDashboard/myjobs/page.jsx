@@ -16,7 +16,7 @@ import {
 } from "@/constants/constant";
 import {
   applyToJob,
-  cancelToJob,
+  cancelAppliedJobs,
   fetchAppliedJobs,
 } from "@/lib/features/workerJobs/appliedjobs/appliedJobThunk";
 import {
@@ -62,6 +62,11 @@ const page = () => {
   const sortOptions =
     jobType === "saved" ? savedSortingOptions : appliedSortingOptions;
 
+  const savedStatus = useSelector((state) => state.saved.status);
+  const appliedStatus = useSelector((state) => state.applied.status);
+
+  const statusLoading = savedStatus || appliedStatus;
+
   const handleJobStatus = (jobStatus) => {
     if (jobStatus === "saved") {
       setJobType("saved");
@@ -92,6 +97,24 @@ const page = () => {
     );
   };
 
+  const handleAppliedJobs = async (jobId) => {
+    await dispatch(applyToJob({ jobId })).unwrap();
+    setPage(1);
+    await dispatch(fetchSavedJobs({ sort, page })).unwrap();
+  };
+
+  const handleCancelAppliedJob = async (jobId) => {
+    await dispatch(cancelAppliedJobs(  jobId)).unwrap();
+    setPage(1);
+    await dispatch(
+      fetchAppliedJobs({
+        sort,
+        status,
+        page: 1,
+      }),
+    ).unwrap();
+  };
+
   useEffect(() => {
     if (jobType === "saved") {
       // console.log("Fetch Again");
@@ -102,6 +125,15 @@ const page = () => {
   }, [jobType, sort, status, page]);
 
   console.log(jobs, "JOBS DATA");
+  const ids = jobs.map((job) => job._id);
+
+  console.log("IDs:", ids);
+  console.log("Jobs:", jobs.length);
+  console.log("Unique IDs:", new Set(ids).size);
+
+  const uniqueJobs = Array.from(
+    new Map(jobs.map((job) => [job._id, job])).values(),
+  );
 
   return (
     <div className="p-6 m-6">
@@ -174,8 +206,8 @@ const page = () => {
           <div className="flex justify-center py-10">
             <Loading />
           </div>
-        ) : jobs.length > 0 ? (
-          jobs.map((job) => {
+        ) : uniqueJobs.length > 0 ? (
+          uniqueJobs.map((job) => {
             return (
               <article
                 className="rounded-lg bg-white p-4 shadow mt-7"
@@ -251,9 +283,8 @@ const page = () => {
                     {jobType === "saved" ? (
                       <button
                         className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                        onClick={async() => {
-                          await dispatch(applyToJob({jobId:job._id})).unwrap();
-                          await dispatch(fetchSavedJobs({ sort, page })).unwrap();
+                        onClick={() => {
+                          handleAppliedJobs({ jobId: job._id });
                         }}
                       >
                         Apply Now
@@ -261,7 +292,9 @@ const page = () => {
                     ) : (
                       <button
                         className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                        onClick={() => dispatch(cancelToJob(job._id))}
+                        onClick={() =>
+                          handleCancelAppliedJob({ jobId: job._id })
+                        }
                       >
                         Cancel
                       </button>
@@ -303,6 +336,7 @@ const page = () => {
         page={page}
         totalCount={totalCount}
       />
+      {statusLoading === "pending" && <Loading />}
     </div>
   );
 };

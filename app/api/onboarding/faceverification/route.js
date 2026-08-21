@@ -80,12 +80,12 @@ export async function POST(request) {
       {
         $set: {
           isVerified: true,
-          // onboardPage:6,
+          onboardPage:6,
           isOnboardingComplete: true,
         },
-        $inc: {
-          onboardPage: 1,
-        },
+        // $inc: {
+        //   onboardPage: 1,
+        // },
       },
       {
         new: true,

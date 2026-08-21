@@ -11,7 +11,7 @@ import { useSelector } from "react-redux";
 const Page = () => {
   const { id } = useParams();
   const role = useSelector((state) => state.user.role);
-
+  console.log(id, role, "CHECK BOTH");
   const selectedRole = localStorage.getItem("role");
   console.log(selectedRole, "SELECTED ROLE OF THE USER");
   const flow =

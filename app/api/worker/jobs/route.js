@@ -14,6 +14,7 @@ export async function POST(request) {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
+    console.log(body, "FOR APPLYING A JOB");
     const jobObj = {
       _id: generateId(),
       jobId: body.jobId,
@@ -62,7 +63,8 @@ export async function POST(request) {
         },
       },
       {
-        new: true,
+        returnDocument:"after",
+        upsert:false
       },
     );
     console.log(updateApplicantCount, "CHECK THIS VALUE APPLIED");
@@ -70,7 +72,7 @@ export async function POST(request) {
       {
         message: "Sucessfully created the job Apllication.",
         data: updateApplicantCount,
-        isJobDeleted:application?.isDeleted
+        
       },
       {
         status: 201,
@@ -98,11 +100,10 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const page = Number(searchParams.get("page")) || 1;
-    console.log(page, "CHECK THE PAGE");
     const limit = Number(searchParams.get("limit")) || 12;
 
     const skip = (page - 1) * limit;
-
+    console.log(page, skip, "CHECK THESE 2");
     if (!status) {
       return NextResponse.json(
         {
@@ -121,14 +122,14 @@ export async function GET(request) {
 
     const appliedJobIds = appliedJobs.map((job) => job.jobId);
     console.log(appliedJobIds, "APPLIED IDS");
-    const allSavedJobs = await SavedJobs.find({
-      workerId: uid,
-      isDeleted: false,
-      _id: { $nin: appliedJobIds },
-    })
-      .lean()
-      .skip(skip)
-      .limit(limit);
+    const allSavedJobs = await SavedJobs.find(
+      {
+        workerId: uid,
+        isDeleted: false,
+        jobId: { $nin: appliedJobIds },
+      },
+      { jobId: 1, _id: 0 },
+    ).lean();
 
     const savedJobIds = allSavedJobs.map((job) => job.jobId);
     console.log(savedJobIds, "ALL SAVES IDS");
@@ -145,9 +146,13 @@ export async function GET(request) {
 
     console.log(filter, "FILTER DATA");
 
-    const jobs = await JobDetails.find(filter).lean().skip(skip).limit(limit);
+    const jobs = await JobDetails.find(filter)
+      .sort({ createdAt: -1 })
+      .lean()
+      .skip(skip)
+      .limit(limit);
     const allJobIds = jobs.map((job) => job._id);
-    console.log(allJobIds, "ALL JOBIDA");
+    console.log(allJobIds.length, "ALL JOBIDA");
     const duplicateIds = allJobIds.filter((id) => excludedIds.includes(id));
     console.log(duplicateIds, "ALL DUPLICATE IDS");
     const totalCount = await JobDetails.countDocuments(filter);

@@ -18,10 +18,14 @@ export async function POST(request) {
     const updatedUser = await User.findByIdAndUpdate(
       uid,
       {
-        $set: { ...validation.data, isOnboardingComplete: false },
-        $inc: {
-          onboardPage: 1,
+        $set: {
+          ...validation.data,
+          onboardPage: 4,
+          isOnboardingComplete: false,
         },
+        // $inc: {
+        //   onboardPage: 1,
+        // },
       },
 
       {

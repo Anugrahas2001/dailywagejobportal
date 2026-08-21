@@ -42,9 +42,10 @@ const Step3 = () => {
       bio,
       skills,
     };
-    const { onboardPage } = await dispatch(
+    const { onboardPage, isOnboardingComplete } = await dispatch(
       step3Onboarding({ body: data }),
     ).unwrap();
+ 
     router.push(`/onboarding/${onboardPage}`);
   };
 

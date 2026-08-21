@@ -1,6 +1,7 @@
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobApplication from "@/modals/JobApplication";
 import JobDetails from "@/modals/JobDetails";
+import SavedJobs from "@/modals/SavedJobs";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -15,7 +16,7 @@ export async function GET(request) {
       10,
     );
     const skip = (page - 1) * limit;
- console.log(page, limit, "PAGE AND LIMIT");
+    console.log(sort, status, page, limit, "PAGE AND LIMIT");
     let sortOption;
     let statusOption;
 
@@ -49,6 +50,8 @@ export async function GET(request) {
       cancelled: false,
       ...statusOption,
     };
+
+    console.log(filter, "FILTER DATA", sortOption);
 
     const allAppliedJobs = await JobApplication.find(filter)
       .sort(sortOption)
@@ -107,25 +110,38 @@ export async function PUT(request) {
         },
       },
       {
-        new: true,
+        returnDocument: "after",
+        upsert: false,
       },
     );
     console.log(updatedJob, "UPDATED JOBSS");
 
-    // const job = await JobApplication.findOne({
-    //   jobId: body.jobId,
-    //   workerId: uid,
-    // });
+    await JobDetails.findOneAndUpdate(
+      { _id: body.jobId },
+      {
+        $inc: { applicantsCount: -1 },
+      },
+      {
+        returnDocument: "after",
+        upsert: false,
+      },
+    );
 
-    // job.cancelled = true;
+    await SavedJobs.findOneAndUpdate(
+      { workerId: uid, jobId: body.jobId },
+      {
+        $set: {
+          isDeleted: false,
+        },
+      },
+      { returnDocument: "after", upsert: false },
+    );
 
-    // await job.save();
-
-    // console.log(job);
     return NextResponse.json(
       {
         message: "Successfully cancelled the job application.",
-        data: updatedJob,
+        data:updatedJob?.jobId,
+        isJobDeleted: updatedJob?.isDeleted,
       },
       {
         status: 200,

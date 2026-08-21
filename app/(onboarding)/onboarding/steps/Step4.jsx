@@ -87,9 +87,11 @@ const Step4 = () => {
         .from("ImageBucket")
         .getPublicUrl(filePath);
 
-      const { onboardPage } = await dispatch(
-        step4Onboarding({ profileImage: urlData.publicUrl }),
-      ).unwrap();
+      const { onboardPage, profileImage, isOnboardingComplete } =
+        await dispatch(
+          step4Onboarding({ profileImage: urlData.publicUrl }),
+        ).unwrap();
+
       router.push(`/onboarding/${onboardPage}`);
     } catch (err) {
       console.error("Image upload error:", err);

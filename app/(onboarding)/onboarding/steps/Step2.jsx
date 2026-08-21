@@ -41,9 +41,10 @@ const Step2 = () => {
 
   const onSubmit = async (data) => {
     try {
-      const { onboardPage } = await dispatch(
+      const { onboardPage, isOnboardingComplete } = await dispatch(
         step2Onboarding({ body: data }),
       ).unwrap();
+     
       router.push(`/onboarding/${onboardPage}?category=${jobCategory}`);
     } catch (error) {
       console.error(error);

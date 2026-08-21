@@ -24,12 +24,13 @@ export async function POST(request) {
       uid,
       {
         $set: {
+          onboardPage:5,
           profileImage: data.profileImage,
           isOnboardingComplete: false,
         },
-        $inc: {
-          onboardPage: 1,
-        },
+        // $inc: {
+        //   onboardPage: 1,
+        // },
       },
       {
         new: true,
