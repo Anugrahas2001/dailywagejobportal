@@ -29,6 +29,7 @@ export async function POST(request) {
     const alreadyApplied = await JobApplication.findOne({
       jobId: body.jobId,
       workerId: uid,
+      status:"applied",
       // cancelled:false
     });
 

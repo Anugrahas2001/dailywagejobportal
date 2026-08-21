@@ -104,7 +104,7 @@ const page = () => {
   };
 
   const handleCancelAppliedJob = async (jobId) => {
-    await dispatch(cancelAppliedJobs(  jobId)).unwrap();
+    await dispatch(cancelAppliedJobs(jobId)).unwrap();
     setPage(1);
     await dispatch(
       fetchAppliedJobs({
@@ -257,12 +257,15 @@ const page = () => {
                     <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
                       <div className="flex items-center gap-2 md:justify-end">
                         <span
-                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(job.status).dot}`}
+                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus.charAt(0).toUpperCase() + job.applicationStatus.slice(1)).dot}`}
                         ></span>
                         <p
-                          className={`text-sm font-medium ${getStatusColor(job.status).text}`}
+                          className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus.charAt(0).toUpperCase() + job.applicationStatus.slice(1)).text}`}
                         >
-                          {job.status}
+                          {jobType === "saved"
+                            ? job.status
+                            : job.applicationStatus.charAt(0).toUpperCase() +
+                              job.applicationStatus.slice(1)}
                         </p>
                       </div>
                     </div>
@@ -276,7 +279,11 @@ const page = () => {
                   {/* md:flex-row */}
                   <p className="text-sm text-gray-500">
                     {" "}
-                    {getPostedText(job.createdAt)}
+                    {getPostedText({
+                      createdAt:
+                        jobType === "saved" ? job.createdAt : job.appliedAt,
+                      jobType,
+                    })}
                   </p>
 
                   <div className="flex gap-2 md:gap-3 md:mt-0">

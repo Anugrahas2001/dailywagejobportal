@@ -59,6 +59,10 @@ export async function GET(request) {
       .skip(skip)
       .limit(limit);
 
+    const applicationMAP = new Map(
+      allAppliedJobs.map((application) => [application.jobId, application]),
+    );
+
     const totalCount = await JobApplication.countDocuments(filter);
 
     const allAppliedJobIds = allAppliedJobs.map((job) => job.jobId);
@@ -70,9 +74,18 @@ export async function GET(request) {
     const jobMap = new Map(allJobs.map((job) => [String(job._id), job]));
 
     const orderedAppliedJobs = allAppliedJobIds
-      .map((id) => jobMap.get(String(id)))
+      .map((id) => {
+        const job = jobMap.get(String(id));
+        const application = applicationMAP.get(String(id));
+
+        return {
+          ...job,
+          applicationStatus: application?.status,
+          appliedAt: application?.appliedAt,
+        };
+      })
       .filter(Boolean);
-    console.log(orderedAppliedJobs.length, totalCount, "CHECK BOTH");
+    console.log(orderedAppliedJobs, totalCount, "CHECK BOTH");
 
     return NextResponse.json(
       {
@@ -140,7 +153,7 @@ export async function PUT(request) {
     return NextResponse.json(
       {
         message: "Successfully cancelled the job application.",
-        data:updatedJob?.jobId,
+        data: updatedJob?.jobId,
         isJobDeleted: updatedJob?.isDeleted,
       },
       {

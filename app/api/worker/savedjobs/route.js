@@ -7,6 +7,7 @@ import { validationError } from "@/lib/validationError";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import { savedJobApplicationSchema } from "@/lib/validations/jobs/jobValidation";
 import JobDetails from "@/modals/JobDetails";
+import JobApplication from "@/modals/JobApplication";
 
 export async function POST(request) {
   try {
@@ -122,24 +123,60 @@ export async function GET(request) {
     ]);
 
     const allSavedJobIds = allsavedJobs.map((job) => job?.jobId);
-    console.log(allSavedJobIds, "ALL SAVED JOB IDS FROM THE ROUTE.JS FILE");
+
+    console.log(allSavedJobIds, "ALL SAVED JOB IDS");
+    const appliedJobs = await JobApplication.find(
+      {
+        workerId: uid,
+        // status: { $ne: "rejected" },
+        jobId: { $in: allSavedJobIds },
+      },
+      { jobId: 1 },
+    ).lean();
+    console.log(appliedJobs, "ALL THE APPLIED JOBS");
+
+    const appliedJobIdSet = appliedJobs.map((job) => String(job.jobId));
+
+    console.log(appliedJobIdSet, "CHECK THE APPLIED IDS");
+
+    const allIds = allSavedJobIds.filter((id) => !appliedJobIdSet.includes(id));
+
+    console.log(
+      allSavedJobIds.length,
+      appliedJobIdSet.length,
+      allIds.length,
+      "HAPPY ONAM",
+    );
+
+    // const allIds = [...allSavedJobIds, ...appliedJobIdSet];
+
+    console.log(allIds, "ALL SAVED JOB IDS FROM THE ROUTE.JS FILE");
     const allJobs = await JobDetails.find({
-      _id: { $in: allSavedJobIds },
+      _id: { $in: allIds },
       isDeleted: false,
     }).lean();
 
     const jobMap = new Map(allJobs.map((job) => [String(job._id), job]));
 
-    const orderedJobs = allSavedJobIds
+    const savedMap = new Map(
+      allsavedJobs.map((saved) => [String(saved.jobId), saved]),
+    );
+
+    const orderedJobs = allIds
       .map((id) => {
         const job = jobMap.get(String(id));
+
         if (!job) return null;
-        const savedEntry = allsavedJobs.find(
-          (s) => String(s.jobId) === String(id),
-        );
-        return { ...job, savedAt: savedEntry?.savedAt };
+
+        const savedEntry = savedMap.get(String(id));
+
+        return {
+          ...job,
+          savedAt: savedEntry?.savedAt,
+        };
       })
       .filter(Boolean);
+
     console.log(orderedJobs.length, total, "CHECK BOTH");
     return NextResponse.json(
       {
