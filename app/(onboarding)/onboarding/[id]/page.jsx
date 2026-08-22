@@ -15,7 +15,7 @@ const Page = () => {
   const selectedRole = localStorage.getItem("role");
   console.log(selectedRole, "SELECTED ROLE OF THE USER");
   const flow =
-    role === "worker" || selectedRole
+    role === "worker" || selectedRole==="worker"
       ? WORKER_ONBOARD_STEPS
       : EMPLOYER_ONBOARD_STEPS;
 

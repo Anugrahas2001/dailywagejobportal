@@ -286,8 +286,8 @@ const DashboardPage = ({ role }) => {
                     )}
                   </div>
 
-                  <Link href={`/${role}Dashboard/jobs/${job._id}`}>
-                    <div onClick={() => handleJobViews(job._id)}>
+                  <div onClick={() => handleJobViews(job._id)}>
+                    <Link href={`/${role}Dashboard/jobs/${job._id}`}>
                       <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
                         <p>
                           📍 {job.city}, {job.state}
@@ -299,55 +299,47 @@ const DashboardPage = ({ role }) => {
                         </p>
                         <p>👥 Openings: {job.numberOfOpenings}</p>
                       </div>
-
-                      <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
-                        <div className="flex items-center gap-2 md:justify-end">
-                          <span
-                            className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(job.status).dot}`}
-                          ></span>
-                          <p
-                            className={`text-sm font-medium ${getStatusColor(job.status).text}`}
-                          >
-                            {job.status}
-                          </p>
-                        </div>
-                        {role === "employer" ? (
-                          <>
-                            <div className="flex gap-3">
-                              {" "}
-                              {/* <span className="flex">
+                    </Link>
+                    <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
+                      <div className="flex items-center gap-2 md:justify-end">
+                        <span
+                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(job.status).dot}`}
+                        ></span>
+                        <p
+                          className={`text-sm font-medium ${getStatusColor(job.status).text}`}
+                        >
+                          {job.status}
+                        </p>
+                      </div>
+                      {role === "employer" ? (
+                        <>
+                          <div className="flex gap-3">
+                            {" "}
+                            {/* <span className="flex">
                               <Eye className="h-5 w-5" />
                               {job.viewsCount}
                             </span> */}
-                              <div className="group relative inline-block">
-                                <button className="flex items-center gap-1 py-2">
-                                  <BotMessageSquare className="h-5 w-5" />
-                                  {job.viewsCount}
-                                </button>
+                            <div className="group relative inline-block">
+                              <button className="flex items-center gap-1 py-2">
+                                <BotMessageSquare className="h-5 w-5" />
+                                {job.viewsCount}
+                              </button>
 
-                                <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                  Views
-                                </span>
-                              </div>
-                              {/* <span className="flex">
-                              <BotMessageSquare className="h-5 w-5" />
-                              {job.aiMatchesCount}
-                            </span> */}
-                              <div className="group relative inline-block">
-                                <button className="flex items-center gap-1 py-2">
-                                  <BotMessageSquare className="h-5 w-5" />
-                                  {job.aiMatchesCount}
-                                </button>
+                              <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                Views
+                              </span>
+                            </div>
+                            <div className="group relative inline-block">
+                              <button className="flex items-center gap-1 py-2">
+                                <BotMessageSquare className="h-5 w-5" />
+                                {job.aiMatchesCount}
+                              </button>
 
-                                <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                  AI Matched Profiles
-                                </span>
-                              </div>
-                              {/* <span className="flex"> */}
-                              {/* <FileUser className="h-5 w-5" />
-                              {applicationsnum.find((a) => a?._id === job?._id)
-                                ?.totalApplications ?? 0}
-                            </span> */}
+                              <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                AI Matched Profiles
+                              </span>
+                            </div>
+                            <Link href={`/employerDashboard/appliedworkers?jobId=${job._id}`}>
                               <div className="group relative inline-block">
                                 <button className="flex items-center gap-1 py-2">
                                   <FileUser className="h-5 w-5" />
@@ -358,14 +350,14 @@ const DashboardPage = ({ role }) => {
                                   Applications
                                 </span>
                               </div>
-                            </div>
-                          </>
-                        ) : (
-                          <></>
-                        )}
-                      </div>
+                            </Link>
+                          </div>
+                        </>
+                      ) : (
+                        <></>
+                      )}
                     </div>
-                  </Link>
+                  </div>
                 </div>
 
                 {/* Footer */}
@@ -375,7 +367,7 @@ const DashboardPage = ({ role }) => {
                   {/* md:flex-row */}
                   <p className="text-sm text-gray-500">
                     {" "}
-                    {getPostedText(job.createdAt)}
+                    {getPostedText({ createdAt: job.createdAt })}
                   </p>
 
                   <div className="flex gap-2 md:gap-3 md:mt-0">
@@ -386,18 +378,6 @@ const DashboardPage = ({ role }) => {
                             View Applications
                           </button>
                           <div className="flex gap-2">
-                            {/* <SquarePen
-                              className="cursor-pointer"
-                              onClick={() => handleJobEdit(job._id)}
-                            />
-                            <Trash2
-                              className="cursor-pointer"
-                              onClick={() => {
-                                handleJobDelete(job._id);
-                              }}
-                            />
-                            <Pause className="cursor-pointer" /> */}
-
                             <div className="group relative inline-block">
                               <button className="flex items-center gap-1 py-2">
                                 <SquarePen
@@ -503,7 +483,6 @@ const DashboardPage = ({ role }) => {
         page={page}
         totalCount={totalCount}
       />
-
     </main>
   );
 };

@@ -46,6 +46,7 @@ export const fetchAvailableJobs = async (role, page) => {
 };
 
 export const getPostedText = ({ createdAt, jobType }) => {
+  console.log(createdAt, "CHECK CREATED AT");
   const createdDate = new Date(createdAt);
   const today = new Date();
 
@@ -59,8 +60,10 @@ export const getPostedText = ({ createdAt, jobType }) => {
   if (diffInDays === 1) {
     return "Posted 1 day ago";
   }
+  console.log(diffInDays, "NUMBER OF DAYS");
+  const postedDay= jobType === "applied" ? "Applied":"Posted" || "POSTED";
 
-  return `${jobType === "saved" ? "Posted" : "Applied"} ${diffInDays} days ago`;
+  return `${postedDay} ${diffInDays} days ago`;
 };
 
 export function getStatusColor(status) {

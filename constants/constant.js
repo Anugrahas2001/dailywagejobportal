@@ -15,7 +15,7 @@ export const WORKER_ONBOARD_STEPS = {
 export const EMPLOYER_ONBOARD_STEPS = {
   1: Step1,
   2: Step4,
-  3: Step5,
+  5: Step5,
 };
 
 export const ONBOARD_PAGES = [1, 2, 3, 4, 5, 6];

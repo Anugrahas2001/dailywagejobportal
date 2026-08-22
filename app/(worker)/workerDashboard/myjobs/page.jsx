@@ -271,7 +271,6 @@ const page = () => {
                     </div>
                   </Link>
                 </div>
-
                 {/* Footer */}
                 <div
                   className={`flex justify-between border-t pt-4 flex-row items-center`}

@@ -230,7 +230,7 @@ const OpeningPage = () => {
         ).unwrap();
 
       } catch (error) {
-        console.error("Authentication verification failed:", error);
+        console.log("Authentication verification failed:", error);
 
         setIsAuthenticated(false);
       } finally {
