@@ -8,61 +8,63 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   try {
     await connectDB();
+    const { uid } = verifyFirebaseToken(request);
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
-    const page = Number(searchParams.get("page")) || 1;
-    const limit = Number(searchParams.get("limit")) || 12;
+    const page = searchParams.get("page");
+    const limit = searchParams.get("limit");
     const skip = (page - 1) * limit;
-    const { uid } = await verifyFirebaseToken(request);
 
-    const allAppliedJobs = await JobApplication.find({
+    const userApplications = await JobApplication.find({
       jobId,
       cancelled: false,
     })
-      .select("workerId")
+      .select("workerId status")
       .lean()
       .skip(skip)
       .limit(limit);
+
+    const jobApplicationMap = new Map(
+      userApplications.map((application) => [
+        String(application?.workerId),
+        application,
+      ]),
+    );
+
+    const allWorkersId = userApplications.map(
+      (application) => application?.workerId,
+    );
 
     const totalCount = await JobApplication.countDocuments({
       jobId,
       cancelled: false,
     });
 
-    const appliedworkerIds = allAppliedJobs.map((job) => job.workerId);
+    const [userdata, jobPref] = await Promise.all([
+      User.find({
+        _id: { $in: allWorkersId },
+      })
+        .select(
+          "name email mobileNumber city state country isVerified profileImage skills",
+        )
+        .lean(),
+      JobPreferences.find({ userId: { $in: allWorkersId } }).lean(),
+    ]);
 
-    const allAppliedUsers = await User.find({
-      _id: { $in: appliedworkerIds },
-    }).lean();
-    const usersMap = new Map(allAppliedUsers.map((us) => [String(us._id), us]));
-
-    console.log(appliedworkerIds, "CHECK WORKERS ID");
-    const allUsersJobPref = await JobPreferences.find({
-      userId: { $in: appliedworkerIds },
-    }).lean();
-
-    console.log(allUsersJobPref, "ALL JOB PREF");
-
-    const allUsersJobPrefMap = new Map(
-      allUsersJobPref.map((job) => [String(job.userId), job]),
+    const preferenceMap = new Map(
+      jobPref.map((pref) => [String(pref.userId), pref]),
     );
+    const data = userdata.map((user) => ({
+      ...user,
+      ...(preferenceMap.get(String(user._id)) || {}),
+      status: jobApplicationMap.get(String(user._id))?.status,
+    }));
 
-    const applicants = appliedworkerIds.map((userId) => {
-      const user = usersMap.get(userId);
-      const jobPref = allUsersJobPrefMap.get(userId);
-
-      console.log(jobPref, "JOB PREF DATA");
-      return {
-        ...user,
-        ...jobPref,
-      };
-    });
-
-    console.log(applicants, "ALL THE FINAL OUTPUT");
+    console.log(data, "USER APPLICATION AND JOB PREFERENEC");
 
     return NextResponse.json(
       {
-        data: applicants,
+        data,
         totalCount,
       },
       {
@@ -71,9 +73,10 @@ export async function GET(request) {
     );
   } catch (error) {
     console.log(error, "ERROR DATA");
+
     return NextResponse.json(
       {
-        message: "Failed to get the user profiles who applied for the job.",
+        message: "Failed to fetch the worker details.",
       },
       {
         status: 500,

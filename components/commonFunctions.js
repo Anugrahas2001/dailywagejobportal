@@ -61,7 +61,7 @@ export const getPostedText = ({ createdAt, jobType }) => {
     return "Posted 1 day ago";
   }
   console.log(diffInDays, "NUMBER OF DAYS");
-  const postedDay= jobType === "applied" ? "Applied":"Posted" || "POSTED";
+  const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
 
   return `${postedDay} ${diffInDays} days ago`;
 };
@@ -140,3 +140,74 @@ export function getStatusColor(status) {
       };
   }
 }
+
+export function formatDOB(dob) {
+  if (!dob) return "";
+
+  const date = new Date(dob);
+
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const year = date.getUTCFullYear();
+
+  return `${day}-${month}-${year}`;
+}
+
+export function calculateAge(dob) {
+  if (!dob) return null;
+
+  const birthDate = new Date(dob);
+  const today = new Date();
+
+  let age = today.getFullYear() - birthDate.getUTCFullYear();
+
+  const birthMonth = birthDate.getUTCMonth();
+  const birthDay = birthDate.getUTCDate();
+
+  const hasBirthdayPassed =
+    today.getMonth() > birthMonth ||
+    (today.getMonth() === birthMonth && today.getDate() >= birthDay);
+
+  if (!hasBirthdayPassed) {
+    age--;
+  }
+
+  return age;
+}
+
+export function getJoiningType(joinType) {
+  return JOINING_TYPES.find((type) => type.value === joinType)?.label;
+}
+
+export function getShiftTypes(shiftType) {
+  return SHIFT_TYPES.find((shift) => shift.value === shiftType)?.label;
+}
+
+export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {
+  console.log(workerId, status, jobId, "CHECK THIS WORKER ID");
+  const token = await fetchUserToken();
+  const response = await fetch(
+    `/api/employer/viewjobapplications/${workerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        status,
+        jobId,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    console.log("Failed to update the status");
+    return;
+  }
+
+  const { data } = await response.json();
+
+  console.log(data, "JOB DATA");
+  return data;
+};
