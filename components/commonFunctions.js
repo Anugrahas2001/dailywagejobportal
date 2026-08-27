@@ -46,7 +46,6 @@ export const fetchAvailableJobs = async (role, page) => {
 };
 
 export const getPostedText = ({ createdAt, jobType }) => {
-  console.log(createdAt, "CHECK CREATED AT");
   const createdDate = new Date(createdAt);
   const today = new Date();
 
@@ -60,7 +59,6 @@ export const getPostedText = ({ createdAt, jobType }) => {
   if (diffInDays === 1) {
     return "Posted 1 day ago";
   }
-  console.log(diffInDays, "NUMBER OF DAYS");
   const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
 
   return `${postedDay} ${diffInDays} days ago`;
@@ -69,7 +67,7 @@ export const getPostedText = ({ createdAt, jobType }) => {
 export function getStatusColor(status) {
   // const formattedStatus =
   // status.charAt(0).toUpperCase() + status.slice(1);
-  console.log(status, "STATUS DATA");
+
   switch (status) {
     // Application statuses
     case "Applied":
@@ -184,7 +182,6 @@ export function getShiftTypes(shiftType) {
 }
 
 export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {
-  console.log(workerId, status, jobId, "CHECK THIS WORKER ID");
   const token = await fetchUserToken();
   const response = await fetch(
     `/api/employer/viewjobapplications/${workerId}`,
@@ -207,7 +204,5 @@ export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {
   }
 
   const { data } = await response.json();
-
-  console.log(data, "JOB DATA");
   return data;
 };

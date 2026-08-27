@@ -42,6 +42,7 @@ import SearchAndFilter from "./SearchAndFilter";
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
+  const [activeSearch, setSearchActive] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -55,7 +56,15 @@ const DashboardPage = ({ role }) => {
   // console.log(workJobs, "WORKER JOBS");
   const empJobs = useSelector(selectAllJobsForEmployer);
   // console.log(empJobs, "EMP JOBS");
-  const jobs = role === "worker" ? workJobs : empJobs;
+
+  const searchAndFilterJobs = useSelector((state) => state.searchJobs.jobs); // console.log(empJobs, "EMP JOBS");
+  const jobs =
+    role === "worker"
+      ? activeSearch
+        ? searchAndFilterJobs
+        : workJobs
+      : empJobs;
+
   // console.log(jobs?.length, role, jobs, "LENGTH OF THE JOBS");
   const totalCount = useSelector((state) => state.jobs.totalCount);
   const count = useSelector((state) => state.jobs.statusCounts);
@@ -172,7 +181,10 @@ const DashboardPage = ({ role }) => {
               Date
             </button>
           </div> */}
-          <SearchAndFilter page={page} />
+          <SearchAndFilter
+            page={page}
+            onClick={() => setSearchActive((prev) => !prev)}
+          />
         </section>
       )}
 

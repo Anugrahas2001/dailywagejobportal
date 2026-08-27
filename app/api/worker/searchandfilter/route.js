@@ -19,7 +19,7 @@ export async function GET(request) {
     const shift = searchParams.get("shift");
     const salary = searchParams.get("salary");
     const availability = searchParams.get("availability");
-    const date = searchParams.get("date");
+    const date = searchParams.get("sortType");
 
     console.log(page, limit, "PAGE AND LIMIT");
     console.log(search, nearby, shift, salary, date, "SEARCH");
@@ -91,38 +91,6 @@ export async function GET(request) {
       }
     }
 
-    // if (nearby) {
-    //   const distanceKm = Number(nearby);
-
-    //   if (!Number.isNaN(distanceKm) && Number(distanceKm) > 0) {
-    //     if (
-    //       Number.isNaN(userLoc.coordinates?.longitude) ||
-    //       Number.isNaN(userLoc.coordinates?.latitude)
-    //     ) {
-    //       return NextResponse.json(
-    //         {
-    //           message: "Longitude and latitude are required for search.",
-    //         },
-    //         {
-    //           status: 404,
-    //         },
-    //       );
-    //     }
-
-    //     filter.loc = {
-    //       $near: {
-    //         $geometry: {
-    //           type: "Point",
-    //           coordinates: [
-    //             userLoc.coordinates?.longitude,
-    //             userLoc.coordinates?.latitude,
-    //           ],
-    //         },
-    //       },
-    //     };
-    //   }
-    // }
-
     if (nearby) {
       const distanceKm = Number(nearby);
 
@@ -157,29 +125,29 @@ export async function GET(request) {
       }
     }
 
-    let sort = {
-      createdAt: -1,
-    };
+    //     let sort = .sort({
+    //   createdAt: sortType === "oldest" ? 1 : -1
+    // })
 
-    if (date === "oldest") {
-      sort = {
-        createdAt: 1,
-      };
-    }
+    //     if (date === "oldest") {
+    //       console.log("=======================1");
+    //       sort = {
+    //         createdAt: 1,
+    //       };
+    //       console.log("=======================2");
+    //     }
 
-    console.log("================================");
-    console.log("DATE:", date);
-    console.log("SORT:", JSON.stringify(sort));
-    console.log("================================");
     let query = JobDetails.find(filter);
 
     if (!nearby) {
       // no $near in the filter → safe to sort explicitly
-      query = query.sort(sort);
-      // console.log(query,"INSIDE OF THE NEARBY");
+      query = query.sort({
+        createdAt: date === "oldest" ? 1 : -1,
+      });
+      console.log("=======================3");
     }
 
-    console.log(sort, filter, "CHECK THE FILTER");
+    console.log(filter, "CHECK THE FILTER");
 
     // const [allJobs, totalCount] = await Promise.all([
     //   query.skip(skip).limit(limit),
@@ -192,6 +160,7 @@ export async function GET(request) {
       query.skip(skip).limit(limit).lean(),
       JobDetails.countDocuments(filter),
     ]);
+    console.log("=======================4");
 
     console.log(
       "RESULT ORDER:",
@@ -201,10 +170,13 @@ export async function GET(request) {
       })),
     );
 
+    console.log(date,"=======================5");
+
     return NextResponse.json(
       {
         data: allJobs,
         totalCount,
+        sortType:date
       },
       {
         status: 200,

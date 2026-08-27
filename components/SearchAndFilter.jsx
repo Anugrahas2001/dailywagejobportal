@@ -1,12 +1,12 @@
 "use client";
 
 import { filterOptions } from "@/constants/constant";
-import { fetchSearchAndFilterResults } from "@/lib/features/jobs/jobThunk";
+import { fetchSearchAndFilterResults } from "@/lib/features/searchFilter/searchJobsThunk";
 import { Filter, Search } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-const SearchAndFilter = ({ page }) => {
+const SearchAndFilter = ({ page, onClick }) => {
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [activeFilter, setActiveFilter] = useState(null);
@@ -19,17 +19,12 @@ const SearchAndFilter = ({ page }) => {
   });
   // const [page, setPage] = useState(1);
   const dispatch = useDispatch();
-  // const pageSize = 12; // define this
-  console.log(page, "FROM DASHBOARD");
-  // const totalCount = useSelector((state) => state.jobs.totalCount);
-
-  // const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
   console.log(activeFilter, selectedFilterValue, "SELECTED FILETR VALUES");
 
   useEffect(() => {
-  doSearchAndFilter(selectedFilterValue, page);
-}, [page]);
+    doSearchAndFilter(selectedFilterValue, page);
+  }, [page]);
 
   const buildParams = (filters) => {
     // build fresh each time
@@ -39,7 +34,7 @@ const SearchAndFilter = ({ page }) => {
     if (filters.Shift) params.set("shift", filters.Shift);
     if (filters.Salary) params.set("salary", filters.Salary);
     if (filters.Availability) params.set("availability", filters.Availability);
-    if (filters.Date) params.set("date", filters.Date);
+    if (filters.Date) params.set("sortType", filters.Date);
 
     return params;
   };
@@ -108,7 +103,9 @@ const SearchAndFilter = ({ page }) => {
 
           <Search
             className="h-5 w-5 shrink-0 text-gray-500 md:h-6 md:w-6"
-            onClick={() => doSearchAndFilter(selectedFilterValue, page)}
+            onClick={() => {
+              (doSearchAndFilter(selectedFilterValue, page), onClick());
+            }}
           />
         </div>
 
@@ -228,7 +225,9 @@ const SearchAndFilter = ({ page }) => {
                       <button
                         key={val?.value}
                         type="button"
-                        onClick={() => handleSelectFilter(option, val.value)}
+                        onClick={() => {
+                          (handleSelectFilter(option, val.value), onClick());
+                        }}
                         className={`
                           block w-full
                           whitespace-nowrap
