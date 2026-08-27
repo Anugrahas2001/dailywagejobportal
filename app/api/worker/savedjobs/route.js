@@ -21,13 +21,11 @@ export async function POST(request) {
       isDeleted: body.toggle,
     };
 
-    console.log(savedObj, "CHECK THE SAVED OBJECT");
     const validation = validate(savedJobApplicationSchema, savedObj);
     if (!validation.success) {
       return validationError(validation);
     }
-    console.log(validation.data.isDeleted, "VALIDATE VALIDAT");
-    // const savedJob=await SavedJobs.create(validation.data);
+
     const savedJob = await SavedJobs.findOneAndUpdate(
       {
         jobId: body.jobId,
@@ -52,9 +50,8 @@ export async function POST(request) {
 
     const isNew = !savedJob?.lastErrorObject?.updatedExisting;
     const savedJobObj = isNew ? validation.data : savedJob.value;
-    console.log(savedJob, "SAVED SAVED");
     const savedJobDoc = await JobDetails.findById(savedJobObj?.jobId).lean();
-    console.log(savedJobDoc, "CHECK THIS DOC");
+
     return NextResponse.json(
       {
         success: true,
@@ -88,7 +85,7 @@ export async function GET(request) {
       Math.max(Number(searchParams.get("limit")) || 12, 1),
       50,
     );
-    console.log(page, limit, "PAGE AND LIMIT");
+
     const skip = (page - 1) * limit;
     const sort = searchParams.get("sorttype") || "newest";
     const { uid } = await verifyFirebaseToken(request);
@@ -124,7 +121,6 @@ export async function GET(request) {
 
     const allSavedJobIds = allsavedJobs.map((job) => job?.jobId);
 
-    console.log(allSavedJobIds, "ALL SAVED JOB IDS");
     const appliedJobs = await JobApplication.find(
       {
         workerId: uid,
@@ -133,22 +129,9 @@ export async function GET(request) {
       },
       { jobId: 1 },
     ).lean();
-    console.log(appliedJobs, "ALL THE APPLIED JOBS");
 
     const appliedJobIdSet = appliedJobs.map((job) => String(job.jobId));
-
-    console.log(appliedJobIdSet, "CHECK THE APPLIED IDS");
-
     const allIds = allSavedJobIds.filter((id) => !appliedJobIdSet.includes(id));
-
-    console.log(
-      allSavedJobIds.length,
-      appliedJobIdSet.length,
-      allIds.length,
-      "HAPPY ONAM",
-    );
-
-    // const allIds = [...allSavedJobIds, ...appliedJobIdSet];
 
     console.log(allIds, "ALL SAVED JOB IDS FROM THE ROUTE.JS FILE");
     const allJobs = await JobDetails.find({
@@ -176,13 +159,11 @@ export async function GET(request) {
         };
       })
       .filter(Boolean);
-
-    console.log(orderedJobs.length, total, "CHECK BOTH");
     return NextResponse.json(
       {
         message: "Successfully fetched the data.",
         data: orderedJobs,
-        totalCount: total,
+        totalCount: orderedJobs?.length,
       },
       {
         status: 200,

@@ -23,13 +23,13 @@ import {
   fetchSavedJobs,
   toggleSavedJobs,
 } from "@/lib/features/workerJobs/savedjobs/savedJobThunk";
-import { Bookmark, Search } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const page = () => {
-  const [search, setSearch] = useState("");
+  // const [search, setSearch] = useState("");
   const [jobType, setJobType] = useState("saved");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -41,7 +41,7 @@ const page = () => {
   const pageSize = 12;
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
-  console.log(savedJobs.length, "ALL SAVED JOBS");
+
   const savedTotalCount = useSelector((state) => state.saved.totalCount);
   const savedLoadingStatus = useSelector((state) => state.saved.status);
 
@@ -49,6 +49,7 @@ const page = () => {
   const appliedTotalCount = useSelector((state) => state.applied.totalCount);
   const appliedLoadingStatus = useSelector((state) => state.applied.status);
 
+  // console.log(savedJobs.length, appliedJobs?.length, "ALL SAVED JOBS");
   const jobs = jobType === "saved" ? savedJobs : appliedJobs;
 
   const totalCount = jobType === "saved" ? savedTotalCount : appliedTotalCount;
@@ -65,9 +66,10 @@ const page = () => {
   const savedStatus = useSelector((state) => state.saved.status);
   const appliedStatus = useSelector((state) => state.applied.status);
 
-  const statusLoading = savedStatus || appliedStatus;
+  const statusLoading = jobType === "saved" ? savedStatus : appliedStatus;
 
   const handleJobStatus = (jobStatus) => {
+    console.log("CLICKED", jobStatus);
     if (jobStatus === "saved") {
       setJobType("saved");
     } else {
@@ -88,7 +90,6 @@ const page = () => {
 
   const handleToggleSavedJob = (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
-    console.log(jobId, isSavedValue, "FROM THE SAVED TOGGLE BUTTON ISHAAN");
     dispatch(
       toggleSavedJobs({
         jobId,
@@ -98,14 +99,27 @@ const page = () => {
   };
 
   const handleAppliedJobs = async (jobId) => {
-    await dispatch(applyToJob({ jobId })).unwrap();
+    console.log(jobId, "JOBID DATA");
+    await dispatch(applyToJob(jobId)).unwrap();
     setPage(1);
-    await dispatch(fetchSavedJobs({ sort, page })).unwrap();
+    if (jobType === "saved") {
+      console.log("ANUGRAHA 1", jobType);
+      await dispatch(fetchSavedJobs({ sort, page })).unwrap();
+    } else {
+      await dispatch(
+        fetchAppliedJobs({
+          sort,
+          status,
+          page: 1,
+        }),
+      ).unwrap();
+    }
   };
 
   const handleCancelAppliedJob = async (jobId) => {
     await dispatch(cancelAppliedJobs(jobId)).unwrap();
     setPage(1);
+    console.log("ANUGRAHA 5", jobType);
     await dispatch(
       fetchAppliedJobs({
         sort,
@@ -117,24 +131,26 @@ const page = () => {
 
   useEffect(() => {
     if (jobType === "saved") {
-      // console.log("Fetch Again");
+      console.log("ANUGRAHA 2", jobType);
       dispatch(fetchSavedJobs({ sort, page }));
     } else {
+      console.log("ANUGRAHA 6", jobType);
       dispatch(fetchAppliedJobs({ sort, status, page }));
     }
   }, [jobType, sort, status, page]);
 
-  console.log(jobs, "JOBS DATA");
   const ids = jobs.map((job) => job._id);
 
-  console.log("IDs:", ids);
-  console.log("Jobs:", jobs.length);
-  console.log("Unique IDs:", new Set(ids).size);
+  console.log(jobType, "JOB TYPE VALUE");
+  // console.log("IDs:", ids);
+  // console.log("Jobs:", jobs.length,jobType);
+  // console.log("Unique IDs:", new Set(ids).size);
 
   const uniqueJobs = Array.from(
     new Map(jobs.map((job) => [job._id, job])).values(),
   );
 
+  // console.log(uniqueJobs, "UNIQUE UNIQUE");
   return (
     <div className="p-6 m-6">
       <div className="flex">
@@ -155,7 +171,7 @@ const page = () => {
           Applied Jobs
         </button>
       </div>
-      <div className="relative w-full">
+      {/* <div className="relative w-full">
         <input
           type="text"
           placeholder="Search..."
@@ -163,7 +179,7 @@ const page = () => {
           onChange={(e) => setSearch(e.target.value)}
         />
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-      </div>
+      </div> */}
 
       <div className="relative inline-block">
         <div className="flex items-center gap-2 mt-3">
@@ -177,6 +193,7 @@ const page = () => {
               value={status}
               options={appliedjobStatus}
               onClick={() => {
+                console.log("ANUGRAHA 7", jobType);
                 dispatch(fetchAppliedJobs({ sort, status, page }));
               }}
             />
@@ -191,8 +208,10 @@ const page = () => {
             defaultLabel={defaultLabel}
             onClick={() => {
               if (jobType === "applied") {
+                console.log("ANUGRAHA 8", jobType);
                 dispatch(fetchAppliedJobs({ sort, status, page }));
               } else {
+                console.log("ANUGRAHA 3", jobType);
                 dispatch(fetchSavedJobs({ sort, page }));
               }
             }}
@@ -208,6 +227,11 @@ const page = () => {
           </div>
         ) : uniqueJobs.length > 0 ? (
           uniqueJobs.map((job) => {
+            // const applicationStatus = job.applicationStatus
+            //   ? job.applicationStatus.charAt(0).toUpperCase() +
+            //     job.applicationStatus.slice(1)
+            //   : "Applied";
+            console.log(job?.applicationStatus, "APPLICATION STATUS");
             return (
               <article
                 className="rounded-lg bg-white p-4 shadow mt-7"
@@ -257,15 +281,14 @@ const page = () => {
                     <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
                       <div className="flex items-center gap-2 md:justify-end">
                         <span
-                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus.charAt(0).toUpperCase() + job.applicationStatus.slice(1)).dot}`}
+                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
                         ></span>
                         <p
-                          className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus.charAt(0).toUpperCase() + job.applicationStatus.slice(1)).text}`}
+                          className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
                         >
                           {jobType === "saved"
                             ? job.status
-                            : job.applicationStatus.charAt(0).toUpperCase() +
-                              job.applicationStatus.slice(1)}
+                            : job.applicationStatus}
                         </p>
                       </div>
                     </div>

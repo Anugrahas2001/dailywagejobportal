@@ -11,10 +11,7 @@ export async function GET(request) {
     const sort = searchParams.get("sortType");
     const status = searchParams.get("statusType");
     const page = Math.max(Number(searchParams.get("page")) || 1, 1);
-    const limit = Math.min(
-      Math.max(Number(searchParams.get("limit")) || 12, 1),
-      10,
-    );
+    const limit = Number(searchParams.get("limit")) || 12;
     const skip = (page - 1) * limit;
     console.log(sort, status, page, limit, "PAGE AND LIMIT");
     let sortOption;
@@ -51,8 +48,6 @@ export async function GET(request) {
       ...statusOption,
     };
 
-    console.log(filter, "FILTER DATA", sortOption);
-
     const allAppliedJobs = await JobApplication.find(filter)
       .sort(sortOption)
       .lean()
@@ -77,15 +72,23 @@ export async function GET(request) {
       .map((id) => {
         const job = jobMap.get(String(id));
         const application = applicationMAP.get(String(id));
-
+        console.log(application?.status, "✨✨✨✨✨✨✨✨");
         return {
           ...job,
-          applicationStatus: application?.status,
+          applicationStatus: application.status,
           appliedAt: application?.appliedAt,
         };
       })
       .filter(Boolean);
-    console.log(orderedAppliedJobs, totalCount, "CHECK BOTH");
+
+    console.log(
+      allAppliedJobs.length,
+      totalCount,
+      allAppliedJobIds.length,
+      allJobs.length,
+      orderedAppliedJobs.length,
+      "CHECK THE MAP DATA",
+    );
 
     return NextResponse.json(
       {

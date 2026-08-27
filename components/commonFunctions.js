@@ -46,55 +46,55 @@ export const fetchAvailableJobs = async (role, page) => {
 };
 
 export const getPostedText = ({ createdAt, jobType }) => {
+  console.log(createdAt, jobType, "CHECK BOTH");
   const createdDate = new Date(createdAt);
   const today = new Date();
 
   const diffInMs = today - createdDate;
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  console.log(diffInMs, diffInDays, "CHECK BOTH OF THIS");
 
+  const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
   if (diffInDays === 0) {
-    return "Posted today";
+    return `${postedDay} today`;
   }
 
   if (diffInDays === 1) {
-    return "Posted 1 day ago";
+    return `${postedDay} 1 day ago`;
   }
-  const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
-
   return `${postedDay} ${diffInDays} days ago`;
 };
 
 export function getStatusColor(status) {
-  // const formattedStatus =
-  // status.charAt(0).toUpperCase() + status.slice(1);
+  console.log(status, "STATUS");
 
   switch (status) {
     // Application statuses
-    case "Applied":
+    case "applied":
       return {
         dot: "bg-blue-500",
         text: "text-blue-700",
       };
 
-    case "Viewed":
+    case "viewed":
       return {
         dot: "bg-indigo-500",
         text: "text-indigo-700",
       };
 
-    case "Shortlisted":
+    case "shortlisted":
       return {
         dot: "bg-purple-500",
         text: "text-purple-700",
       };
 
-    case "Accepted":
+    case "accepted":
       return {
         dot: "bg-green-500",
         text: "text-green-700",
       };
 
-    case "Rejected":
+    case "rejected":
       return {
         dot: "bg-red-500",
         text: "text-red-700",
