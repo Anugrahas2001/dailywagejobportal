@@ -37,10 +37,10 @@ import {
 import { applyToJob } from "@/lib/features/workerJobs/appliedjobs/appliedJobThunk";
 import { toggleSavedJobs } from "@/lib/features/workerJobs/savedjobs/savedJobThunk";
 import Loading from "./Loading";
+import SearchAndFilter from "./SearchAndFilter";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
-  // console.log(page, "PAGE NUMBERRRRR");
   const [status, setStatus] = useState("");
   const router = useRouter();
   const dispatch = useDispatch();
@@ -96,6 +96,7 @@ const DashboardPage = ({ role }) => {
   }, [page, status, role, dispatch]);
 
   const goToPage = (p) => {
+    console.log(p, "ANUGRAHA ANUGRAHA");
     if (p >= 1 && p <= totalPages) setPage(p);
   };
 
@@ -137,7 +138,7 @@ const DashboardPage = ({ role }) => {
       {/* Analytics */}
       {role === "worker" && (
         <section className="w-full m-3">
-          <div className="flex items-center bg-white">
+          {/* <div className="flex items-center bg-white">
             <div
               className="m-1 md:m-2 flex flex-1 px-2 items-center rounded-lg border border-gray-300  focus-within:border-blue-500
                 focus-within:ring-2
@@ -159,7 +160,7 @@ const DashboardPage = ({ role }) => {
               Nearby
             </button>
             <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              1000
+              Avilability
             </button>
             <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
               Shift
@@ -170,7 +171,8 @@ const DashboardPage = ({ role }) => {
             <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
               Date
             </button>
-          </div>
+          </div> */}
+          <SearchAndFilter page={page} />
         </section>
       )}
 
@@ -339,7 +341,9 @@ const DashboardPage = ({ role }) => {
                                 AI Matched Profiles
                               </span>
                             </div>
-                            <Link href={`/employerDashboard/appliedworkers?jobId=${job._id}`}>
+                            <Link
+                              href={`/employerDashboard/appliedworkers?jobId=${job._id}`}
+                            >
                               <div className="group relative inline-block">
                                 <button className="flex items-center gap-1 py-2">
                                   <FileUser className="h-5 w-5" />

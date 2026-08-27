@@ -28,22 +28,77 @@ export const JOB_APPLICATION_STATUS = [
   "rejected",
 ];
 
- const statuses = [
-    "All",
-    "Applied",
-    "Viewed",
-    "Shortlisted",
-    "Accepted",
-    "Rejected",
-  ];
+export const filterOptions = {
+  Nearby: [
+    { label: "Within 1 km", value: "1" },
+    { label: "Within 5 km", value: "5" },
+    { label: "Within 10 km", value: "10" },
+    { label: "Within 25 km", value: "25" },
+  ],
 
-export const appliedjobStatus=[
+  Availability: [
+    // { label: "Today", value: "today" },
+    // { label: "Tomorrow", value: "tomorrow" },
+    // { label: "This Week", value: "week" },
+    { value: "same_day", label: "Same Day" },
+    { value: "next_day", label: "Next Day" },
+    { value: "within-1-weeks", label: "within 1 weeks" },
+    { value: "within-2-weeks", label: "within 2 weeks" },
+    { value: "This_month", label: "This Month" },
+  ],
+
+  Shift: [
+    {
+    value: "full_day",
+    label: "Full Day (8:00 AM - 5:00 PM)",
+  },
+  {
+    value: "half_day_morning",
+    label: "Half Day - Morning (8:00 AM - 12:00 PM)",
+  },
+  {
+    value: "half_day_afternoon",
+    label: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
+  },
+  {
+    value: "night_shift",
+    label: "Night Shift (10:00 PM - 6:00 AM)",
+  },
+  {
+    value: "flexible",
+    label: "Flexible Hours",
+  },
+  ],
+
+  Salary: [
+    { label: "Below ₹500", value: "0-500" },
+    { label: "₹500 - ₹1000", value: "500-1000" },
+    { label: "₹1000 - ₹2000", value: "1000-2000" },
+    { label: "Above ₹2000", value: "2000+" },
+  ],
+
+  Date: [
+    { label: "Newest", value: "newest" },
+    { label: "Oldest", value: "oldest" },
+  ],
+};
+
+const statuses = [
+  "All",
+  "Applied",
+  "Viewed",
+  "Shortlisted",
+  "Accepted",
+  "Rejected",
+];
+
+export const appliedjobStatus = [
   { value: "applied", label: "Applied" },
   { value: "viewed", label: "Viewed" },
   { value: "accepted", label: "Accepted" },
   { value: "shortlisted", label: "Shortlisted" },
   { value: "rejected", label: "Rejected" },
-]
+];
 
 export const savedSortingOptions = [
   { value: "newest", label: "Newest Saved" },
@@ -112,12 +167,12 @@ export const SHIFT_TYPES = [
 ];
 
 export const JOINING_TYPES = [
-  { value: "immediate", label: "Immediate" },
+  // { value: "immediate", label: "Immediate" },
   { value: "same_day", label: "Same Day" },
   { value: "next_day", label: "Next Day" },
+  { value: "within-1-weeks", label: "within 1 weeks" },
   { value: "within-2-weeks", label: "within 2 weeks" },
-  { value: "scheduled", label: "Scheduled" },
-  { value: "flexible", label: "Flexible" },
+  { value: "This_month", label: "This Month" },
 ];
 
 export const GENDER_TYPES = [
