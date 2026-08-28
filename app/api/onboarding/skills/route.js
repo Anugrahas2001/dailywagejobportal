@@ -23,9 +23,6 @@ export async function POST(request) {
           onboardPage: 4,
           isOnboardingComplete: false,
         },
-        // $inc: {
-        //   onboardPage: 1,
-        // },
       },
 
       {
@@ -37,7 +34,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        message: "Successfully created skills and bio.",
+        message: "Skills and bio added successfully.",
         result: {
           onboardPage: updatedUser?.onboardPage,
           isOnboardingComplete: updatedUser?.isOnboardingComplete,
@@ -52,7 +49,7 @@ export async function POST(request) {
   } catch (error) {
     return NextResponse.json(
       {
-        message: "Failed to update skills.",
+        message: "Unable to update skills and bio. Please try again.",
         error: error.message,
       },
       {

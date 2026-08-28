@@ -15,12 +15,11 @@ export async function GET(request) {
     const limit = Number(searchParams.get("limit")) || 12;
 
     const skip = (page - 1) * limit;
-    console.log(page, limit, skip, "CHECK THESE 3");
 
     if (!status) {
       return NextResponse.json(
         {
-          message: "Status query parameter is required.",
+          message: "The status query parameter is required.",
         },
         {
           status: 400,
@@ -40,10 +39,9 @@ export async function GET(request) {
     const jobs = await JobDetails.find(filter).lean().skip(skip).limit(limit);
     const totalCount = await JobDetails.countDocuments(filter);
 
-    console.log(jobs.length, "WITH STATUS");
     return NextResponse.json(
       {
-        message: "Successfully fetched jobs.",
+        message: "Jobs fetched successfully.",
         data: jobs,
         totalCount,
       },
@@ -56,7 +54,7 @@ export async function GET(request) {
 
     return NextResponse.json(
       {
-        message: "Failed to fetch jobs.",
+        message: "Unable to fetch jobs. Please try later.",
         error: error.message,
       },
       {

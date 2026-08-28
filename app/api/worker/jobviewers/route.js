@@ -28,7 +28,7 @@ export async function POST(request) {
         workerId: uid,
       },
       {
-        $setOnInsert: validation.data
+        $setOnInsert: validation.data,
       },
       {
         new: false,
@@ -38,11 +38,7 @@ export async function POST(request) {
     );
 
     const isNew = !exJobView?.lastErrorObject?.updatedExisting;
-    console.log(
-      isNew,
-      exJobView?.lastErrorObject?.updatedExisting,
-      "CHECK BOTH",
-    );
+
     const jobViewDoc = isNew ? validation.data : exJobView.value;
 
     // Only bump the counter when this is a genuinely new viewer
@@ -57,7 +53,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        message: "Successfully updated the jov view count.",
+        message: "Job view count updated successfully.",
         data: jobViewDoc,
       },
       {
@@ -68,10 +64,10 @@ export async function POST(request) {
     console.log(error);
     return NextResponse.json(
       {
-        message: "Failed to create the job view document.",
+        message: "Unable to update the job view count. Please try again later.",
       },
       {
-        status: 200,
+        status: 500,
       },
     );
   }

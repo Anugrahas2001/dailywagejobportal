@@ -30,7 +30,6 @@ export async function DELETE(request, { params }) {
       },
     );
 
-    console.log(deletedJob, "DELETED JOBBB");
     if (!deletedJob) {
       return NextResponse.json(
         {
@@ -46,7 +45,7 @@ export async function DELETE(request, { params }) {
       {
         message: "Job deleted successfully.",
         jobId: deletedJob._id,
-        status:deletedJob.status,
+        status: deletedJob.status,
       },
       {
         status: 200,
@@ -57,7 +56,7 @@ export async function DELETE(request, { params }) {
 
     return NextResponse.json(
       {
-        message: "Failed to delete job.",
+        message: "Unable to delete the job. Please try again.",
         error: error.message,
       },
       {
@@ -78,7 +77,6 @@ export async function PUT(request, { params }) {
       return validationError(validation);
     }
     const data = validation.data;
-    console.log(data, "%%%%%%%%%%%%%%");
     const updatedJob = await JobDeatils.findOneAndUpdate(
       {
         _id: id,
@@ -95,7 +93,7 @@ export async function PUT(request, { params }) {
     if (!updatedJob) {
       return NextResponse.json(
         {
-          message: "Job not found",
+          message: "Job not found.",
         },
         {
           status: 404,
@@ -104,7 +102,7 @@ export async function PUT(request, { params }) {
     }
     return NextResponse.json(
       {
-        message: "Successfully Updated the job",
+        message: "Job updated successfully.",
       },
       {
         status: 200,
@@ -114,7 +112,7 @@ export async function PUT(request, { params }) {
     console.log(error);
     return NextResponse.json(
       {
-        message: "Failed to update the job details.",
+        message: "Unable to update the job. Please try later.",
         error: error.message,
       },
       {
@@ -133,17 +131,17 @@ export async function GET(request, { params }) {
     if (!job) {
       return NextResponse.json(
         {
-          message: "Job  not found.",
+          message: "Job not found.",
         },
         {
           status: 404,
         },
       );
     }
-    console.log(job, "JOB DATA");
+
     return NextResponse.json(
       {
-        message: "Successfully fetched the job.",
+        message: "Job Details fetched successfully.",
         job,
       },
       {
@@ -154,7 +152,7 @@ export async function GET(request, { params }) {
     console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Failed to fetch the job details.",
+        message: "Unable to fetch the job details. Please try later.",
         error: error.message,
       },
       {

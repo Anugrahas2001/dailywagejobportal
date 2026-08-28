@@ -13,7 +13,7 @@ export async function GET(request) {
     const page = Math.max(Number(searchParams.get("page")) || 1, 1);
     const limit = Number(searchParams.get("limit")) || 12;
     const skip = (page - 1) * limit;
-    console.log(sort, status, page, limit, "PAGE AND LIMIT");
+
     let sortOption;
     let statusOption;
 
@@ -81,18 +81,18 @@ export async function GET(request) {
       })
       .filter(Boolean);
 
-    console.log(
-      allAppliedJobs.length,
-      totalCount,
-      allAppliedJobIds.length,
-      allJobs.length,
-      orderedAppliedJobs.length,
-      "CHECK THE MAP DATA",
-    );
+    // console.log(
+    //   allAppliedJobs.length,
+    //   totalCount,
+    //   allAppliedJobIds.length,
+    //   allJobs.length,
+    //   orderedAppliedJobs.length,
+    //   "CHECK THE MAP DATA",
+    // );
 
     return NextResponse.json(
       {
-        message: "Successfully fetched all the applied jobs.",
+        message: "Applied jobs fetched successfully.",
         data: orderedAppliedJobs,
         totalCount,
       },
@@ -104,7 +104,7 @@ export async function GET(request) {
     console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Failed to fetch applied jobs.",
+        message: "Unable to fetch applied jobs. Please try again later.",
       },
       {
         status: 500,
@@ -117,7 +117,6 @@ export async function PUT(request) {
   try {
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
-    console.log(body, "BODY DATAAA");
     const updatedJob = await JobApplication.findOneAndUpdate(
       { jobId: body.jobId, workerId: uid },
       {
@@ -130,7 +129,6 @@ export async function PUT(request) {
         upsert: false,
       },
     );
-    console.log(updatedJob, "UPDATED JOBSS");
 
     await JobDetails.findOneAndUpdate(
       { _id: body.jobId },
@@ -155,7 +153,7 @@ export async function PUT(request) {
 
     return NextResponse.json(
       {
-        message: "Successfully cancelled the job application.",
+        message: "Your job application has been cancelled successfully.",
         data: updatedJob?.jobId,
         isJobDeleted: updatedJob?.isDeleted,
       },
@@ -164,8 +162,14 @@ export async function PUT(request) {
       },
     );
   } catch (error) {
-    return NextResponse.json({
-      message: "failed to cancel the job.",
-    });
+    console.log(error, "ERROR");
+    return NextResponse.json(
+      {
+        message: "Unable to cancel the job. Please try again later.",
+      },
+      {
+        status: 500,
+      },
+    );
   }
 }

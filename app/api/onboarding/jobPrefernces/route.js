@@ -33,9 +33,6 @@ export async function POST(request) {
           onboardPage:3,
           isOnboardingComplete: false,
         },
-        // $inc: {
-        //   onboardPage: 1,
-        // },
       },
       {
         new: true,
@@ -53,7 +50,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        message: "Successfully created Job Preferences.",
+        message: "Job preferences created successfully.",
         result: {
           onboardPage: updatedUser?.onboardPage,
           isOnboardingComplete: updatedUser?.isOnboardingComplete,
@@ -67,7 +64,7 @@ export async function POST(request) {
     console.error("jobPreferences POST error:", error);
     return NextResponse.json(
       {
-        message: "Failed create job prefrenecs.",
+       message: "Unable to create job preferences. Please try again.",
         error: error,
       },
       {

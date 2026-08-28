@@ -26,9 +26,6 @@ export async function POST(request) {
           onboardPage: 2,
           isOnboardingComplete: false,
         },
-        // $inc: {
-        //   onboardPage: 1,
-        // },
       },
       {
         new: true,
@@ -48,7 +45,7 @@ export async function POST(request) {
       );
     }
     return NextResponse.json({
-      message: "Onboarding Step1 completed successfully.",
+      message: "Step 1 of onboarding completed successfully.",
       result: {
         name: updatedUser?.name,
         profileImage: updatedUser?.updatedUser,
@@ -61,7 +58,7 @@ export async function POST(request) {
     console.log(error, "ERROR FROM INTERNAL");
     return NextResponse.json(
       {
-        message: "Failed to complete onboarding step1.",
+        message: "Unable to complete Step 1 of onboarding. Please try again.",
         error: error,
       },
       {

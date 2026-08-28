@@ -47,7 +47,6 @@ export async function POST(request) {
       },
     );
 
-    console.log(existingUser, "EXISTING USER");
     const isNew = !existingUser?.lastErrorObject?.updatedExisting;
     console.log(
       isNew,
@@ -55,15 +54,14 @@ export async function POST(request) {
       "CHECK BOTH",
     );
     const userDoc = isNew ? validation.data : existingUser.value;
-    console.log(
-      isNew,
-      userDoc,
-      validation.data,
-      "##########################################",
-    );
+
     if (!isNew && userDoc.role !== role) {
       return NextResponse.json(
-        { success: false, role: userDoc.role, message: "Role mismatch." },
+        {
+          success: false,
+          role: userDoc.role,
+          message: "The selected role does not match your current role.",
+        },
         { status: 403 },
       );
     }
@@ -73,7 +71,6 @@ export async function POST(request) {
         success: true,
         message: isNew ? "User created successfully." : "User already exists.",
         data: {
-        
           onboardPage: userDoc.onboardPage || 1,
           isOnboardingComplete: userDoc.isOnboardingComplete || false,
           role: userDoc.role,
@@ -86,8 +83,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        success: false,
-        message: "Internal server error.",
+        message: "Unable to log in. Please try again.",
       },
       { status: 500 },
     );

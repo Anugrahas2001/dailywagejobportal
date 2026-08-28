@@ -60,10 +60,9 @@ export async function GET(request) {
       status: jobApplicationMap.get(String(user._id))?.status,
     }));
 
-    console.log(data, "USER APPLICATION AND JOB PREFERENEC");
-
     return NextResponse.json(
       {
+        message: "User personal and job details fetched successfully.",
         data,
         totalCount,
       },
@@ -76,7 +75,8 @@ export async function GET(request) {
 
     return NextResponse.json(
       {
-        message: "Failed to fetch the worker details.",
+        message:
+          "Unable to fetch the worker's personal and job details. Please try again.",
       },
       {
         status: 500,

@@ -67,7 +67,7 @@ export async function POST(request) {
     console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Failed to craete saved jobs.",
+        message: "Unable to save the job. Please try again later.",
       },
       {
         status: 500,
@@ -161,7 +161,7 @@ export async function GET(request) {
       .filter(Boolean);
     return NextResponse.json(
       {
-        message: "Successfully fetched the data.",
+        message: "Saved jobs fetched successfully.",
         data: orderedJobs,
         totalCount: orderedJobs?.length,
       },
@@ -173,7 +173,7 @@ export async function GET(request) {
     console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Failed to fetch all the saved jobs.",
+        message: "Unable to fetch saved jobs. Please try again later.",
       },
       {
         status: 500,

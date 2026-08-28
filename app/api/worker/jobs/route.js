@@ -14,7 +14,7 @@ export async function POST(request) {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
-    console.log(body, "FOR APPLYING A JOB");
+
     const jobObj = {
       _id: generateId(),
       jobId: body.jobId,
@@ -24,19 +24,17 @@ export async function POST(request) {
     if (!validation.success) {
       return validationError(validation);
     }
-    console.log(validation.data, "VALIDATION DATA");
 
     const alreadyApplied = await JobApplication.findOne({
       jobId: body.jobId,
       workerId: uid,
-      status:"applied",
-      // cancelled:false
+      status: { $ne: "rejected" },
     });
 
     if (alreadyApplied) {
       return NextResponse.json(
         {
-          message: "You have already applied.",
+          message: "You have already applied for this job.",
         },
         {
           status: 409,
@@ -45,7 +43,7 @@ export async function POST(request) {
     }
 
     const application = await JobApplication.create(validation.data);
-    console.log(application, "APPLICATION CREATED");
+
     const updateApplicantCount = await JobDetails.findByIdAndUpdate(
       { _id: body.jobId },
       {
@@ -64,16 +62,15 @@ export async function POST(request) {
         },
       },
       {
-        returnDocument:"after",
-        upsert:false
+        returnDocument: "after",
+        upsert: false,
       },
     );
     console.log(updateApplicantCount, "CHECK THIS VALUE APPLIED");
     return NextResponse.json(
       {
-        message: "Sucessfully created the job Apllication.",
+        message: "Your job application was submitted successfully.",
         data: updateApplicantCount,
-        
       },
       {
         status: 201,
@@ -83,7 +80,7 @@ export async function POST(request) {
     console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Failed to create a job application.",
+        message: "Unable to submit your job application. Please try again.",
       },
       {
         status: 500,
@@ -104,7 +101,7 @@ export async function GET(request) {
     const limit = Number(searchParams.get("limit")) || 12;
 
     const skip = (page - 1) * limit;
-    console.log(page, skip, "CHECK THESE 2");
+
     if (!status) {
       return NextResponse.json(
         {
@@ -133,7 +130,6 @@ export async function GET(request) {
     ).lean();
 
     const savedJobIds = allSavedJobs.map((job) => job.jobId);
-    console.log(savedJobIds, "ALL SAVES IDS");
     const excludedIds = [...appliedJobIds, ...savedJobIds];
     console.log(excludedIds, "ALL THE EXCLUDEDiDS");
     const filter = {
@@ -144,8 +140,6 @@ export async function GET(request) {
     if (status !== "All") {
       filter.status = status;
     }
-
-    console.log(filter, "FILTER DATA");
 
     const jobs = await JobDetails.find(filter)
       .sort({ createdAt: -1 })
@@ -160,7 +154,7 @@ export async function GET(request) {
     console.log(jobs.length, totalCount, "ALL WORKER JOBS");
     return NextResponse.json(
       {
-        message: "Successfully fetched jobs.",
+        message: "Jobs fetched successfully.",
         data: jobs,
         totalCount,
       },
@@ -173,7 +167,7 @@ export async function GET(request) {
 
     return NextResponse.json(
       {
-        message: "Failed to fetch jobs.",
+        message: "Unable to fetch jobs. Please try again later.",
         error: error.message,
       },
       {

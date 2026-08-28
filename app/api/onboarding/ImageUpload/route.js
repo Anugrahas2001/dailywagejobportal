@@ -28,9 +28,6 @@ export async function POST(request) {
           profileImage: data.profileImage,
           isOnboardingComplete: false,
         },
-        // $inc: {
-        //   onboardPage: 1,
-        // },
       },
       {
         new: true,
@@ -44,7 +41,7 @@ export async function POST(request) {
     }
     return NextResponse.json(
       {
-        message: "Successfully uploaded profileImage.",
+        message: "Profile image uploaded successfully.",
         result: {
           onboardPage: updatedUser?.onboardPage,
           profileImage: updatedUser?.profileImage,
@@ -59,7 +56,7 @@ export async function POST(request) {
   } catch (error) {
     return NextResponse.json(
       {
-        message: "Failed to uploaded profileImage.",
+        message: "Unable to upload the profile image. Please try again.",
         error: error.message,
       },
       {

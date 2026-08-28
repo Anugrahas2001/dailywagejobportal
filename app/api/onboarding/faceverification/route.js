@@ -7,8 +7,17 @@ import { NextResponse } from "next/server";
 
 async function imageUrlToBuffer(imageUrl) {
   const response = await fetch(imageUrl);
+
   if (!response.ok) {
-    throw new Error("Unable to fetch profile image.");
+    return NextResponse.json(
+      {
+        success: false,
+        message: "Unable to fetch the profile image.",
+      },
+      {
+        status: 502,
+      },
+    );
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -28,7 +37,7 @@ export async function POST(request) {
     if (!sourceImage?.profileImage) {
       return NextResponse.json(
         {
-          message: "Profile Image not found.",
+          message: "Profile image not found.",
         },
         {
           status: 400,
@@ -80,12 +89,9 @@ export async function POST(request) {
       {
         $set: {
           isVerified: true,
-          onboardPage:6,
+          onboardPage: 6,
           isOnboardingComplete: true,
         },
-        // $inc: {
-        //   onboardPage: 1,
-        // },
       },
       {
         new: true,
@@ -100,7 +106,7 @@ export async function POST(request) {
       result: {
         onboardPage: updatedUser?.onboardPage,
         isOnboardingComplete: updatedUser?.isOnboardingComplete,
-        profileImage:updatedUser?.profileImage,
+        profileImage: updatedUser?.profileImage,
         role: updatedUser?.role,
       },
 
@@ -109,10 +115,11 @@ export async function POST(request) {
         : "Verification failed - faces do not match sufficiently",
     });
   } catch (error) {
-    console.log(error, "=============================");
+    console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
-        message: "Face verification failed",
+        message:
+          "Unable to complete face verification. Please try again later.",
         error: error.message,
       },
       {

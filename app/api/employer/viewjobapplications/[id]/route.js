@@ -8,15 +8,12 @@ import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
   try {
-    console.log("🔥🔥🔥 DYNAMIC ROUTE HIT 🔥🔥🔥");
     await connectDB();
 
     const { uid } = await verifyFirebaseToken(request);
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
-
-    console.log(id,jobId, "USER ID");
 
     const jobApplicationStatus = await JobApplication.findOne({
       workerId: id,
@@ -38,10 +35,9 @@ export async function GET(request, { params }) {
       JobPreferences.findOne({ userId: id }).lean(),
     ]);
 
-    console.log(user, jobPref, "ALL THE DATA");
-
     return NextResponse.json(
       {
+        message: "Job and user details fetched successfully.",
         data: {
           ...user,
           ...jobPref,
@@ -57,7 +53,8 @@ export async function GET(request, { params }) {
 
     return NextResponse.json(
       {
-        message: "Failed to fetch the job and user details of this user",
+        message:
+          "Unable to fetch the job and user details. Please try again.",
       },
       {
         status: 500,
@@ -70,15 +67,7 @@ export async function PUT(request, { params }) {
   try {
     const { uid } = await verifyFirebaseToken(request);
     const { status, jobId } = await request.json();
-
     const { id } = await params;
-
-    console.log(uid);
-    console.log(status);
-    console.log(jobId);
-    console.log(id);
-
-    console.log(status, jobId, id, "========================");
 
     const jobApplication = await JobApplication.findOneAndUpdate(
       { jobId, workerId: id },
@@ -107,9 +96,9 @@ export async function PUT(request, { params }) {
       );
     }
 
-    console.log(jobApplication, "CHECK THE VALUE");
     return NextResponse.json(
       {
+        message: "Job application status updated successfully.",
         data: jobApplication,
       },
       {
@@ -119,7 +108,9 @@ export async function PUT(request, { params }) {
   } catch (error) {
     console.log(error, "ERROR DATA");
     return NextResponse.json({
-      message: "Failed to update the job APplication status",
+      message: "Unable to update the job application status. Please try agin.",
+    },{
+      status:500
     });
   }
 }

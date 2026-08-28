@@ -21,7 +21,6 @@ export async function GET(request) {
     const availability = searchParams.get("availability");
     const date = searchParams.get("sortType");
 
-    console.log(page, limit, "PAGE AND LIMIT");
     console.log(search, nearby, shift, salary, date, "SEARCH");
     const skip = (page - 1) * limit;
 
@@ -33,7 +32,6 @@ export async function GET(request) {
     ).lean();
 
     const appliedJobIds = appliedJobs.map((job) => job.jobId);
-    console.log(appliedJobIds, "APPLIED IDS");
     const allSavedJobs = await SavedJobs.find(
       {
         workerId: uid,
@@ -44,7 +42,6 @@ export async function GET(request) {
     ).lean();
 
     const savedJobIds = allSavedJobs.map((job) => job.jobId);
-    console.log(savedJobIds, "ALL SAVES IDS");
     const excludedIds = [...appliedJobIds, ...savedJobIds];
     console.log(excludedIds.length, "ALL THE EXCLUDEDiDS");
 
@@ -105,7 +102,7 @@ export async function GET(request) {
           return NextResponse.json(
             {
               message:
-                "User longitude and latitude are required for nearby search.",
+                "Latitude and longitude are required to search for nearby jobs.",
             },
             {
               status: 400,
@@ -125,18 +122,6 @@ export async function GET(request) {
       }
     }
 
-    //     let sort = .sort({
-    //   createdAt: sortType === "oldest" ? 1 : -1
-    // })
-
-    //     if (date === "oldest") {
-    //       console.log("=======================1");
-    //       sort = {
-    //         createdAt: 1,
-    //       };
-    //       console.log("=======================2");
-    //     }
-
     let query = JobDetails.find(filter);
 
     if (!nearby) {
@@ -144,39 +129,32 @@ export async function GET(request) {
       query = query.sort({
         createdAt: date === "oldest" ? 1 : -1,
       });
-      console.log("=======================3");
     }
 
     console.log(filter, "CHECK THE FILTER");
-
-    // const [allJobs, totalCount] = await Promise.all([
-    //   query.skip(skip).limit(limit),
-    //   JobDetails.countDocuments(filter),
-    // ]);
-
-    // console.log(allJobs.length, "ALL JOBS", totalCount);
 
     const [allJobs, totalCount] = await Promise.all([
       query.skip(skip).limit(limit).lean(),
       JobDetails.countDocuments(filter),
     ]);
-    console.log("=======================4");
+    // console.log("=======================4");
 
-    console.log(
-      "RESULT ORDER:",
-      allJobs.map((job) => ({
-        id: job._id,
-        createdAt: job.createdAt,
-      })),
-    );
+    // console.log(
+    //   "RESULT ORDER:",
+    //   allJobs.map((job) => ({
+    //     id: job._id,
+    //     createdAt: job.createdAt,
+    //   })),
+    // );
 
-    console.log(date,"=======================5");
+    // console.log(date, "=======================5");
 
     return NextResponse.json(
       {
         data: allJobs,
         totalCount,
-        sortType:date
+        sortType: date,
+        message: "Search and filter results fetched successfully.",
       },
       {
         status: 200,
@@ -187,7 +165,8 @@ export async function GET(request) {
 
     return NextResponse.json(
       {
-        message: "Failed to perform the search and filter operations.",
+        message:
+          "Unable to fetch search and filter results. Please try again later.",
       },
       {
         status: 500,

@@ -15,30 +15,24 @@ import useLoading from "@/components/hooks/useLoading";
 import Loading from "@/components/Loading";
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/lib/features/profiles/userThunk";
+import Error from "@/components/Error";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 
 const LoginForm = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { loading, setLoading } = useLoading();
-  const searchParams = useSearchParams();
   const dispatch = useDispatch();
-
+  const searchParams = useSearchParams();
   const role = searchParams.get("role");
-  console.log(role, "USER ROLE DATA");
   const onboardPage = useSelector((state) => state.user.onboardPage);
   const isOnboardingComplete = useSelector(
     (state) => state.user.isOnboardingCompleted,
   );
   const status = useSelector((state) => state.user.status);
-
   const userRole = useSelector((state) => state.user.role);
-  console.log(
-    onboardPage,
-    isOnboardingComplete,
-    userRole,
-    "ALL FROM STORE TO THE LOGIN PAGE",
-  );
+  const error = useSelector((state) => state.user.error);
 
   const handleLoginForm = async (e) => {
     e.preventDefault();
@@ -65,8 +59,13 @@ const LoginForm = () => {
       if (auth.currentUser) {
         const token = await auth.currentUser.getIdToken();
 
-        dispatch(login({ token, role }));
-        return;
+        try {
+          await dispatch(login({ token, role })).unwrap();
+          return;
+        } catch (error) {
+          // Login failed
+          console.log(error.message || "Login failed:", error);
+        }
       }
 
       try {
@@ -114,7 +113,12 @@ const LoginForm = () => {
 
       const token = await userCredential.user.getIdToken();
 
-      dispatch(login({ token, role }));
+      try {
+          await dispatch(login({ token, role })).unwrap();
+        } catch (error) {
+          // Login failed
+          console.log(error.message || "Login failed:", error);
+        }
       setEmail("");
       setPassword("");
     } catch (error) {
@@ -130,7 +134,7 @@ const LoginForm = () => {
       const Provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, Provider);
       const token = await result.user.getIdToken();
-      dispatch(login({ token, role }));
+      await dispatch(login({ token, role })).unwrap();
       return;
     } catch (err) {
       alert(err.message);
@@ -163,7 +167,7 @@ const LoginForm = () => {
 
       // Onboarding completed
       if (isOnboardingComplete) {
-        console.log(userRole,role, "USER ROLE DATA");
+        console.log(userRole, role, "USER ROLE DATA");
         router.replace(
           role === "worker" ? "/workerDashboard" : "/employerDashboard",
         );
@@ -224,7 +228,10 @@ const LoginForm = () => {
           </button>
         </div>
       </div>
-      {status === "pending" || (loading && <Loading />)}
+      {(status === "pending" || loading) && <Loading />}
+      {error && (
+        <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
+      )}
     </div>
   );
 };

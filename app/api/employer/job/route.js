@@ -19,8 +19,6 @@ export async function POST(request) {
       ...body,
     };
 
-    // console.log(obj, "FOR VALIDATION");
-
     const validation = validate(jobDetailSchema, obj);
 
     if (!validation.success) {
@@ -28,7 +26,7 @@ export async function POST(request) {
     }
 
     const newJob = await JobDetails.create(validation.data);
-    console.log(newJob, "THE NEW JOB CREATED");
+
     return NextResponse.json(
       {
         message: "A new job created successfully.",
@@ -42,7 +40,7 @@ export async function POST(request) {
     console.log(error, "BACKEND ERROR");
     return NextResponse.json(
       {
-        message: "failed to create a new job.",
+        message: "Unable to create the job. Please try again later.",
         error: error.message,
       },
       {
@@ -51,85 +49,6 @@ export async function POST(request) {
     );
   }
 }
-
-// export async function GET(request) {
-//   try {
-//     await connectDB();
-//     const counts = {
-//       All: 0,
-//       Active: 0,
-//       Paused: 0,
-//       Completed: 0,
-//     };
-
-//     console.log("I'M STARTING TOEXECUTE");
-//     const { uid } = await verifyFirebaseToken(request);
-//     const { searchParams } = new URL(request.url);
-//     const page = Number(searchParams.get("page")) || 1;
-//     const limit = Number(searchParams.get("limit")) || 10;
-
-//     const skip = (page - 1) * limit;
-
-//     const allJobs = await JobDetails.find({
-//       employerId: uid,
-//       isDeleted: false,
-//       // _id: { $nin: appliedJobIds },
-//     })
-//       .lean();
-
-//     console.log(allJobs, "ALL THE AVAILABLE JOBS",allJobs.length);
-//     for (const job of allJobs) {
-//       if (counts[job.status] !== undefined) {
-//         counts[job.status]++;
-//         console.log(counts[job.status], "DATA");
-//       }
-//     }
-//     counts.All = allJobs.length;
-//     console.log(counts, "&&&&&&&&&&&&");
-
-//     const allJobsIds = allJobs.map((job) => job?._id);
-
-//     const numberofApplications = await JobApplication.aggregate([
-//       {
-//         $match: {
-//           jobId: { $in: allJobsIds },
-//           status: { $in: ["applied", "viewed", "shortlisted"] },
-//           cancelled: false,
-//         },
-//       },
-//       {
-//         $group: {
-//           _id: "$jobId",
-//           totalApplications: { $sum: 1 },
-//         },
-//       },
-//     ]);
-
-//     console.log(numberofApplications, "CHECK THIS");
-
-//     return NextResponse.json(
-//       {
-//         message: "Successfully fetched all the available jobs.",
-//         data: allJobs,
-//         counts,
-//         numberofApplications,
-//       },
-//       {
-//         status: 200,
-//       },
-//     );
-//   } catch (error) {
-//     console.log(error);
-//     return NextResponse.json(
-//       {
-//         message: "Failed to fetch all the avilable jobs.",
-//       },
-//       {
-//         status: 500,
-//       },
-//     );
-//   }
-// }
 
 export async function GET(request) {
   try {
@@ -181,7 +100,7 @@ export async function GET(request) {
         message: "Successfully fetched all the available jobs.",
         data: result.jobs,
         counts,
-        totalCount:result.totalCount[0]?.count
+        totalCount: result.totalCount[0]?.count,
       },
       { status: 200 },
     );
