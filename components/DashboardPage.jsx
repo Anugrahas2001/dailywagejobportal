@@ -66,7 +66,11 @@ const DashboardPage = ({ role }) => {
       : empJobs;
 
   // console.log(jobs?.length, role, jobs, "LENGTH OF THE JOBS");
-  const totalCount = useSelector((state) => state.jobs.totalCount);
+  const totalCountJobs = useSelector((state) => state.jobs.totalCount);
+  const searchTotalCount = useSelector((state) => state.searchJobs.totalCount);
+
+  const totalCount = activeSearch ? searchTotalCount : totalCountJobs;
+
   const count = useSelector((state) => state.jobs.statusCounts);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 0;
@@ -125,9 +129,9 @@ const DashboardPage = ({ role }) => {
   const handleAppliedJob = async (jobId) => {
     console.log(jobId, "JOB ID DATA");
     await dispatch(
-      applyToJob({
+      applyToJob(
         jobId,
-      }),
+      ),
     ).unwrap();
     setPage(1);
     await dispatch(fetchActiveJobs({ page: 1 })).unwrap();

@@ -1,7 +1,9 @@
 "use client";
 
+import Error from "@/components/Error";
 import Loading from "@/components/Loading";
 import { EXPERIENCE_LEVELS, JOB_SKILLS } from "@/constants/constant";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step3Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
@@ -17,6 +19,7 @@ const Step3 = () => {
   const jobCategory = searchParams.get("category");
   const dispatch = useDispatch();
   const status = useSelector((state) => state.user.status);
+  const error = useSelector((state) => state.user.error);
 
   const skillsRequired = JOB_SKILLS[jobCategory] || [];
 
@@ -38,14 +41,18 @@ const Step3 = () => {
   };
 
   const handleSubmission = async () => {
+    if (skills.length < 3) {
+      alert("Please add at least 3 skills before continuing.");
+      return;
+    }
+
     const data = {
       bio,
       skills,
     };
-    const { onboardPage, isOnboardingComplete } = await dispatch(
-      step3Onboarding({ body: data }),
-    ).unwrap();
- 
+    const { result } = await dispatch(step3Onboarding({ body: data })).unwrap();
+    console.log(result, "RESULT DATA SKILLS");
+    const { onboardPage, isOnboardingComplete } = result;
     router.push(`/onboarding/${onboardPage}`);
   };
 
@@ -134,22 +141,22 @@ const Step3 = () => {
       </div>
       {/* Cards */}
       {skills.length > 0 && (
-        <div className="rounded-lg m-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="rounded-lg m-5 grid grid-cols-1 md:grid-cols-3 gap-4">
           {skills.map((skill, index) => (
-            <div key={index} className="rounded-lg border p-4 bg-amber-50">
-              <div className="flex justify-center text-lg pt-3">
+            <div key={index} className="rounded-lg border">
+              <div className="flex justify-center pt-3">
                 <h2>Skill:</h2>
                 <h2 className="mx-2">{skill.skill}</h2>
               </div>
-              <div className="flex justify-center text-lg">
+              <div className="flex justify-center">
                 <h2>Experience:</h2>
-                <h2 className="mx-2">{skill.experience}</h2>
+                <h2 className="">{skill.experience}</h2>
               </div>
               <div className="flex justify-center gap-2 m-3">
-                <button className="rounded-lg bg-blue-600 px-4 py-2 text-white">
+                <button className="rounded-lg bg-blue-600 px-3 py-1 text-white">
                   Edit
                 </button>
-                <button className="rounded-lg bg-blue-600 px-4 py-2 text-white">
+                <button className="rounded-lg bg-blue-600 px-3 py-1 text-white">
                   Delete
                 </button>
               </div>
@@ -163,12 +170,15 @@ const Step3 = () => {
           disabled={status === "pending"}
           type="submit"
           onClick={handleSubmission}
-          className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {status === "pending" ? "Submitting..." : "Submit"}
         </button>
       </div>
       {status === "pending" && <Loading />}
+      {error && (
+        <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
+      )}
     </div>
   );
 };

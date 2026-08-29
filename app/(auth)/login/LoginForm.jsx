@@ -114,11 +114,11 @@ const LoginForm = () => {
       const token = await userCredential.user.getIdToken();
 
       try {
-          await dispatch(login({ token, role })).unwrap();
-        } catch (error) {
-          // Login failed
-          console.log(error.message || "Login failed:", error);
-        }
+        await dispatch(login({ token, role })).unwrap();
+      } catch (error) {
+        // Login failed
+        console.log(error.message || "Login failed:", error);
+      }
       setEmail("");
       setPassword("");
     } catch (error) {
@@ -207,7 +207,7 @@ const LoginForm = () => {
               disabled={loading}
               className="bg-blue-700 w-36 mt-4 h-12 rounded-sm cursor-pointer text-white font-semibold"
             >
-              {loading ? "Please wait..." : "Login"}
+              {loading && status === "pending" ? "Please wait..." : "Login"}
             </button>
           </div>
         </form>
@@ -224,7 +224,7 @@ const LoginForm = () => {
             className="w-10 h-10 bg-white object-none object-center m-1 rounded-full"
           />
           <button className="rounded-lg cursor-pointer text-white font-semibold w-64">
-            Sign In with Google
+            {status === "pending" ? "Please wait" : "Sign In with Google"}
           </button>
         </div>
       </div>

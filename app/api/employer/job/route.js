@@ -29,7 +29,7 @@ export async function POST(request) {
 
     return NextResponse.json(
       {
-        message: "A new job created successfully.",
+        message: "New job created successfully.",
         data: newJob,
       },
       {

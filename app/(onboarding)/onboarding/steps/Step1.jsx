@@ -11,6 +11,8 @@ import { GENDER_TYPES } from "@/constants/constant";
 import useCurrentLocationHook from "@/components/hooks/useCurrentLocation";
 import { useDispatch, useSelector } from "react-redux";
 import { step1Onboarding } from "@/lib/features/profiles/userThunk";
+import Error from "@/components/Error";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 
 const Step1 = () => {
   const {
@@ -21,6 +23,7 @@ const Step1 = () => {
     handleSubmit,
     formState: { errors },
   } = useForm({
+    mode: "onChange",
     dob: null,
     name: "",
     gender: "",
@@ -44,6 +47,7 @@ const Step1 = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const status = useSelector((state) => state.user.status);
+  const error = useSelector((state) => state.user.error);
 
   const handleToggle = () => {
     const enabled = !useCurrentLocation;
@@ -53,13 +57,25 @@ const Step1 = () => {
     if (enabled) {
       handleCurrentLocation();
     } else {
-      setValue("city", "");
-      setValue("state", "");
-      setValue("country", "");
-      setValue("location", {
-        type: "Point",
-        coordinates: [],
+      setValue("city", "", {
+        shouldValidate: true,
       });
+      setValue("state", "", {
+        shouldValidate: true,
+      });
+      setValue("country", "", {
+        shouldValidate: true,
+      });
+      setValue(
+        "location",
+        {
+          type: "Point",
+          coordinates: [],
+        },
+        {
+          shouldValidate: true,
+        },
+      );
     }
   };
 
@@ -68,14 +84,26 @@ const Step1 = () => {
       setLoading(true);
       const location = await getLocation();
 
-      setValue("location", {
-        type: "Point",
-        coordinates: location.coordinates,
-      });
+      setValue(
+        "location",
+        {
+          type: "Point",
+          coordinates: location.coordinates,
+        },
+        {
+          shouldValidate: true,
+        },
+      );
 
-      setValue("city", location.city);
-      setValue("state", location.state);
-      setValue("country", location.country);
+      setValue("city", location.city, {
+        shouldValidate: true,
+      });
+      setValue("state", location.state, {
+        shouldValidate: true,
+      });
+      setValue("country", location.country, {
+        shouldValidate: true,
+      });
     } catch (error) {
       console.error(error);
 
@@ -114,16 +142,10 @@ const Step1 = () => {
       mobileNumber: data.mobileNumber,
     };
 
-    const { role, onboardPage, isOnboardingComplete } = await dispatch(
-      step1Onboarding({ data: body }),
-    ).unwrap();
-   
-    console.log("================ STEP1");
-    // if (role === "employer") {
-      router.push(`/onboarding/${onboardPage}`);
-    // } else {
-    //   router.push(`/onboarding/${onboardPage}`);
-    // }
+    const { result } = await dispatch(step1Onboarding({ data: body })).unwrap();
+    const { role, onboardPage, isOnboardingComplete } = result;
+    console.log(onboardPage, "CHECK THIS VALUE");
+    router.push(`/onboarding/${onboardPage}`);
   };
 
   return (
@@ -167,9 +189,10 @@ const Step1 = () => {
           {...register("gender", {
             required: "Please select a gender",
           })}
+          error={errors.gender?.message}
         />
 
-        {errors.gender && <p>{errors.gender.message}</p>}
+        {/* {errors.gender && <p></p>} */}
 
         <div className="flex flex-col gap-1 w-full max-w-xs">
           <label htmlFor="dob" className="text-sm font-medium">
@@ -375,7 +398,10 @@ const Step1 = () => {
           </button>
         </div>
       </form>
-      {status === "pending" || (loading && <Loading />)}
+      {(status === "pending" || loading) && <Loading />}
+      {error && (
+        <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
+      )}
     </div>
   );
 };

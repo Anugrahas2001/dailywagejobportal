@@ -147,7 +147,7 @@ export async function GET(request) {
     //   })),
     // );
 
-    // console.log(date, "=======================5");
+    console.log(allJobs.length,totalCount, "=======================5");
 
     return NextResponse.json(
       {

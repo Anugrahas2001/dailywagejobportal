@@ -188,7 +188,7 @@ const JobForm = ({ mode, initialData }) => {
       //   body: JSON.stringify(data),
       // });
 
-      dispatch(createJob({data}))
+      dispatch(createJob({body:data}))
       
     } else {
       // await fetch(`/api/employer/job/${initialData._id}`, {
@@ -198,7 +198,7 @@ const JobForm = ({ mode, initialData }) => {
       //   },
       //   body: JSON.stringify(data),
       // });
-      dispatch(updateJob({data,id:initialData._id}));
+      dispatch(updateJob({body:data,id:initialData._id}));
     }
 
     router.push("/employerDashboard");

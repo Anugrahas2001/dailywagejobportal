@@ -6,6 +6,8 @@ import { Upload, X, ImageIcon } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import Loading from "@/components/Loading";
 import { step4Onboarding } from "@/lib/features/profiles/userThunk";
+import Error from "@/components/Error";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -87,10 +89,11 @@ const Step4 = () => {
         .from("ImageBucket")
         .getPublicUrl(filePath);
 
-      const { onboardPage, profileImage, isOnboardingComplete } =
-        await dispatch(
-          step4Onboarding({ profileImage: urlData.publicUrl }),
-        ).unwrap();
+      const { result } = await dispatch(
+        step4Onboarding({ profileImage: urlData.publicUrl }),
+      ).unwrap();
+
+      const { onboardPage, profileImage, isOnboardingComplete } = result;
 
       router.push(`/onboarding/${onboardPage}`);
     } catch (err) {
@@ -210,6 +213,9 @@ const Step4 = () => {
         </div>
       </div>
       {status === "pending" && <Loading />}
+      {error && (
+        <Error error={error} onClick={dispatch(clearOnboardingError())} />
+      )}
     </div>
   );
 };

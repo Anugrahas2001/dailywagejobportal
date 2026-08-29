@@ -1,21 +1,34 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   EMPLOYER_ONBOARD_STEPS,
   WORKER_ONBOARD_STEPS,
 } from "@/constants/constant";
 import { useParams } from "next/navigation";
 import { useSelector } from "react-redux";
+import Loading from "@/components/Loading";
 
 const Page = () => {
   const { id } = useParams();
   const role = useSelector((state) => state.user.role);
   console.log(id, role, "CHECK BOTH");
-  const selectedRole = localStorage.getItem("role");
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
+
+  useEffect(() => {
+    const storedRole = localStorage.getItem("role");
+    setSelectedRole(storedRole);
+    setIsRoleLoaded(true);
+  }, []);
+
+  if (!isRoleLoaded) {
+    return <Loading />;
+  }
+
   console.log(selectedRole, "SELECTED ROLE OF THE USER");
   const flow =
-    role === "worker" || selectedRole==="worker"
+    role === "worker" || selectedRole === "worker"
       ? WORKER_ONBOARD_STEPS
       : EMPLOYER_ONBOARD_STEPS;
 

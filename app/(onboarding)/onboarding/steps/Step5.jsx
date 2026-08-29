@@ -1,6 +1,8 @@
 "use client";
 
+import Error from "@/components/Error";
 import Loading from "@/components/Loading";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step5Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -21,6 +23,7 @@ const Step5 = () => {
 
   const role = useSelector((state) => state.user.role);
   const status = useSelector((state) => state.user.status);
+  const error = useSelector((state) => state.user.error);
 
   useEffect(() => {
     // startCamera();
@@ -111,9 +114,10 @@ const Step5 = () => {
     try {
       setVerifying(true);
 
-      const { onboardPage, isOnboardingComplete } = await dispatch(
+      const { result } = await dispatch(
         step5Onboarding({ profileImage: photo }),
       ).unwrap();
+      const { onboardPage, isOnboardingComplete } = result;
 
       console.log(isOnboardingComplete, role, "RESULT ANU DATA");
 
@@ -121,9 +125,9 @@ const Step5 = () => {
         setVerificationStatus("success");
 
         if (role === "worker") {
-          router.push("/workerDashboard");
+          router.replace("/workerDashboard");
         } else {
-          router.push("/employerDashboard");
+          router.replace("/employerDashboard");
         }
       }
 
@@ -254,6 +258,9 @@ const Step5 = () => {
 
         <canvas ref={canvasRef} className="hidden" />
         {status === "pending" && <Loading />}
+        {error && (
+          <Error error={error} onClick={dispatch(clearOnboardingError())} />
+        )}
       </div>
     </div>
   );

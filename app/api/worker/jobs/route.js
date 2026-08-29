@@ -15,6 +15,7 @@ export async function POST(request) {
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
 
+    console.log(body, "BODY DDDDATA");
     const jobObj = {
       _id: generateId(),
       jobId: body.jobId,

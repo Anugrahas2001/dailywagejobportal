@@ -2,8 +2,8 @@ import {
   // JOINING_TYPES,
   // SALARY_CREDIT_TYPES,
   JOINING_TYPE_VALUES,
-SHIFT_TYPE_VALUES,
-SALARY_CREDIT_TYPES_VALUES,
+  SHIFT_TYPE_VALUES,
+  SALARY_CREDIT_TYPES_VALUES,
   // SHIFT_TYPES,
 } from "@/constants/constant";
 import mongoose from "mongoose";
@@ -28,26 +28,26 @@ const JobPreferencesSchema = new mongoose.Schema(
     },
     minSalary: {
       type: Number,
-      default: 500,
+      default: 400,
     },
     maxSalary: {
       type: Number,
-      default: 1000,
+      default: 800,
     },
     salaryCreditType: {
       type: String,
       enum: SALARY_CREDIT_TYPES_VALUES,
-      default: "daily",
+      // default: "daily",
     },
     joiningPeriod: {
       type: String,
       enum: JOINING_TYPE_VALUES,
-      default: "immediate",
+      // default: "immediate",
     },
     shiftType: {
       type: String,
       enum: SHIFT_TYPE_VALUES,
-      default: "full day",
+      // default: "full day",
     },
     locRange: {
       type: Number,

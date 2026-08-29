@@ -17,7 +17,7 @@ const NavBar = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [onboardingPage, setOnboardingPage] = useState(1);
   // const [onboardingCompleted, setOnboardingComplete] = useState(false);
-  const [userRole,setUserRole]=useState('');
+  const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const image = localStorage.getItem("profileImage");
@@ -31,25 +31,15 @@ const NavBar = () => {
     // setOnboardingComplete(isOnboardingComplete);
   }, []);
 
-
   const reduxRole = useSelector((state) => state.user.role);
-const reduxOnboardPage = useSelector(
-  (state) => state.user.onboardPage
-);
-const reduxProfileImage = useSelector(
-  (state) => state.user.profileImage
-);
+  const reduxOnboardPage = useSelector((state) => state.user.onboardPage);
+  const reduxProfileImage = useSelector((state) => state.user.profileImage);
 
-const role = userRole || reduxRole;
-const onboardPage = onboardingPage || reduxOnboardPage;
-const profileimage = profileImage || reduxProfileImage;
+  const role = userRole || reduxRole;
+  const onboardPage = onboardingPage || reduxOnboardPage;
+  const profileimage = profileImage || reduxProfileImage;
 
-  console.log(
-    userRole,
-    profileImage,
-    onboardingPage,
-    "PROFILE IMAGES DATA",
-  );
+  console.log(userRole, profileImage, onboardingPage, "PROFILE IMAGES DATA");
 
   const handleLogOut = async () => {
     const token = await fetchUserToken();
@@ -73,23 +63,26 @@ const profileimage = profileImage || reduxProfileImage;
     setShow(false);
   };
 
-  console.log(
-    onboardPage,
-    role,
-    onboardPage >= 4 && role === "worker",
-    "ANUGRAHA S",
-  );
+  const handlePageData = () => {
+    if (role === "worker") {
+      router.replace("/workerDashboard");
+    } else {
+      router.replace("/employerDashboard");
+    }
+  };
 
   return (
     <div className="relative mx-4">
       <div className="flex justify-between">
-        <img
-          src="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1783930795229/1783930795229-8ce74683-ba1a-41fc-a08d-bbb20e3b94ba.png"
-          alt="logo"
-          width={120}
-          height={60}
-          className="w-32 md:w-44 h-16 rounded-lg mt-1 mx-2"
-        />
+        <button onClick={handlePageData}>
+          <img
+            src="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1783930795229/1783930795229-8ce74683-ba1a-41fc-a08d-bbb20e3b94ba.png"
+            alt="logo"
+            width={120}
+            height={60}
+            className="w-32 md:w-44 h-16 rounded-lg mt-1 mx-2"
+          />
+        </button>
 
         <div className="flex items-center">
           {onboardPage >= 4 && role === "worker" && (

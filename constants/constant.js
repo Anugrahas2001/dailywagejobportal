@@ -49,25 +49,25 @@ export const filterOptions = {
 
   Shift: [
     {
-    value: "full_day",
-    label: "Full Day (8:00 AM - 5:00 PM)",
-  },
-  {
-    value: "half_day_morning",
-    label: "Half Day - Morning (8:00 AM - 12:00 PM)",
-  },
-  {
-    value: "half_day_afternoon",
-    label: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
-  },
-  {
-    value: "night_shift",
-    label: "Night Shift (10:00 PM - 6:00 AM)",
-  },
-  {
-    value: "flexible",
-    label: "Flexible Hours",
-  },
+      value: "full_day",
+      label: "Full Day (8:00 AM - 5:00 PM)",
+    },
+    {
+      value: "half_day_morning",
+      label: "Half Day - Morning (8:00 AM - 12:00 PM)",
+    },
+    {
+      value: "half_day_afternoon",
+      label: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
+    },
+    {
+      value: "night_shift",
+      label: "Night Shift (10:00 PM - 6:00 AM)",
+    },
+    {
+      value: "flexible",
+      label: "Flexible Hours",
+    },
   ],
 
   Salary: [
@@ -115,35 +115,17 @@ export const appliedSortingOptions = [
 export const ALLOWED_ROLES = ["admin", "employer", "worker"];
 
 export const SALARY_CREDIT_TYPES = [
+  { value: "", label: "Select a salary type" },
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly" },
   { value: "monthly", label: "Monthly" },
 ];
 
-// export const SHIFT_TYPES = [
-//   {
-//     value: "9:00 AM - 5:00 PM",
-//     label: "Full Day",
-//   },
-//   {
-//     value: "8:00 AM - 12:00 PM",
-//     label: "Half Day (Morning)",
-//   },
-//   {
-//     value: "1:00 PM - 5:00 PM",
-//     label: "Half Day (Afternoon)",
-//   },
-//   {
-//     value: "10:00 PM - 6:00 AM",
-//     label: "Night Shift",
-//   },
-//   {
-//     value: "Flexible",
-//     label: "Flexible Hours",
-//   },
-// ];
-
 export const SHIFT_TYPES = [
+  {
+    value: "",
+    label: "Select shift type",
+  },
   {
     value: "full_day",
     label: "Full Day (8:00 AM - 5:00 PM)",
@@ -167,7 +149,7 @@ export const SHIFT_TYPES = [
 ];
 
 export const JOINING_TYPES = [
-  // { value: "immediate", label: "Immediate" },
+  { value: "", label: "Select Joining Period" },
   { value: "same_day", label: "Same Day" },
   { value: "next_day", label: "Next Day" },
   { value: "within-1-weeks", label: "within 1 weeks" },
@@ -176,10 +158,11 @@ export const JOINING_TYPES = [
 ];
 
 export const GENDER_TYPES = [
-  { value: "Any", label: "Select Gender" },
+  { value: "", label: "Select Gender" },
   { value: "Male", label: "Male" },
   { value: "Female", label: "Female" },
   { value: "Other", label: "Other" },
+  { value: "Any", label: "Any Gender" },
 ];
 
 export const SALARY_CREDIT_TYPES_VALUES = SALARY_CREDIT_TYPES.map(

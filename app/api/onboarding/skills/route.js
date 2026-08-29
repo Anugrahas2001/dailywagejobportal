@@ -1,3 +1,4 @@
+import { connectDB } from "@/lib/mongodb";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
 import { skillCreationSchema } from "@/lib/validations/onboarding/onBoardingValidation";
@@ -7,10 +8,13 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
+    await connectDB();
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
-    const validation = validate(skillCreationSchema, body);
+    console.log(body, "BODY DATA");
 
+    const validation = validate(skillCreationSchema, body);
+    console.log(validation, "VALIDATION VALIDATION");
     if (!validation.success) {
       return validationError(validation);
     }
@@ -47,6 +51,7 @@ export async function POST(request) {
       },
     );
   } catch (error) {
+    console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
         message: "Unable to update skills and bio. Please try again.",

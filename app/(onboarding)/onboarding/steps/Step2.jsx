@@ -1,4 +1,5 @@
 "use client";
+import Error from "@/components/Error";
 import InputField from "@/components/form/InputField";
 import SelectField from "@/components/form/SelectField";
 import Loading from "@/components/Loading";
@@ -8,6 +9,7 @@ import {
   SALARY_CREDIT_TYPES,
   SHIFT_TYPES,
 } from "@/constants/constant";
+import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step2Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -24,15 +26,16 @@ const Step2 = () => {
     defaultValues: {
       jobTitle: "",
       jobCategory: "",
-      minSalary: 1000,
-      maxSalary: 2000,
-      salaryCreditType: "daily",
-      joiningPeriod: "immediate",
-      shiftType: "full_day",
+      minSalary: 400,
+      maxSalary: 800,
+      salaryCreditType: "",
+      joiningPeriod: "",
+      shiftType: "",
       locRange: 10,
     },
   });
   const router = useRouter();
+  const error = useSelector((state) => state.user.error);
 
   const jobCategory = watch("jobCategory");
   console.log(jobCategory, "CATEGORY FROM THE FORM");
@@ -41,10 +44,11 @@ const Step2 = () => {
 
   const onSubmit = async (data) => {
     try {
-      const { onboardPage, isOnboardingComplete } = await dispatch(
+      const { result } = await dispatch(
         step2Onboarding({ body: data }),
       ).unwrap();
-     
+      const { onboardPage, isOnboardingComplete } = result;
+
       router.push(`/onboarding/${onboardPage}?category=${jobCategory}`);
     } catch (error) {
       console.error(error);
@@ -91,9 +95,12 @@ const Step2 = () => {
           label="Minimum Salary/Day"
           type="number"
           placeholder="Minimum Salary"
-          min={500}
+          min={400}
           max={10000}
-          {...register("minSalary", { valueAsNumber: true })}
+          {...register("minSalary", {
+            required: "Please select a minimum salary",
+            valueAsNumber: true,
+          })}
           error={errors.minSalary?.message}
         />
 
@@ -101,9 +108,12 @@ const Step2 = () => {
           label="Maximum Salary/Day"
           type="number"
           placeholder="Maximum Salary"
-          min={500}
+          min={800}
           max={10000}
-          {...register("maxSalary", { valueAsNumber: true })}
+          {...register("maxSalary", {
+            required: "Please select a maximum salary",
+            valueAsNumber: true,
+          })}
           error={errors.maxSalary?.message}
         />
 
@@ -113,38 +123,47 @@ const Step2 = () => {
           placeholder="Location Range"
           min={10}
           max={1000}
-          {...register("locRange", { valueAsNumber: true })}
+          {...register("locRange", {
+            required: "Location range is required",
+            valueAsNumber: true,
+          })}
           error={errors.locRange?.message}
         />
 
         <SelectField
           label="Shift Type"
           options={SHIFT_TYPES}
-          {...register("shiftType")}
+          {...register("shiftType", {
+            required: "Please select a shift type",
+          })}
+          error={errors.shiftType?.message}
         />
 
-        {errors.shiftType && (
-          <p className="text-red-500">{errors.shiftType?.message}</p>
-        )}
+        {/* {errors.shiftType && (
+          <p className="text-red-500"></p>
+        )} */}
 
         <SelectField
           label="Salary Credit Type"
           options={SALARY_CREDIT_TYPES}
-          {...register("salaryCreditType")}
+          {...register("salaryCreditType", {
+            required: "Please select a salary credit type",
+          })}
+          error={errors.salaryCreditType?.message}
         />
 
-        {errors.salaryCreditType && (
-          <p className="text-red-500">{errors.salaryCreditType?.message}</p>
-        )}
+        {/* {errors.salaryCreditType && (
+          <p className="text-red-500"></p>
+        )} */}
 
         <SelectField
           label="Joining Period"
           options={JOINING_TYPES}
-          {...register("joiningPeriod")}
+          {...register("joiningPeriod", {
+            required: "Please select a joining period",
+          })}
+          error={errors.joiningPeriod?.message}
         />
-        {errors.joiningPeriod && (
-          <p className="text-red-500">{errors.joiningPeriod?.message}</p>
-        )}
 
         <div className="flex justify-center w-full">
           <button
@@ -158,6 +177,9 @@ const Step2 = () => {
       </form>
 
       {status === "pending" && <Loading />}
+      {error && (
+        <Error error={error} onClick={dispatch(clearOnboardingError())} />
+      )}
     </div>
   );
 };
