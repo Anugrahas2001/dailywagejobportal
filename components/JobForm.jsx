@@ -13,13 +13,14 @@ import {
   SALARY_CREDIT_TYPES,
   SHIFT_TYPES,
 } from "@/constants/constant";
-import { fetchUserToken } from "@/lib/fetchUserToken";
 import { useRouter } from "next/navigation";
 import useLoading from "./hooks/useLoading";
 import useCurrentLocationHook from "./hooks/useCurrentLocation";
 import Loading from "./Loading";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { createJob, updateJob } from "@/lib/features/jobs/jobThunk";
+import Error from "./Error";
+import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 
 const JobForm = ({ mode, initialData }) => {
   const {
@@ -65,7 +66,10 @@ const JobForm = ({ mode, initialData }) => {
   const [isAdding, setIsAdding] = useState(false);
   const useCurrentLocation = watch("useCurrentLocation");
   const { getLocation } = useCurrentLocationHook();
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
+
+  const error = useSelector((state) => state.jobs.error);
+  const status = useSelector((state) => state.jobs.status);
 
   useEffect(() => {
     if (initialData) {
@@ -180,25 +184,9 @@ const JobForm = ({ mode, initialData }) => {
   const onSubmit = async (data) => {
     console.log(data, "DATA SEND TO THE BACKEND");
     if (mode === "create") {
-      // await fetch("/api/employer/job", {
-      //   method: "POST",
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify(data),
-      // });
-
-      dispatch(createJob({body:data}))
-      
+      dispatch(createJob({ body: data }));
     } else {
-      // await fetch(`/api/employer/job/${initialData._id}`, {
-      //   method: "PUT",
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //   },
-      //   body: JSON.stringify(data),
-      // });
-      dispatch(updateJob({body:data,id:initialData._id}));
+      dispatch(updateJob({ body: data, id: initialData._id }));
     }
 
     router.push("/employerDashboard");
@@ -333,30 +321,6 @@ const JobForm = ({ mode, initialData }) => {
             </button>
           </div>
         </div>
-        {/* <div> */}
-        {/* <div className="md:col-span-2 mt-2">
-          {selectedResponsibilities.length > 0 && (
-            <ul>
-              {selectedResponsibilities.map((resp, index) => (
-                <li
-                  key={index}
-                  className="text-gray-700 rounded-lg py-2 px-3 border list-disc list-inside space-y-2"
-                >
-                  <div className="flex justify-between items-center">
-                    <span>{resp}</span>
-                    <button
-                      className="text-red-500"
-                      onClick={() => handleDelete(index)}
-                    >
-                      X
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div> */}
-
         <div className="md:col-span-2 mt-2">
           {selectedResponsibilities.length > 0 && (
             <ul className="list-disc pl-6 space-y-2">
@@ -558,17 +522,11 @@ const JobForm = ({ mode, initialData }) => {
                 : "Update Job"}
           </button>
         </div>
-
-        {/* <div className="flex justify-center w-full">
-          <button
-            type="submit"
-            className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            Create Job
-          </button>
-        </div> */}
       </form>
-      {loading && <Loading />}
+      {(status === "pending" || loading) && <Loading />}
+      {error && (
+        <Error error={error} onClick={() => dispatch(clearJobsError())} />
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@
 import React from "react";
 
 const Error = ({ error, onClick }) => {
+  console.log(error, onClick, "SHAAA SHAAA SHAAA");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">

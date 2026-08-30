@@ -6,6 +6,7 @@ import {
   getShiftLabel,
   getStatusColor,
 } from "@/components/commonFunctions";
+import Error from "@/components/Error";
 import FilterButtons from "@/components/FilterButtons";
 import Loading from "@/components/Loading";
 import Pagination from "@/components/Pagination";
@@ -14,11 +15,13 @@ import {
   appliedSortingOptions,
   savedSortingOptions,
 } from "@/constants/constant";
+import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import {
   applyToJob,
   cancelAppliedJobs,
   fetchAppliedJobs,
 } from "@/lib/features/workerJobs/appliedjobs/appliedJobThunk";
+import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
 import {
   fetchSavedJobs,
   toggleSavedJobs,
@@ -53,6 +56,10 @@ const page = () => {
   const jobs = jobType === "saved" ? savedJobs : appliedJobs;
 
   const totalCount = jobType === "saved" ? savedTotalCount : appliedTotalCount;
+
+  const savedError = useSelector((state) => state.saved.error);
+  const appliedError = useSelector((state) => state.applied.error);
+  const error = savedError || appliedError;
 
   const loadingStatus =
     jobType === "saved" ? savedLoadingStatus : appliedLoadingStatus;
@@ -366,6 +373,15 @@ const page = () => {
         totalCount={totalCount}
       />
       {statusLoading === "pending" && <Loading />}
+      {error && (
+        <Error
+          error={error}
+          onClick={() => {
+            (dispatch(clearSavedJobsError()),
+              dispatch(clearAppliedJobsError()));
+          }}
+        />
+      )}
     </div>
   );
 };
