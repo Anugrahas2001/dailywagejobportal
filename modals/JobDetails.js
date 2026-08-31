@@ -123,7 +123,7 @@ const JobSchema = new mongoose.Schema(
         values: ["Active", "Paused", "Completed", "Expired"],
         message: "{VALUE} is not a valid status",
       },
-      default: "active",
+      default: "Active",
     },
     applicantsCount: {
       type: Number,

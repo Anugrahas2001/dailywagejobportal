@@ -21,11 +21,11 @@ export const EMPLOYER_ONBOARD_STEPS = {
 export const ONBOARD_PAGES = [1, 2, 3, 4, 5, 6];
 
 export const JOB_APPLICATION_STATUS = [
-  "applied",
-  "viewed",
-  "shortlisted",
-  "accepted",
-  "rejected",
+  "Applied",
+  "Viewed",
+  "Shortlisted",
+  "Accepted",
+  "Rejected",
 ];
 
 export const filterOptions = {
