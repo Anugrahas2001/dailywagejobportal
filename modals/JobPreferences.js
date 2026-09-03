@@ -37,17 +37,17 @@ const JobPreferencesSchema = new mongoose.Schema(
     salaryCreditType: {
       type: String,
       enum: SALARY_CREDIT_TYPES_VALUES,
-      // default: "daily",
+      default: "",
     },
     joiningPeriod: {
       type: String,
       enum: JOINING_TYPE_VALUES,
-      // default: "immediate",
+      default: "",
     },
     shiftType: {
       type: String,
       enum: SHIFT_TYPE_VALUES,
-      // default: "full day",
+      default: "",
     },
     locRange: {
       type: Number,

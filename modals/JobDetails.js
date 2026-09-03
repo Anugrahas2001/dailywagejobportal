@@ -35,7 +35,7 @@ const JobSchema = new mongoose.Schema(
     genderPreference: {
       type: String,
       enum: GENDER_TYPES_VALUES,
-      default: "Any",
+      // default: "",
     },
     jobDescription: {
       type: String,
@@ -48,7 +48,7 @@ const JobSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: SHIFT_TYPE_VALUES,
-      default: "full_day",
+      // default: "",
     },
     loc: {
       type: { type: String, default: "Point" },
@@ -61,7 +61,7 @@ const JobSchema = new mongoose.Schema(
     availability: {
       type: String,
       enum: JOINING_TYPE_VALUES,
-      default: "immediate",
+      // default: "",
     },
 
     skillsRequired: {
@@ -78,12 +78,12 @@ const JobSchema = new mongoose.Schema(
     minSalary: {
       type: Number,
       required: [true, "Minimum salary is required"],
-      min: [500, "Minimum salary cannot be negative"],
+      min: [400, "Minimum salary cannot be negative"],
     },
     maxSalary: {
       type: Number,
       required: [true, "Maximum salary is required"],
-      min: [1000, "Maximum salary cannot be negative"],
+      min: [800, "Maximum salary cannot be negative"],
     },
     responsibilities: {
       type: [
@@ -115,7 +115,7 @@ const JobSchema = new mongoose.Schema(
     salaryType: {
       type: String,
       enum: SALARY_CREDIT_TYPES_VALUES,
-      default: "daily",
+      // default: "",
     },
     status: {
       type: String,

@@ -118,13 +118,22 @@ import {
 } from "./commonFunctions";
 import { useRouter } from "next/navigation";
 import Loading from "./Loading";
+import { getMatchStyle } from "@/constants/constant";
 
-const ViewProfile = ({ workerId, jobId }) => {
+const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
   const [workerData, setWorkerData] = useState({});
   const [jobStatus, setJobStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  console.log(workerData,jobStatus, "WORKER DATA AVILABLE");
+  console.log(
+    workerId,
+    jobId,
+    type,
+    matchingRate,
+    workerData,
+    jobStatus,
+    "WORKER DATA AVILABLESSS",
+  );
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -223,6 +232,7 @@ const ViewProfile = ({ workerId, jobId }) => {
             />
 
             {/* Basic Information */}
+            {/* <div className="flex items-center justify-between bg-amber-300"> */}
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-col items-center gap-2 sm:flex-row">
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -242,6 +252,15 @@ const ViewProfile = ({ workerId, jobId }) => {
                 {workerData?.jobCategory}
               </p>
             </div>
+            <div className="bg-amber-100 m-2">
+              <span
+                className={`px-3 py-1 rounded-md ${getMatchStyle(matchingRate)?.className}`}
+              >
+                {matchingRate}%{""}-{getMatchStyle(matchingRate)?.text}
+              </span>
+              {/* <span>{}</span> */}
+            </div>
+            {/* </div> */}
           </div>
         </div>
 
@@ -398,40 +417,42 @@ const ViewProfile = ({ workerId, jobId }) => {
         </section>
 
         {/* Application Status */}
-        <section className="p-6 md:p-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Application Status
-              </h2>
+        {type === "applications" && (
+          <section className="p-6 md:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Application Status
+                </h2>
 
-              <p className="mt-1 text-sm text-gray-500">
-                Update the applicant's current status.
-              </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Update the applicant's current status.
+                </p>
+              </div>
+
+              <select
+                value={jobStatus ? jobStatus : workerData?.status}
+                onChange={(e) =>
+                  handleJobApplicationStatus(e, {
+                    workerId: workerData?.userId,
+                    jobId,
+                  })
+                }
+                className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
+                  workerData?.status || jobStatus
+                    ? "border-blue-300 bg-blue-50 text-blue-700"
+                    : "border-gray-300 bg-white text-gray-700"
+                }`}
+              >
+                {/* <option>Viewed</option> */}
+                <option value="">Select Status</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+              </select>
             </div>
-
-            <select
-              value={jobStatus ? jobStatus : workerData?.status}
-              onChange={(e) =>
-                handleJobApplicationStatus(e, {
-                  workerId: workerData?.userId,
-                  jobId,
-                })
-              }
-              className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
-                workerData?.status || jobStatus
-                  ? "border-blue-300 bg-blue-50 text-blue-700"
-                  : "border-gray-300 bg-white text-gray-700"
-              }`}
-            >
-              {/* <option>Viewed</option> */}
-              <option value="">Select Status</option>
-              <option value="shortlisted">Shortlisted</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
       <div>{loading && <Loading />}</div>
     </div>

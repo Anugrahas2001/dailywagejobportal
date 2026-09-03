@@ -40,6 +40,7 @@ import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
+import { fetchUserToken } from "@/lib/fetchUserToken";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
@@ -354,20 +355,24 @@ const DashboardPage = ({ role }) => {
                                 Views
                               </span>
                             </div>
-                            <div className="group relative inline-block">
-                              <button className="flex items-center gap-1 py-2">
-                                <BotMessageSquare className="h-5 w-5" />
-                                {job.aiMatchesCount}
-                              </button>
+                            <div className="group relative inline-block cursor-pointer">
+                              <Link
+                                href={`/employerDashboard/recommendedprofiles?jobId=${job._id}&type=recommendation`}
+                              >
+                                <button className="flex items-center gap-1 py-2">
+                                  <BotMessageSquare className="h-5 w-5" />
+                                  {job.aiMatchesCount}
+                                </button>
 
-                              <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                AI Matched Profiles
-                              </span>
+                                <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                  AI Matched Profiles
+                                </span>
+                              </Link>
                             </div>
-                            <Link
-                              href={`/employerDashboard/appliedworkers?jobId=${job._id}`}
-                            >
-                              <div className="group relative inline-block">
+                            <div className="group relative inline-block cursor-pointer">
+                              <Link
+                                href={`/employerDashboard/appliedworkers?jobId=${job._id}&type=applications`}
+                              >
                                 <button className="flex items-center gap-1 py-2">
                                   <FileUser className="h-5 w-5" />
                                   {job.applicantsCount}
@@ -376,8 +381,8 @@ const DashboardPage = ({ role }) => {
                                 <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                                   Applications
                                 </span>
-                              </div>
-                            </Link>
+                              </Link>
+                            </div>
                           </div>
                         </>
                       ) : (
@@ -514,7 +519,9 @@ const DashboardPage = ({ role }) => {
         <Error
           error={error}
           onClick={() => {
-            (dispatch(clearJobsError()), dispatch(clearAppliedJobsError()),dispatch(clearSavedJobsError()));
+            (dispatch(clearJobsError()),
+              dispatch(clearAppliedJobsError()),
+              dispatch(clearSavedJobsError()));
           }}
         />
       )}

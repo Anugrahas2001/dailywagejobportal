@@ -19,6 +19,8 @@ export async function POST(request) {
       ...body,
     };
 
+    console.log(obj, "NEW JOB 1");
+
     const validation = validate(jobDetailSchema, obj);
 
     if (!validation.success) {
@@ -26,7 +28,7 @@ export async function POST(request) {
     }
 
     const newJob = await JobDetails.create(validation.data);
-
+    console.log(newJob, "A VERY NEW JOB");
     return NextResponse.json(
       {
         message: "New job created successfully.",

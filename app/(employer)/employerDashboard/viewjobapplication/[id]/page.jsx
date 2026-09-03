@@ -7,15 +7,21 @@ const page = () => {
   const params = useParams();
   const workerId = params.id;
   const searchParams = useSearchParams();
-
-  // console.log("FULL URL:", window.location.href);
-  // console.log("SEARCH PARAMS:", searchParams.toString());
   console.log("JOB ID:", searchParams.get("jobId"));
 
-const jobId = searchParams.get("jobId");
-  console.log(workerId, "INSIDE OF THE CODE");
+  const jobId = searchParams.get("jobId");
+  const type = searchParams.get("type");
+  const matchingRate = searchParams.get("matching");
+  console.log(workerId, matchingRate, type, "INSIDE OF THE CODE 33333");
 
-  return <ViewProfile workerId={workerId} jobId={jobId} />;
+  return (
+    <ViewProfile
+      workerId={workerId}
+      jobId={jobId}
+      type={type}
+      matchingRate={matchingRate}
+    />
+  );
 };
 
 export default page;

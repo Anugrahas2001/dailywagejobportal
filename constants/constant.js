@@ -83,15 +83,6 @@ export const filterOptions = {
   ],
 };
 
-const statuses = [
-  "All",
-  "Applied",
-  "Viewed",
-  "Shortlisted",
-  "Accepted",
-  "Rejected",
-];
-
 export const appliedjobStatus = [
   { value: "applied", label: "Applied" },
   { value: "viewed", label: "Viewed" },
@@ -471,3 +462,32 @@ export const JOB_STATUS = [
     label: "Expired",
   },
 ];
+
+
+export const getMatchStyle = (rate) => {
+  if (rate >= 80) {
+    return {
+      text: "Excellent Match",
+      className: "bg-green-50 text-green-700 border-green-200",
+    };
+  }
+
+  if (rate >= 60) {
+    return {
+      text: "Good Match",
+      className: "bg-green-50 text-green-600 border-green-200",
+    };
+  }
+
+  if (rate >= 30) {
+    return {
+      text: "Moderate Match",
+      className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    };
+  }
+
+  return {
+    text: "Low Match",
+    className: "bg-red-50 text-red-600 border-red-200",
+  };
+};

@@ -34,22 +34,22 @@ const JobForm = ({ mode, initialData }) => {
     defaultValues: {
       jobName: "",
       jobCategory: "Construction",
-      genderPreference: "Any",
+      genderPreference: "",
       jobDescription: "",
-      jobShift: "full_day",
+      jobShift: "",
       city: "",
       state: "",
       country: "India",
-      availability: "immediate",
+      availability: "",
       numberOfOpenings: 1,
-      minSalary: 500,
-      maxSalary: 1000,
+      minSalary: 400,
+      maxSalary: 800,
       currency: "INR",
-      salaryType: "daily",
+      salaryType: "",
       skillsRequired: [],
       responsibilities: [],
       useCurrentLocation: false,
-      location: {
+      loc: {
         type: "Point",
         coordinates: [0, 0],
       },
@@ -137,7 +137,7 @@ const JobForm = ({ mode, initialData }) => {
       setValue("city", "");
       setValue("state", "");
       setValue("country", "");
-      setValue("location", {
+      setValue("loc", {
         type: "Point",
         coordinates: [],
       });
@@ -149,7 +149,7 @@ const JobForm = ({ mode, initialData }) => {
       setLoading(true);
       const location = await getLocation();
       console.log(location, "LOCATION DATA");
-      setValue("location", {
+      setValue("loc", {
         type: "Point",
         coordinates: location.coordinates,
       });

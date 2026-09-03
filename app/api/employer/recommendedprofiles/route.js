@@ -1,6 +1,3 @@
-// app/api/jobs/[jobId]/matches/route.js
-//
-// GET /api/jobs/:jobId/matches?page=1&limit=20&minScore=0
 //
 // For a given job, finds all users whose JobPreferences are compatible,
 // scores each one, and returns their profiles ranked best-match-first.
@@ -17,33 +14,37 @@
 // `role: { $ne: "employer" }` (or whatever your employer role value is)
 // to the $match stage below — ALLOWED_ROLES isn't visible here so it's
 // left as a comment rather than guessed.
-
+// app\api\employer\recommendedprofiles\[id]\route.js
+import { connectDB } from "@/lib/mongodb";
+import JobDetails from "@/modals/JobDetails";
+import User from "@/modals/User";
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import JobDetails from "@/models/JobDetails";
-import User from "@/models/User";
-// JobPreferences model isn't queried directly here (we reach it via $lookup),
-// but importing it ensures mongoose registers the schema/collection name.
-import "@/models/JobPreferences";
 
 export async function GET(req, { params }) {
   try {
-    await dbConnect();
+    await connectDB();
 
-    const { jobId } = params;
+    // const { id } = await params;
+    // console.log(id, "DPNT PRODUCE TOO MUCH 1 OK");
+
     const { searchParams } = new URL(req.url);
+    const id = searchParams.get("jobId");
     const page = Math.max(parseInt(searchParams.get("page")) || 1, 1);
     const limit = Math.min(parseInt(searchParams.get("limit")) || 20, 100);
-    const minScore = Number(searchParams.get("minScore")) || 0;
+    const minScore = Number(searchParams.get("minScore")) || 10;
+
+    console.log(id, page, limit, "CHECK THESE VALUES");
     // Pass ?debug=true to also see the per-field score breakdown behind
     // the overall matchPercentage — off by default per product requirement.
     const debug = searchParams.get("debug") === "true";
 
     // 1. Load the job we're matching against
     const job = await JobDetails.findOne({
-      _id: jobId,
+      _id: id,
       isDeleted: { $ne: true },
     }).lean();
+
+    console.log(job, "DPNT PRODUCE TOO MUCH 2");
 
     if (!job) {
       return NextResponse.json(
@@ -70,10 +71,14 @@ export async function GET(req, { params }) {
       });
     }
 
+    console.log("JOB LOCATION:", job.loc);
+    console.log("JOB COORDINATES:", job.loc?.coordinates);
+    console.log("HAS VALID LOCATION:", hasValidLocation);
+
     // Hard filters: only completed profiles, and gender preference
     // (skip gender filter entirely if job accepts "Any")
     //  { isOnboardingComplete: true };
-    const hardFilters = { $ne: "employer" };
+    const hardFilters = { role: { $ne: "employer" } };
     // Uncomment and set to your real employer role value to exclude employers:
 
     if (job.genderPreference && job.genderPreference !== "Any") {
@@ -120,6 +125,9 @@ export async function GET(req, { params }) {
         name: 1,
         email: 1,
         mobileNumber: 1,
+        city: 1,
+        state: 1,
+        isVerified: 1,
         gender: 1,
         profileImage: 1,
         skills: 1,
@@ -129,6 +137,7 @@ export async function GET(req, { params }) {
     });
 
     const candidates = await User.aggregate(pipeline);
+    // console.log(candidates, "DPNT PRODUCE TOO MUCH 3");
 
     // 3. Score every candidate in JS — keeps weighting easy to read/tune
     const scored = candidates.map((candidate) => {
@@ -139,18 +148,21 @@ export async function GET(req, { params }) {
         candidate.skills,
       );
       return {
-        userId: candidate._id,
+        _id: candidate._id,
         name: candidate.name,
         email: candidate.email,
+        city: candidate.city,
+        state: candidate.state,
         mobileNumber: candidate.mobileNumber,
         gender: candidate.gender,
         profileImage: candidate.profileImage,
         skills: candidate.skills,
+        isVerified: candidate.isVerified,
         distanceKm:
           candidate.distanceInMeters != null
             ? +(candidate.distanceInMeters / 1000).toFixed(2)
             : null,
-        preference: candidate.preference,
+        ...candidate.preference,
         // Single overall match rate for the whole profile, 0-100 (= 0%-100%)
         matchPercentage: score,
         // Only attached when explicitly requested — internal scoring detail,
@@ -159,29 +171,32 @@ export async function GET(req, { params }) {
       };
     });
 
+    // console.log(scored, "DPNT PRODUCE TOO MUCH 4");
+
     // 4. Rank best -> worst, apply minScore filter, then paginate
     const ranked = scored
       .filter((c) => c.matchPercentage >= minScore)
       .sort((a, b) => b.matchPercentage - a.matchPercentage);
 
+    // console.log(ranked, minScore, "I SEEE YOUUU");
+
     const total = ranked.length;
     const start = (page - 1) * limit;
     const paginated = ranked.slice(start, start + limit);
-
+    console.log(total, "DPNT PRODUCE TOO MUCH");
     return NextResponse.json({
       success: true,
-      jobId: job._id,
-      totalMatches: total,
-      page,
-      limit,
-      results: paginated,
+      message:
+        "Successfully fetched the recommended candidates profiles for this job.",
+      totalCount: total,
+      data: paginated,
     });
   } catch (error) {
     console.error("Job matching error:", error);
     return NextResponse.json(
       {
         success: false,
-        message: "Something went wrong while matching candidates",
+        message: "Unable to fetch matching candidates for this profile.",
         error: error.message,
       },
       { status: 500 },
