@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
+import { matchQueue } from "@/lib/queues/matchQueue";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
 import { jobDetailSchema } from "@/lib/validations/employer/employerJobValidation";
@@ -77,6 +78,7 @@ export async function PUT(request, { params }) {
       return validationError(validation);
     }
     const data = validation.data;
+    console.log(data, "ALL THE UPDATED JOB DATA");
     const updatedJob = await JobDeatils.findOneAndUpdate(
       {
         _id: id,
@@ -100,9 +102,23 @@ export async function PUT(request, { params }) {
         },
       );
     }
+
+    console.log(updatedJob, "THE UPDATED JOB");
+
+    // for (const job of candidateJobs) {
+    await matchQueue.add(
+      "compute-matches",
+      { jobId: updatedJob._id },
+      { jobId: `job-${updatedJob._id}` },
+      // { jobId: `job-${updatedJob._id}`, delay: 10000 }, // debounce rapid edits
+    );
+    // }
+    console.log("QUEUE DISPATCHED");
+
     return NextResponse.json(
       {
         message: "Job updated successfully.",
+        data: updatedJob,
       },
       {
         status: 200,

@@ -3,7 +3,7 @@ import {
   JOINING_TYPE_VALUES,
   SALARY_CREDIT_TYPES_VALUES,
   SHIFT_TYPE_VALUES,
-} from "@/constants/constant";
+} from "../constants/constant";
 import mongoose from "mongoose";
 
 const JobSchema = new mongoose.Schema(

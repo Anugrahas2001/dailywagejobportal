@@ -40,7 +40,6 @@ import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
-import { fetchUserToken } from "@/lib/fetchUserToken";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
@@ -365,7 +364,7 @@ const DashboardPage = ({ role }) => {
                                 </button>
 
                                 <span className="absolute left-1/2 top-full -translate-x-1/2 whitespace-nowrap rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                  AI Matched Profiles
+                                  Matched Profiles
                                 </span>
                               </Link>
                             </div>

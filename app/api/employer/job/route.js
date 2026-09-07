@@ -1,5 +1,6 @@
 import { generateId } from "@/lib/generateRandomId";
 import { connectDB } from "@/lib/mongodb";
+import { matchQueue } from "@/lib/queues/matchQueue";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
 import { jobDetailSchema } from "@/lib/validations/employer/employerJobValidation";
@@ -7,6 +8,7 @@ import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobDetails from "@/modals/JobDetails";
 import { NextResponse } from "next/server";
 
+// create a new job by employer
 export async function POST(request) {
   try {
     await connectDB();
@@ -29,6 +31,16 @@ export async function POST(request) {
 
     const newJob = await JobDetails.create(validation.data);
     console.log(newJob, "A VERY NEW JOB");
+
+    // NEW: enqueue matching computation — don't block the response on it
+    await matchQueue.add(
+      "compute-matches",
+      { jobId: newJob._id },
+      { jobId: `job-${newJob._id}` }, // dedupe key
+    );
+
+    console.log("JOB SENT TO THE QUEUE SUCCESSFULLY");
+
     return NextResponse.json(
       {
         message: "New job created successfully.",
@@ -54,6 +66,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
+    console.log("INSIDE OF THE CODE");
     await connectDB();
 
     const { uid } = await verifyFirebaseToken(request);
@@ -96,6 +109,8 @@ export async function GET(request) {
       if (counts[_id] !== undefined) counts[_id] = count;
     });
     counts.All = result.totalCount[0]?.count || 0;
+
+    // console.log(result.jobs, "ALL THE JOBS AVILABLE");
 
     return NextResponse.json(
       {

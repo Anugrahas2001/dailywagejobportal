@@ -18,7 +18,11 @@ import useLoading from "./hooks/useLoading";
 import useCurrentLocationHook from "./hooks/useCurrentLocation";
 import Loading from "./Loading";
 import { useDispatch, useSelector } from "react-redux";
-import { createJob, updateJob } from "@/lib/features/jobs/jobThunk";
+import {
+  createJob,
+  // fetchAvilableJobs,
+  updateJob,
+} from "@/lib/features/jobs/jobThunk";
 import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 
@@ -70,6 +74,8 @@ const JobForm = ({ mode, initialData }) => {
 
   const error = useSelector((state) => state.jobs.error);
   const status = useSelector((state) => state.jobs.status);
+  // const allJobsStatus = useSelector((state) => state.jobs.status);
+  // const status = statusss || allJobsStatus;
 
   useEffect(() => {
     if (initialData) {
@@ -181,15 +187,31 @@ const JobForm = ({ mode, initialData }) => {
     }
   };
 
-  const onSubmit = async (data) => {
-    console.log(data, "DATA SEND TO THE BACKEND");
-    if (mode === "create") {
-      dispatch(createJob({ body: data }));
-    } else {
-      dispatch(updateJob({ body: data, id: initialData._id }));
-    }
+  // const onSubmit = async (data) => {
+  //   console.log(data, "DATA SEND TO THE BACKEND");
+  //   if (mode === "create") {
+  //     dispatch(createJob({ body: data }));
+  //   } else {
+  //     dispatch(updateJob({ body: data, id: initialData._id }));
+  //     await dispatch(fetchAvilableJobs({ page: 1 })).unwrap();
+  //   }
 
-    router.push("/employerDashboard");
+  //   router.push("/employerDashboard");
+  // };
+
+  const onSubmit = async (data) => {
+    try {
+      if (mode === "create") {
+        await dispatch(createJob({ body: data })).unwrap();
+      } else {
+        await dispatch(updateJob({ body: data, id: initialData._id })).unwrap();
+        // await dispatch(fetchAvilableJobs({ page: 1 })).unwrap();
+      }
+      router.push("/employerDashboard");
+    } catch (error) {
+      console.error(error);
+      // show a toast / inline error to the user here
+    }
   };
 
   return (
