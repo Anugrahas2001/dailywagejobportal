@@ -123,7 +123,7 @@ const LoginForm = () => {
       setPassword("");
     } catch (error) {
       console.error(error.code);
-      console.error(error.message);
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -207,7 +207,7 @@ const LoginForm = () => {
               disabled={loading}
               className="bg-blue-700 w-36 mt-4 h-12 rounded-sm cursor-pointer text-white font-semibold"
             >
-              {loading && status === "pending" ? "Please wait..." : "Login"}
+              {loading || status === "pending" ? "Please wait..." : "Login"}
             </button>
           </div>
         </form>
