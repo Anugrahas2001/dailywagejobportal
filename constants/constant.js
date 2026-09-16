@@ -1,4 +1,3 @@
-
 export const ONBOARD_PAGES = [1, 2, 3, 4, 5, 6];
 
 export const JOB_APPLICATION_STATUS = [
@@ -444,8 +443,8 @@ export const JOB_STATUS = [
   },
 ];
 
-
 export const getMatchStyle = (rate) => {
+  console.log(rate,"CHECK THIS matchPercentage RATES");
   if (rate >= 80) {
     return {
       text: "Excellent Match",

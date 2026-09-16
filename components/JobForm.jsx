@@ -18,13 +18,10 @@ import useLoading from "./hooks/useLoading";
 import useCurrentLocationHook from "./hooks/useCurrentLocation";
 import Loading from "./Loading";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  createJob,
-  // fetchAvilableJobs,
-  updateJob,
-} from "@/lib/features/jobs/jobThunk";
+// import { createJob, updateJob } from "@/lib/featureFs/jobs/jobThunk";
 import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
+import { createJob, updateJob } from "@/lib/features/jobs/jobThunk";
 
 const JobForm = ({ mode, initialData }) => {
   const {
@@ -120,8 +117,17 @@ const JobForm = ({ mode, initialData }) => {
     setIsAdding(true);
     const currentResponsibilities = watch("responsibilities");
     if (currentResponsibilities.includes(trimmedResponsibility)) {
+      setIsAdding(false); // <-- was missing, caused isAdding to stay true
       return;
     }
+
+    // Max limit check
+    if (currentResponsibilities.length >= 8) {
+      alert("You can only add up to 8 responsibilities.");
+      setIsAdding(false); // <-- reset here too
+      return;
+    }
+
     console.log("NOW AVILABLE RESPONSIBILITIES", currentResponsibilities);
     setValue("responsibilities", [
       ...currentResponsibilities,

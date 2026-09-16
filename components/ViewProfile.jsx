@@ -107,6 +107,7 @@ import {
   Phone,
   Briefcase,
   Clock,
+  Wallet,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import {
@@ -115,6 +116,7 @@ import {
   getJoiningType,
   getShiftTypes,
   fetchUserJobDetails,
+  salaryCreditTypes,
 } from "./commonFunctions";
 import { useRouter } from "next/navigation";
 import Loading from "./Loading";
@@ -156,7 +158,7 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
         }
 
         const { data } = await response.json();
-
+        console.log(data, "USER DATA");
         setWorkerData(data);
         setJobStatus(data?.status || "");
         setLoading(false);
@@ -363,6 +365,17 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
 
             <div className="rounded-lg bg-gray-50 p-4">
               <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Wallet className="h-4 w-4" />
+                Salary Credit Type
+              </div>
+
+              <p className="mt-2 font-semibold text-gray-800">
+                {salaryCreditTypes(workerData?.salaryCreditType) || "-"}
+              </p>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-500">
                 <Clock className="h-4 w-4" />
                 Joining
               </div>
@@ -417,7 +430,7 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
         </section>
 
         {/* Application Status */}
-        {type === "applications" && (
+        {type === "applications" ? (
           <section className="p-6 md:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -451,6 +464,17 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
                 <option value="rejected">Rejected</option>
               </select>
             </div>
+          </section>
+        ) : (
+          <section className="flex justify-center items-center">
+            <button
+              className="bg-blue-600 p-3 rounded-md m-3 text-white"
+              onClick={() => {
+                console.log("Sent Job Invitation");
+              }}
+            >
+              Send Job Invitation
+            </button>
           </section>
         )}
       </div>

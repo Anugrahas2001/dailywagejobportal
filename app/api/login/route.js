@@ -66,6 +66,10 @@ export async function POST(request) {
       );
     }
 
+    // NEW: enqueue matching computation — don't block the response on it
+ 
+    console.log("DATA SENT TO THE QUEUE SUCCESSFULLY");
+
     return NextResponse.json(
       {
         success: true,

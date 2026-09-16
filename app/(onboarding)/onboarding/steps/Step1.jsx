@@ -143,7 +143,7 @@ const Step1 = () => {
     };
 
     const { result } = await dispatch(step1Onboarding({ data: body })).unwrap();
-    const { role, onboardPage, isOnboardingComplete } = result;
+    const { role, onboardPage } = result;
     console.log(onboardPage, "CHECK THIS VALUE");
     router.push(`/onboarding/${onboardPage}`);
   };
@@ -186,6 +186,7 @@ const Step1 = () => {
         <SelectField
           label="Gender"
           options={GENDER_TYPES}
+          placeholder={"Select a gender"}
           {...register("gender", {
             required: "Please select a gender",
           })}

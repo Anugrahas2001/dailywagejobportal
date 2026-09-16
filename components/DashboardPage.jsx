@@ -78,8 +78,9 @@ const DashboardPage = ({ role }) => {
   console.log(error, "MY DEAR SELF");
   // console.log(jobs?.length, role, jobs, "LENGTH OF THE JOBS");
   const totalCountJobs = useSelector((state) => state.jobs.totalCount);
-  const searchTotalCount = useSelector((state) => state.searchJobs.totalCount);
 
+  const searchTotalCount = useSelector((state) => state.searchJobs.totalCount);
+  console.log(totalCountJobs, "CHECK THIS VALUE", searchTotalCount);
   const totalCount = activeSearch ? searchTotalCount : totalCountJobs;
 
   const count = useSelector((state) => state.jobs.statusCounts);
@@ -323,6 +324,7 @@ const DashboardPage = ({ role }) => {
                           💰 ₹{job.minSalary} - ₹{job.maxSalary}
                         </p>
                         <p>👥 Openings: {job.numberOfOpenings}</p>
+                        {/* <div className="bg-red-700 w-10 h-20">{job.matchingScore}</div> */}
                       </div>
                     </Link>
                     <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">

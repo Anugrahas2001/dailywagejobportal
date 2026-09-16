@@ -33,6 +33,7 @@ const LoginForm = () => {
   const status = useSelector((state) => state.user.status);
   const userRole = useSelector((state) => state.user.role);
   const error = useSelector((state) => state.user.error);
+  localStorage.setItem("role", role);
 
   const handleLoginForm = async (e) => {
     e.preventDefault();
@@ -55,7 +56,7 @@ const LoginForm = () => {
         return;
       }
       setLoading(true);
-      localStorage.setItem("role", role);
+      // localStorage.setItem("role", role);
       if (auth.currentUser) {
         const token = await auth.currentUser.getIdToken();
 

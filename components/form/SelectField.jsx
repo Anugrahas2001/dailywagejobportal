@@ -27,8 +27,8 @@ const SelectField = ({
 
       <select
         id={selectId}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${selectId}-error` : undefined}
+        // aria-invalid={!!error}
+        // aria-describedby={error ? `${selectId}-error` : undefined}
         className={`
           w-full px-3 py-2 rounded-lg border text-sm bg-white
           transition-colors duration-150

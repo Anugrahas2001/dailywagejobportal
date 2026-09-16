@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
+import { matchQueue } from "@/lib/queues/matchQueue";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
 import { profileImageSchema } from "@/lib/validations/onboarding/onBoardingValidation";
@@ -24,7 +25,7 @@ export async function POST(request) {
       uid,
       {
         $set: {
-          onboardPage:5,
+          onboardPage: 5,
           profileImage: data.profileImage,
           isOnboardingComplete: false,
         },
@@ -39,6 +40,16 @@ export async function POST(request) {
     if (!updatedUser) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
+
+    await matchQueue.add(
+      "compute-matchedJobs",
+      { userId: uid, status: "Active" },
+
+      { userId: `user-${uid}` }, // dedupe key
+    );
+
+    console.log("EVENT EMITTED TO THE QUEUE SUCCESSFULLY");
+
     return NextResponse.json(
       {
         message: "Profile image uploaded successfully.",

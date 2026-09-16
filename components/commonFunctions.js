@@ -1,4 +1,4 @@
-import { JOINING_TYPES, SHIFT_TYPES } from "@/constants/constant";
+import { JOINING_TYPES, SALARY_CREDIT_TYPES, SHIFT_TYPES } from "@/constants/constant";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 
 export const getShiftLabel = (shiftValue) => {
@@ -179,6 +179,10 @@ export function getJoiningType(joinType) {
 
 export function getShiftTypes(shiftType) {
   return SHIFT_TYPES.find((shift) => shift.value === shiftType)?.label;
+}
+
+export function salaryCreditTypes(salaryType) {
+  return SALARY_CREDIT_TYPES.find((salary) => salary.value === salaryType)?.label;
 }
 
 export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {

@@ -7,9 +7,19 @@ import {
   SHIFT_TYPES,
 } from "@/constants/constant";
 import { fetchUserToken } from "@/lib/fetchUserToken";
-import { BadgeCheck, MapPin, Wallet, Clock, X, Calendar } from "lucide-react";
+import {
+  BadgeCheck,
+  MapPin,
+  Wallet,
+  Clock,
+  X,
+  Calendar,
+  Mail,
+  Phone,
+} from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import Pagination from "./Pagination";
 
 const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [applicants, setApplicants] = useState([]);
@@ -17,6 +27,8 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [expandedSkills, setExpandedSkills] = useState(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const pageSize = 12;
+  const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
   useEffect(() => {
     if (!jobId || !type) return;
@@ -26,7 +38,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         ? `/api/employer/viewjobapplications?jobId=${jobId}&page=1&limit=12`
         : `/api/employer/recommendedprofiles?jobId=${jobId}&page=1&limit=12`;
 
-    console.log(url, "URL DATA");
+    console.log(url, "URL DATA FOR FETCH WORKERS PROFILES");
 
     const handleApplicantsProfiles = async () => {
       try {
@@ -60,6 +72,11 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
 
     handleApplicantsProfiles();
   }, [jobId]);
+
+  const goToPage = (p) => {
+    console.log(p, "ANUGRAHA ANUGRAHA");
+    if (p >= 1 && p <= totalPages) setPage(p);
+  };
 
   const handleSatusUpdates = async ({ status, workerId, jobId }) => {
     try {
@@ -145,19 +162,33 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                               />
                             )}
                           </div>
+                          <div className="flex">
+                            <Mail className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
+                            <p className="mt-0.5 text-sm text-gray-600">
+                              {profile?.email}
+                            </p>
+                          </div>
 
-                          <p className="mt-0.5 text-sm text-gray-600">
+                          <div className="flex">
+                            <Phone className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
+                            <p className="mt-0.5 text-sm text-gray-600">
+                              {profile?.mobileNumber?.code}-
+                              {profile?.mobileNumber?.number}{" "}
+                            </p>
+                          </div>
+
+                          {/* <p className="mt-0.5 text-sm text-gray-600">
                             {profile?.jobTitle}
                           </p>
 
                           <span className="mt-1 inline-block rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
                             {profile?.jobCategory}
-                          </span>
+                          </span> */}
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
-                            <span className="text-gray-400 text-sm">
+                            <p className="mt-0.5 text-sm text-gray-600">
                               {profile?.city}, {profile?.state}
-                            </span>
+                            </p>
                           </div>
                         </div>
 
@@ -173,6 +204,15 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     </div>
                   </div>
                   {/* Quick Information */}
+                  <div className="mt-3">
+                    <p className="mt-0.5 text-sm text-gray-600">
+                      {profile?.jobTitle}
+                    </p>
+
+                    <span className="mt-1 inline-block rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
+                      {profile?.jobCategory}
+                    </span>
+                  </div>
                   <div className="mt-5 grid grid-cols-1 gap-3 text-sm text-gray-600 sm:grid-cols-4">
                     {/* Location */}
 
@@ -333,6 +373,12 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </div>
         )}
       </div>
+      <Pagination
+        onClick={goToPage}
+        totalPages={totalPages}
+        page={page}
+        totalCount={totalCount}
+      />
       <div>{loading && <Loading />}</div>
     </div>
   );
