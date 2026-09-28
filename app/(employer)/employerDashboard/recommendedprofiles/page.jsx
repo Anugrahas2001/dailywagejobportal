@@ -55,8 +55,6 @@ const page = () => {
   const searchParams = useSearchParams();
   const profileType = searchParams.get("type");
   const jobId = searchParams.get("jobId");
-  // const rate=searchParams.get("matching");
-  console.log(jobId, profileType, "==============$$$$$@@@@%%%&&&&&");
 
   return (
     <div>

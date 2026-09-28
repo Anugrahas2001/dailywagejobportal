@@ -40,11 +40,13 @@ import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
+import Slider from "./Slider";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [activeSearch, setSearchActive] = useState(false);
+  const [val, setVal] = useState(20);
   const router = useRouter();
   const dispatch = useDispatch();
 
@@ -71,16 +73,16 @@ const DashboardPage = ({ role }) => {
   const appliedError = useSelector((state) => state.applied.error);
   const savedError = useSelector((state) => state.saved.error);
 
-  console.log(jobsError, appliedError, savedError, "JOBS ERROR DATA");
+  // console.log(jobsError, appliedError, savedError, "JOBS ERROR DATA");
 
   const error = jobsError || appliedError || savedError;
 
-  console.log(error, "MY DEAR SELF");
+  // console.log(error, "MY DEAR SELF");
   // console.log(jobs?.length, role, jobs, "LENGTH OF THE JOBS");
   const totalCountJobs = useSelector((state) => state.jobs.totalCount);
 
   const searchTotalCount = useSelector((state) => state.searchJobs.totalCount);
-  console.log(totalCountJobs, "CHECK THIS VALUE", searchTotalCount);
+  // console.log(totalCountJobs, "CHECK THIS VALUE", searchTotalCount);
   const totalCount = activeSearch ? searchTotalCount : totalCountJobs;
 
   const count = useSelector((state) => state.jobs.statusCounts);
@@ -89,6 +91,10 @@ const DashboardPage = ({ role }) => {
   // console.log(totalCount, totalPages, "COUNT AND PAGES");
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
+
+  useEffect(() => {
+    console.log(val, "CHECK THIS VALUE INSIDE THE USEEFFECT");
+  }, [val]);
 
   useEffect(() => {
     if (role === "employer") {
@@ -127,7 +133,7 @@ const DashboardPage = ({ role }) => {
 
   const handleToggleSavedJob = async (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
-    console.log(jobId, isSavedValue, "FROM THE SAVED TOGGLE BUTTON");
+    // console.log(jobId, isSavedValue, "FROM THE SAVED TOGGLE BUTTON");
     await dispatch(
       toggleSavedJobs({
         jobId,
@@ -139,7 +145,7 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleAppliedJob = async (jobId) => {
-    console.log(jobId, "JOB ID DATA");
+    // console.log(jobId, "JOB ID DATA");
     await dispatch(applyToJob(jobId)).unwrap();
     setPage(1);
     await dispatch(fetchActiveJobs({ page: 1 })).unwrap();
@@ -157,42 +163,9 @@ const DashboardPage = ({ role }) => {
   return (
     <main className="min-h-screen bg-gray-100 p-4 md:py-6 md:px-16">
       {/* Analytics */}
+
       {role === "worker" && (
         <section className="w-full m-3">
-          {/* <div className="flex items-center bg-white">
-            <div
-              className="m-1 md:m-2 flex flex-1 px-2 items-center rounded-lg border border-gray-300  focus-within:border-blue-500
-                focus-within:ring-2
-                focus-within:ring-blue-200"
-            >
-              <input
-                placeholder="Enter here..."
-                className="md:px-3 w-full rounded-lg py-2 outline-none"
-              />
-              <Search className="h-6 w-7 flex justify-end" />
-            </div>
-            <button className="flex items-center gap-2 rounded-lg border border-gray-300 px-2 md:px-4 py-2 hover:bg-gray-100">
-              <Filter className="h-5 w-5" />
-              <span className="hidden sm:inline">Filter</span>
-            </button>
-          </div>
-          <div className="flex justify-center items-center gap-2 m-2 md:gap-2">
-            <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              Nearby
-            </button>
-            <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              Avilability
-            </button>
-            <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              Shift
-            </button>
-            <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              Salary
-            </button>
-            <button className="px-1 md:px-3 py-1 rounded-sm text-sm bg-blue-600 text-white">
-              Date
-            </button>
-          </div> */}
           <SearchAndFilter
             page={page}
             onClick={() => setSearchActive((prev) => !prev)}
@@ -270,6 +243,10 @@ const DashboardPage = ({ role }) => {
           {/* Create Job */}
         </>
       )}
+
+      <div className="mt-4">
+        <Slider value={val} onChange={setVal} />
+      </div>
 
       {/* Available Jobs */}
       <h2 className="mt-8 text-2xl font-bold">Available Jobs</h2>
@@ -360,7 +337,7 @@ const DashboardPage = ({ role }) => {
                               <Link
                                 href={`/employerDashboard/recommendedprofiles?jobId=${job._id}&type=recommendation`}
                               >
-                                <button className="flex items-center gap-1 py-2">
+                                <button className="flex items-center gap-1 py-2 cursor-pointer">
                                   <BotMessageSquare className="h-5 w-5" />
                                   {job.aiMatchesCount}
                                 </button>
@@ -374,7 +351,7 @@ const DashboardPage = ({ role }) => {
                               <Link
                                 href={`/employerDashboard/appliedworkers?jobId=${job._id}&type=applications`}
                               >
-                                <button className="flex items-center gap-1 py-2">
+                                <button className="flex items-center gap-1 py-2 cursor-pointer">
                                   <FileUser className="h-5 w-5" />
                                   {job.applicantsCount}
                                 </button>

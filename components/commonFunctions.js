@@ -185,7 +185,7 @@ export function salaryCreditTypes(salaryType) {
   return SALARY_CREDIT_TYPES.find((salary) => salary.value === salaryType)?.label;
 }
 
-export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {
+export const fetchUserJobDetails = async ({ workerId, status, jobId,type }) => {
   const token = await fetchUserToken();
   const response = await fetch(
     `/api/employer/viewjobapplications/${workerId}`,
@@ -198,6 +198,7 @@ export const fetchUserJobDetails = async ({ workerId, status, jobId }) => {
       body: JSON.stringify({
         status,
         jobId,
+        type
       }),
     },
   );

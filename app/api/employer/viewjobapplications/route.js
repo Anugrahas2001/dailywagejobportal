@@ -6,6 +6,7 @@ import User from "@/modals/User";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
+  console.log("app/api/employer/viewjobapplications/route.js - GET");
   try {
     await connectDB();
     const { uid } = verifyFirebaseToken(request);

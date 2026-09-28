@@ -409,8 +409,10 @@ import UserMatches from "@/modals/UserMatches";
 import JobPreferences from "@/modals/JobPreferences";
 import User from "@/modals/User";
 import { NextResponse } from "next/server";
+import JobInvitation from "@/modals/JobInvitation";
 
 export async function GET(request) {
+ console.log("app/api/employer/recommendedprofiles/route.js - GET");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
@@ -422,10 +424,9 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     const allTheAvailableUsers = await UserMatches.find({
-      jobId,
+      jobId,isDeleted:false
     }).lean();
 
-    console.log(allTheAvailableUsers, "ALL THE VAILABLE USERSss");
 
     const matchingScoreMap = new Map(
       allTheAvailableUsers.map((user) => [
@@ -434,26 +435,33 @@ export async function GET(request) {
       ]),
     );
 
-    console.log(matchingScoreMap, "MATCHING SCORE MAP");
-
     const allTheUserIds = allTheAvailableUsers.map((job) => job.workerId);
-    console.log(allTheUserIds, "ALL THE AVILABLE USER IDS");
-    const [users, userPref] = await Promise.all([
+
+    const [users, userPref, jobInvitations] = await Promise.all([
       User.find({ _id: { $in: allTheUserIds } })
         .select(
           "name email gender mobileNumber city state isVerified profileImage skills",
         )
         .lean(),
       JobPreferences.find({ userId: { $in: allTheUserIds } }).lean(),
+      JobInvitation.find({
+        workerId: { $in: allTheUserIds },
+        employerId: uid,
+        status: "sent",
+      }),
     ]);
-
-    console.log(users.length, userPref.length, "CHECK BOTH OF THIS LENGTH");
 
     const userPrefMap = new Map(
       userPref.map((pref) => [String(pref.userId), pref]),
     );
+
+    const jobInvitationMap = new Map(
+      jobInvitations.map((job) => [String(job.workerId), job]),
+    );
+
     const userResults = users.map((us) => {
       const pref = userPrefMap.get(String(us._id));
+      const usermatch = jobInvitationMap.get(String(us._id));
       return {
         userId: us._id,
         name: us.name,
@@ -467,16 +475,13 @@ export async function GET(request) {
         profileImage: us.profileImage,
         ...pref,
         matchPercentage: matchingScoreMap.get(String(us._id)),
+        applicationAvailable: usermatch ? true : false,
       };
     });
-
-    console.log(userResults.length, "ALL THE USER RESULTS");
 
     const sortedResult = [...userResults]
       .sort((a, b) => b.matchPercentage - a.matchPercentage)
       .slice(skip, skip + limit);
-
-    console.log(sortedResult, "USER RESULT DATA");
 
     return NextResponse.json(
       {

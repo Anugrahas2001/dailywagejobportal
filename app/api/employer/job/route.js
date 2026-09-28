@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 
 // create a new job by employer
 export async function POST(request) {
+  console.log("app/api/employer/job/route.js - POST");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
@@ -21,8 +22,6 @@ export async function POST(request) {
       ...body,
     };
 
-    console.log(obj, "NEW JOB 1");
-
     const validation = validate(jobDetailSchema, obj);
 
     if (!validation.success) {
@@ -30,7 +29,6 @@ export async function POST(request) {
     }
 
     const newJob = await JobDetails.create(validation.data);
-    console.log(newJob, "A VERY NEW JOB");
 
     // NEW: enqueue matching computation — don't block the response on it
     await matchQueue.add(
@@ -38,8 +36,6 @@ export async function POST(request) {
       { jobId: newJob._id },
       { jobId: `job-${newJob._id}` }, // dedupe key
     );
-
-    console.log("JOB SENT TO THE QUEUE SUCCESSFULLY");
 
     return NextResponse.json(
       {
@@ -66,7 +62,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
-    console.log("INSIDE OF THE CODE");
+    console.log("app/api/employer/job/route.js - GET");
     await connectDB();
 
     const { uid } = await verifyFirebaseToken(request);

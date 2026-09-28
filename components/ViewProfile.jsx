@@ -122,20 +122,19 @@ import { useRouter } from "next/navigation";
 import Loading from "./Loading";
 import { getMatchStyle } from "@/constants/constant";
 
-const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
+const ViewProfile = ({
+  workerId,
+  jobId,
+  type,
+  matchingRate,
+  jobInvitation,
+}) => {
   const [workerData, setWorkerData] = useState({});
   const [jobStatus, setJobStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  console.log(
-    workerId,
-    jobId,
-    type,
-    matchingRate,
-    workerData,
-    jobStatus,
-    "WORKER DATA AVILABLESSS",
-  );
+  const isInvited = jobInvitation === "false" ? false : jobInvitation === "true" ? true : jobInvitation;
+  console.log(jobInvitation, typeof jobInvitation,isInvited, "WORKER DATA AVILABLESSS");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -173,6 +172,30 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
       fetchUserData();
     }
   }, [workerId]);
+
+  const handleJobInvitation = async (workerId) => {
+    const token = await fetchUserToken();
+    console.log(workerId, "WORKER ID");
+    try {
+      setLoading(true);
+      const response = await fetch("/api/employer/jobInvitation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(workerId),
+      });
+
+      const { data } = await response.json();
+      router.replace("/employerDashboard");
+      console.log(data, "RESPONSE DATA ");
+      setLoading(false);
+    } catch (error) {
+      console.log(error, "ERROR DATA");
+      setLoading(false);
+    }
+  };
 
   const handleJobApplicationStatus = async (e, { workerId, jobId }) => {
     const status = e.target.value;
@@ -467,14 +490,16 @@ const ViewProfile = ({ workerId, jobId, type, matchingRate }) => {
           </section>
         ) : (
           <section className="flex justify-center items-center">
-            <button
-              className="bg-blue-600 p-3 rounded-md m-3 text-white"
-              onClick={() => {
-                console.log("Sent Job Invitation");
-              }}
-            >
-              Send Job Invitation
-            </button>
+            {isInvited === false && (
+              <button
+                className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                onClick={() => {
+                  handleJobInvitation({ workerId: workerData?.userId });
+                }}
+              >
+                Send Job Invitation
+              </button>
+            )}
           </section>
         )}
       </div>

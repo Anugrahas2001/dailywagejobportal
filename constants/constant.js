@@ -8,6 +8,12 @@ export const JOB_APPLICATION_STATUS = [
   "Rejected",
 ];
 
+export const JOB_INVITATION_STATUS = [
+  { label: "Sent", value: "sent" },
+  { label: "Accepted", value: "accepted" },
+  { label: "Rejected", value: "rejected" },
+];
+
 export const filterOptions = {
   Nearby: [
     { label: "Within 1 km", value: "1" },
@@ -145,6 +151,8 @@ export const SHIFT_TYPE_VALUES = SHIFT_TYPES.map((item) => item.value);
 export const JOINING_TYPE_VALUES = JOINING_TYPES.map((item) => item.value);
 
 export const GENDER_TYPES_VALUES = GENDER_TYPES.map((item) => item.value);
+
+export const JOB_INVITATION_STATUS_VALUES=JOB_INVITATION_STATUS.map((item)=>item.value)
 
 export const EXPERIENCE_LEVELS = [
   "Beginner",
@@ -444,7 +452,7 @@ export const JOB_STATUS = [
 ];
 
 export const getMatchStyle = (rate) => {
-  console.log(rate,"CHECK THIS matchPercentage RATES");
+  console.log(rate, "CHECK THIS matchPercentage RATES");
   if (rate >= 80) {
     return {
       text: "Excellent Match",

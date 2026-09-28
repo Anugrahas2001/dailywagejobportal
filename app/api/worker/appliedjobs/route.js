@@ -5,6 +5,7 @@ import SavedJobs from "@/modals/SavedJobs";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
+console.log("app/api/worker/appliedjobs/route.js - GET");
   try {
     const { uid } = await verifyFirebaseToken(request);
     const { searchParams } = new URL(request.url);
@@ -72,7 +73,6 @@ export async function GET(request) {
       .map((id) => {
         const job = jobMap.get(String(id));
         const application = applicationMAP.get(String(id));
-        console.log(application?.status, "✨✨✨✨✨✨✨✨");
         return {
           ...job,
           applicationStatus: application.status,
@@ -80,15 +80,6 @@ export async function GET(request) {
         };
       })
       .filter(Boolean);
-
-    // console.log(
-    //   allAppliedJobs.length,
-    //   totalCount,
-    //   allAppliedJobIds.length,
-    //   allJobs.length,
-    //   orderedAppliedJobs.length,
-    //   "CHECK THE MAP DATA",
-    // );
 
     return NextResponse.json(
       {
@@ -114,6 +105,7 @@ export async function GET(request) {
 }
 
 export async function PUT(request) {
+   console.log("app/api/worker/appliedjobs/route.js - PUT");
   try {
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();

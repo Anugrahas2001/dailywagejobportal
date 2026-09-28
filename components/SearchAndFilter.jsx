@@ -20,9 +20,17 @@ const SearchAndFilter = ({ page, onClick }) => {
   // const [page, setPage] = useState(1);
   const dispatch = useDispatch();
 
-  console.log(activeFilter, selectedFilterValue, "SELECTED FILETR VALUES");
+   // Tracks whether a search has been explicitly triggered at least once
+  // (via the search button or a filter selection). Until then, the
+  // page-change effect below stays silent.
+  const hasSearchedRef = useRef(false);
 
-  useEffect(() => {
+  console.log(activeFilter, selectedFilterValue, "SELECTED FILETR VALUES");
+useEffect(() => {
+    // Skip firing on mount / before the user has actually searched.
+    // This effect should only react to page changes (e.g. pagination
+    // clicks) that happen AFTER an initial search has been made.
+    if (!hasSearchedRef.current) return;
     doSearchAndFilter(selectedFilterValue, page);
   }, [page]);
 

@@ -8,12 +8,12 @@ import JobDeatils from "@/modals/JobDetails";
 import { NextResponse } from "next/server";
 
 export async function DELETE(request, { params }) {
+  console.log("app/api/employer/job/[id]/route.js - DELETE");
   try {
     await connectDB();
 
     const { id } = await params;
     const { uid } = await verifyFirebaseToken(request);
-    console.log(id, "THE JOB ID");
 
     const deletedJob = await JobDeatils.findByIdAndUpdate(
       {
@@ -68,6 +68,7 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+   console.log("app/api/employer/job/[id]/route.js - PUT");
   try {
     await connectDB();
     const { id } = await params;
@@ -78,7 +79,6 @@ export async function PUT(request, { params }) {
       return validationError(validation);
     }
     const data = validation.data;
-    console.log(data, "ALL THE UPDATED JOB DATA");
     const updatedJob = await JobDeatils.findOneAndUpdate(
       {
         _id: id,
@@ -103,8 +103,6 @@ export async function PUT(request, { params }) {
       );
     }
 
-    console.log(updatedJob, "THE UPDATED JOB");
-
     // for (const job of candidateJobs) {
     await matchQueue.add(
       "compute-matches",
@@ -112,8 +110,6 @@ export async function PUT(request, { params }) {
       { jobId: `job-${updatedJob._id}` },
       // { jobId: `job-${updatedJob._id}`, delay: 10000 }, // debounce rapid edits
     );
-    // }
-    console.log("QUEUE DISPATCHED");
 
     return NextResponse.json(
       {
@@ -125,7 +121,7 @@ export async function PUT(request, { params }) {
       },
     );
   } catch (error) {
-    console.log(error);
+    console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
         message: "Unable to update the job. Please try later.",
@@ -139,6 +135,7 @@ export async function PUT(request, { params }) {
 }
 
 export async function GET(request, { params }) {
+  console.log("app/api/employer/job/[id]/route.js - GET");
   try {
     await connectDB();
     const { id } = await params;

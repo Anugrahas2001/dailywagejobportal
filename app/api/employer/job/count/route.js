@@ -4,6 +4,7 @@ import JobDetails from "@/modals/JobDetails";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
+console.log("app/api/employer/job/count/route.js - GET");
   try {
     await connectDB();
 
@@ -31,7 +32,6 @@ export async function GET(request) {
       employerId: uid,
       isDeleted: false,
     };
-    console.log(status, "STATUS DATA");
     if (status !== "All") {
       filter.status = status;
     }

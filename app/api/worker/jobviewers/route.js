@@ -9,6 +9,7 @@ import JobViews from "@/modals/JobViews";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
+console.log("app/api/worker/jobviewers/route.js - POST");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);

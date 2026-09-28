@@ -16,8 +16,8 @@ const page = () => {
   const jobId = searchParams.get("jobId");
   const type = searchParams.get("type");
   const matchingRate = searchParams.get("matching");
-  console.log(workerId, matchingRate, type, "INSIDE OF THE CODE");
   const role = localStorage.getItem("role");
+  const jobInvitation=searchParams.get("jobInvitation");
 
   return (
     <Modal  workerId={workerId}
@@ -30,6 +30,7 @@ const page = () => {
         jobId={jobId}
         type={type}
         matchingRate={matchingRate}
+        jobInvitation={jobInvitation}
       />
       <Footer />
     </Modal>

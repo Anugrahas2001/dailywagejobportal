@@ -10,20 +10,21 @@ import { useDispatch, useSelector } from "react-redux";
 import { verifyLogin } from "@/lib/features/profiles/userThunk";
 
 const OpeningPage = () => {
+  console.log("INSIDE OF THE OPENING PAGE");
   const router = useRouter();
   const dispatch = useDispatch();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
+  console.log(isAuthenticated, "CHECK AUTH AUTH");
+
   const role = useSelector((state) => state.user.role);
   const status = useSelector((state) => state.user.status);
 
   const isOnboardingComplete = useSelector(
-    (state) => state.user.isOnboardingCompleted
+    (state) => state.user.isOnboardingCompleted,
   );
-  const onboardPage = useSelector(
-    (state) => state.user.onboardPage
-  );
+  const onboardPage = useSelector((state) => state.user.onboardPage);
 
   const handleRole = (roleSelected) => {
     router.replace(`/login?role=${roleSelected}`);
@@ -45,10 +46,10 @@ const OpeningPage = () => {
   // 1. Check Firebase authentication
   // --------------------------------------------------
   useEffect(() => {
+    console.log("USE EFFECT IS CALLED 1");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
         if (!user) {
-          
           // setIsAuthenticated(null);
           setAuthChecked(true);
           return;
@@ -60,10 +61,7 @@ const OpeningPage = () => {
         const token = await user.getIdToken();
 
         // Verify user with backend / Redux
-        await dispatch(
-          verifyLogin({ token })
-        ).unwrap();
-
+        await dispatch(verifyLogin({ token })).unwrap();
       } catch (error) {
         console.log("Authentication verification failed:", error);
 
@@ -84,6 +82,7 @@ const OpeningPage = () => {
     // VERY IMPORTANT:
     // Do absolutely nothing until Firebase authentication
     // has been checked.
+    console.log("USE EFFECT IS CALLED 2");
     if (!authChecked) {
       return;
     }
@@ -110,15 +109,13 @@ const OpeningPage = () => {
 
     // If onboarding is incomplete
     if (!isOnboardingComplete) {
-      console.log(
-        "Authenticated user has incomplete onboarding:",
-        onboardPage
-      );
+      console.log("Authenticated user has incomplete onboarding:", onboardPage);
 
       router.replace(`/onboarding/${onboardPage || 1}`);
       return;
     }
 
+    console.log(isOnboardingComplete, role, "CHECK BOTH for onboarding");
     // ------------------------------------------------
     // Onboarding completed
     // ------------------------------------------------

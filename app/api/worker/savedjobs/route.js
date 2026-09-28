@@ -10,6 +10,7 @@ import JobDetails from "@/modals/JobDetails";
 import JobApplication from "@/modals/JobApplication";
 
 export async function POST(request) {
+  console.log("app/api/worker/savedjobs/route.js - POST");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
@@ -77,6 +78,7 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
+  console.log("app/api/worker/savedjobs/route.js - GET");
   try {
     await connectDB();
     const { searchParams } = new URL(request.url);

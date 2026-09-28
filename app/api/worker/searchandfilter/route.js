@@ -7,6 +7,7 @@ import User from "@/modals/User";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
+  console.log("app/api/worker/searchandfilter/route.js - GET");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
@@ -20,8 +21,6 @@ export async function GET(request) {
     const salary = searchParams.get("salary");
     const availability = searchParams.get("availability");
     const date = searchParams.get("sortType");
-
-    console.log(search, nearby, shift, salary, date, "SEARCH");
     const skip = (page - 1) * limit;
 
     const userLoc = await User.findById(uid).select("loc.coordinates").lean();
@@ -147,7 +146,7 @@ export async function GET(request) {
     //   })),
     // );
 
-    console.log(allJobs.length,totalCount, "=======================5");
+    console.log(allJobs.length, totalCount, "=======================5");
 
     return NextResponse.json(
       {

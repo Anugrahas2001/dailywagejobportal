@@ -1,5 +1,4 @@
 import { generateId } from "@/lib/generateRandomId";
-import { computeMatchScore } from "@/lib/matching/computeMatchedJobsForUser";
 import { connectDB } from "@/lib/mongodb";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
@@ -12,6 +11,7 @@ import SavedJobs from "@/modals/SavedJobs";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
+  console.log("app\api\worker\jobs\route.js - POST");
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
@@ -182,6 +182,7 @@ export async function POST(request) {
 // CORRECT
 
 export async function GET(request) {
+ console.log("app/api/worker/jobs/route.js - GET");
   try {
     const { uid } = await verifyFirebaseToken(request);
 

@@ -31,6 +31,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
   useEffect(() => {
+    console.log(jobId, "JOB ID CHANGED");
     if (!jobId || !type) return;
     console.log(jobId, type, "&&&&&&&&&&&&&&&&&&&&");
     const url =
@@ -81,7 +82,16 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const handleSatusUpdates = async ({ status, workerId, jobId }) => {
     try {
       setLoading(true);
-      await fetchUserJobDetails({ status, workerId, jobId });
+      const { workerId } = await fetchUserJobDetails({
+        status,
+        workerId,
+        jobId,
+        type,
+      });
+      console.log(workerId, "STATUS UPDATED");
+      setApplicants((prev) =>
+        prev.filter((applicant) => applicant._id !== workerId),
+      );
       setLoading(false);
     } catch (error) {
       console.log(error, "ERROR DATA");
@@ -92,7 +102,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   };
 
   const allRates = applicants.map((obj) => obj.matchPercentage);
-  console.log(allRates, "ALL THE RATES");
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
@@ -150,6 +159,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div>
+                          {/* <div className="flex justify-between"> */}
                           <div className="flex items-center gap-1.5">
                             <h2 className="text-lg font-semibold text-gray-900">
                               {profile?.name}
@@ -162,6 +172,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                               />
                             )}
                           </div>
+                          {/* </div> */}
                           <div className="flex">
                             <Mail className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
                             <p className="mt-0.5 text-sm text-gray-600">
@@ -191,15 +202,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                             </p>
                           </div>
                         </div>
-
-                        {/* Reject
-                        <button
-                          type="button"
-                          title="Reject application"
-                          className="rounded-full cursor-pointer p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-                        >
-                          <X className="h-5 w-5" />
-                        </button> */}
                       </div>
                     </div>
                   </div>
@@ -314,25 +316,16 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     </div>
                   )}
                   {/* Bottom Actions */}
-                  <div className="mt-5 flex items-center justify-between border-t pt-4">
-                    {/* View Profile */}
-
+                  {/* <div className="mt-5 flex items-center justify-between border-t pt-4">
+                    {profile?.applicationAvailable && (
+                      <span>Job Invitation Sent.</span>
+                    )}
                     <Link
-                      href={
-                        `/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}&matching=${profile.matchPercentage}`
-                        // ${
-                        //   profile?.matchPercentage !== undefined
-                        //     ? `&matching=${profile.matchPercentage}`
-                        //     : ""
-                        // }
-                      }
-                      //                       href={`/employerDashboard/viewjobapplication/${profile._id}?jobId=${jobId}&type=${type}${
-                      // //                 hasMatch ? `&matching=${profile.matchPercentage}` : ""
-                      // //               }`;}
+                      href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}&matching=${profile.matchPercentage}`}
                     >
                       <button
                         type="button"
-                        className="rounded-md border cursor-pointer border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-blue-100"
+                        className="rounded-md border flex justify-end cursor-pointer border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-blue-100"
                         onClick={() => {
                           if (!profile?.status) {
                             handleSatusUpdates({
@@ -347,14 +340,47 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                       </button>
                     </Link>
 
-                    {/* Status */}
-
                     {profile?.status ? (
                       <button className="bg-blue-600 text-white text-center px-2 py-1 rounded-md">
                         {profile?.status}
                       </button>
                     ) : (
                       <></>
+                    )}
+                  </div> */}
+                  <div className="mt-5 flex items-center justify-between border-t pt-4">
+                    {/* View Profile */}
+                    <Link
+                      href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}&matching=${profile.matchPercentage}&jobInvitation=${profile?.applicationAvailable}`}
+                    >
+                      <button
+                        type="button"
+                        className="rounded-md bg-blue-400 text-white border border-gray-300 px-4 py-2 text-sm font-medium transition hover:bg-blue-700 cursor-pointer"
+                        onClick={() => {
+                          if (!profile?.status) {
+                            handleSatusUpdates({
+                              status: "viewed",
+                              workerId: profile?.userId,
+                              jobId,
+                            });
+                          }
+                        }}
+                      >
+                        View Profile
+                      </button>
+                    </Link>
+                    {/* Job Invitation Status */}
+                    {profile?.applicationAvailable && (
+                      <span className="bg-blue-50 text-blue-700 border-blue-700">
+                        Job Invitation Sent.
+                      </span>
+                    )}
+
+                    {/* Status */}
+                    {profile?.status && (
+                      <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
+                        {profile.status}
+                      </button>
                     )}
                   </div>
                 </div>
