@@ -7,7 +7,6 @@ import React from "react";
 import { Footer } from "react-day-picker";
 
 const page = () => {
-
   const params = useParams();
   const workerId = params.id;
   const searchParams = useSearchParams();
@@ -17,13 +16,25 @@ const page = () => {
   const type = searchParams.get("type");
   const matchingRate = searchParams.get("matching");
   const role = localStorage.getItem("role");
-  const jobInvitation=searchParams.get("jobInvitation");
+  const jobInvitation = searchParams.get("jobInvitation");
+
+  console.log(
+    jobId,
+    workerId,
+    type,
+    matchingRate,
+    jobInvitation,
+    "FROM THE MODAL DATA",
+  );
 
   return (
-    <Modal  workerId={workerId}
-        jobId={jobId}
-        type={type}
-        matchingRate={matchingRate} role={role}>
+    <Modal
+      workerId={workerId}
+      jobId={jobId}
+      type={type}
+      matchingRate={matchingRate}
+      role={role}
+    >
       <NavBar />
       <ViewProfile
         workerId={workerId}

@@ -3,7 +3,7 @@
 import { filterOptions } from "@/constants/constant";
 import { fetchSearchAndFilterResults } from "@/lib/features/searchFilter/searchJobsThunk";
 import { Filter, Search } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
 const SearchAndFilter = ({ page, onClick }) => {

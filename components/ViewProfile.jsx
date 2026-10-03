@@ -133,69 +133,56 @@ const ViewProfile = ({
   const [jobStatus, setJobStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const isInvited = jobInvitation === "false" ? false : jobInvitation === "true" ? true : jobInvitation;
-  console.log(jobInvitation, typeof jobInvitation,isInvited, "WORKER DATA AVILABLESSS");
+  const isInvited =
+    jobInvitation === "false"
+      ? false
+      : jobInvitation === "true"
+        ? true
+        : jobInvitation;
+  console.log(
+    matchingRate,
+    jobInvitation,
+    typeof jobInvitation,
+    isInvited,
+    "WORKER DATA AVILABLESSS",
+  );
+
+  const fetchUserData = async () => {
+    try {
+      const token = await fetchUserToken();
+      setLoading(true);
+      const response = await fetch(
+        `/api/employer/viewjobapplications/${workerId}?jobId=${jobId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        console.log(response, "SOMETHING HAPPENED");
+        return;
+      }
+
+      const { data } = await response.json();
+      console.log(data, "USER DATA");
+      setWorkerData(data);
+      setJobStatus(data?.status || "");
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch worker data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = await fetchUserToken();
-        setLoading(true);
-        const response = await fetch(
-          `/api/employer/viewjobapplications/${workerId}?jobId=${jobId}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!response.ok) {
-          console.log(response, "SOMETHING HAPPENED");
-          return;
-        }
-
-        const { data } = await response.json();
-        console.log(data, "USER DATA");
-        setWorkerData(data);
-        setJobStatus(data?.status || "");
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch worker data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (workerId) {
       fetchUserData();
     }
   }, [workerId]);
-
-  const handleJobInvitation = async (workerId) => {
-    const token = await fetchUserToken();
-    console.log(workerId, "WORKER ID");
-    try {
-      setLoading(true);
-      const response = await fetch("/api/employer/jobInvitation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(workerId),
-      });
-
-      const { data } = await response.json();
-      router.replace("/employerDashboard");
-      console.log(data, "RESPONSE DATA ");
-      setLoading(false);
-    } catch (error) {
-      console.log(error, "ERROR DATA");
-      setLoading(false);
-    }
-  };
 
   const handleJobApplicationStatus = async (e, { workerId, jobId }) => {
     const status = e.target.value;
@@ -208,33 +195,14 @@ const ViewProfile = ({
     try {
       console.log(jobId, "JOB ID INSIDE THE UPDATE");
       setLoading(true);
-      // const response = await fetch(
-      //   `/api/employer/viewjobapplications/${workerData?.userId}`,
-      //   {
-      //     method: "PUT",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //       Authorization: `Bearer ${token}`,
-      //     },
-      //     body: JSON.stringify({
-      //       status,
-      //       jobId,
-      //     }),
-      //   },
-      // );
 
-      // if (!response.ok) {
-      //   console.log("Failed to update the status");
-      //   return;
-      // }
+      await fetchUserJobDetails({ workerId, status, jobId, type });
 
-      // const { data } = await response.json();
-
-      // console.log(data, "JOB DATA");
-
-      await fetchUserJobDetails({ workerId, status, jobId });
-
-      router.push(`/employerDashboard/appliedworkers?jobId=${jobId}`);
+      // router.replace(`/employerDashboard/appliedworkers?jobId=${jobId}`);
+      router.back();
+      // await fetchUserData();
+      // // Refresh the previous route
+      // router.refresh();
       setLoading(false);
     } catch (error) {
       console.log(error, "ERROR DATA");
@@ -243,8 +211,34 @@ const ViewProfile = ({
     }
   };
 
+  const handleJobInvitation = async ({ workerId, jobId }) => {
+    const token = await fetchUserToken();
+    console.log(workerId, "WORKER ID");
+    try {
+      setLoading(true);
+      const response = await fetch("/api/employer/jobInvitation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ workerId, jobId }),
+      });
+
+      const { data } = await response.json();
+      // router.replace("/employerDashboard");
+      router.back();
+      console.log(data, "RESPONSE DATA ");
+      setLoading(false);
+    } catch (error) {
+      console.log(error, "ERROR DATA");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 p-4 md:p-8">
+    
       <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-sm">
         {/* Profile Header */}
         <div className="border-b bg-white p-6 md:p-8">
@@ -277,14 +271,15 @@ const ViewProfile = ({
                 {workerData?.jobCategory}
               </p>
             </div>
-            <div className="bg-amber-100 m-2">
-              <span
-                className={`px-3 py-1 rounded-md ${getMatchStyle(matchingRate)?.className}`}
-              >
-                {matchingRate}%{""}-{getMatchStyle(matchingRate)?.text}
-              </span>
-              {/* <span>{}</span> */}
-            </div>
+            {type !== "applications" && (
+              <div className="bg-amber-100 m-2">
+                <span
+                  className={`px-3 py-1 rounded-md ${getMatchStyle(matchingRate)?.className}`}
+                >
+                  {matchingRate}%{""}-{getMatchStyle(matchingRate)?.text}
+                </span>
+              </div>
+            )}
             {/* </div> */}
           </div>
         </div>
@@ -494,7 +489,7 @@ const ViewProfile = ({
               <button
                 className="m-3 rounded-md bg-blue-600 p-3 text-white"
                 onClick={() => {
-                  handleJobInvitation({ workerId: workerData?.userId });
+                  handleJobInvitation({ workerId: workerData?.userId, jobId });
                 }}
               >
                 Send Job Invitation

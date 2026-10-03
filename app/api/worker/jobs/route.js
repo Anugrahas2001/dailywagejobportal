@@ -1,5 +1,6 @@
 import { generateId } from "@/lib/generateRandomId";
 import { connectDB } from "@/lib/mongodb";
+import { sendNotification } from "@/lib/notificationService";
 import { validate } from "@/lib/validate";
 import { validationError } from "@/lib/validationError";
 import { jobApplicationSchema } from "@/lib/validations/jobs/jobValidation";
@@ -22,6 +23,9 @@ export async function POST(request) {
       jobId: body.jobId,
       workerId: uid,
     };
+
+    console.log(jobObj, "THE JOB OBJECT");
+
     const validation = validate(jobApplicationSchema, jobObj);
     if (!validation.success) {
       return validationError(validation);
@@ -32,6 +36,12 @@ export async function POST(request) {
       workerId: uid,
       status: { $ne: "rejected" },
     });
+
+    const job = await JobDetails.findById(body.jobId)
+      .select("employerId")
+      .lean();
+
+    console.log(alreadyApplied, "ALREADY APPLIED");
 
     if (alreadyApplied) {
       return NextResponse.json(
@@ -45,6 +55,7 @@ export async function POST(request) {
     }
 
     const application = await JobApplication.create(validation.data);
+    console.log(application, "APPLICATION CREATED NEWLY");
 
     const updateApplicantCount = await JobDetails.findByIdAndUpdate(
       { _id: body.jobId },
@@ -69,6 +80,14 @@ export async function POST(request) {
       },
     );
 
+    await sendNotification({
+      title: "New job application",
+      message:
+        "A candidate just applied to your job posting. Review their profile to see if they're a good fit.",
+      senderId: uid,
+      recepientId: job?.employerId,
+    });
+
     return NextResponse.json(
       {
         message: "Your job application was submitted successfully.",
@@ -79,6 +98,7 @@ export async function POST(request) {
       },
     );
   } catch (error) {
+    console.log(error, "ERROR DATA");
     return NextResponse.json(
       {
         message: "Unable to submit your job application. Please try again.",
@@ -182,7 +202,7 @@ export async function POST(request) {
 // CORRECT
 
 export async function GET(request) {
- console.log("app/api/worker/jobs/route.js - GET");
+  console.log("app/api/worker/jobs/route.js - GET");
   try {
     const { uid } = await verifyFirebaseToken(request);
 
@@ -190,10 +210,38 @@ export async function GET(request) {
 
     const page = Number(searchParams.get("page")) || 1;
     const limit = Number(searchParams.get("limit")) || 12;
-
+    // Use ?? so that matching=0 is respected (|| would turn 0 into 20)
+    const rawMatching = searchParams.get("matching");
+    const parsedMatching = rawMatching !== null ? Number(rawMatching) : NaN;
+    const matchingRate = Number.isNaN(parsedMatching) ? 20 : parsedMatching;
+    console.log(matchingRate, "MATCHING MATCHING RATE");
     const skip = (page - 1) * limit;
 
-    const matches = await JobMatches.find({ workerId: uid })
+    const appliedJobs = await JobApplication.find(
+      { workerId: uid },
+      { jobId: 1 },
+    ).lean();
+
+    const appliedJobIds = appliedJobs.map((job) => job.jobId);
+    console.log(appliedJobIds, "APPLIED IDS");
+    const allSavedJobs = await SavedJobs.find(
+      {
+        workerId: uid,
+        isDeleted: false,
+        jobId: { $nin: appliedJobIds },
+      },
+      { jobId: 1, _id: 0 },
+    ).lean();
+
+    const savedJobIds = allSavedJobs.map((job) => job.jobId);
+    const excludedIds = [...appliedJobIds, ...savedJobIds];
+    console.log(excludedIds, "ALL THE EXCLUDEDiDS");
+
+    const matches = await JobMatches.find({
+      workerId: uid,
+      jobId: { $nin: excludedIds },
+      matchingScore: { $gte: matchingRate },
+    })
       .select("jobId matchingScore")
       .sort({ matchingScore: -1 })
       .lean();
@@ -216,6 +264,8 @@ export async function GET(request) {
       ...job,
       matchingScore: matchScoreMap.get(job._id),
     }));
+
+    // console.log(matchScoreMap, jobsWithScores, "FINDING VALUES");
 
     // Sort by matchingScore descending (this is the source of truth for order)
     jobsWithScores.sort(

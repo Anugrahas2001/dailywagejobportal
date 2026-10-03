@@ -142,6 +142,10 @@ export const GENDER_TYPES = [
   { value: "Any", label: "Any Gender" },
 ];
 
+export const appliedjobStatus_values = appliedjobStatus.map(
+  (item) => item.value,
+);
+
 export const SALARY_CREDIT_TYPES_VALUES = SALARY_CREDIT_TYPES.map(
   (item) => item.value,
 );
@@ -152,7 +156,9 @@ export const JOINING_TYPE_VALUES = JOINING_TYPES.map((item) => item.value);
 
 export const GENDER_TYPES_VALUES = GENDER_TYPES.map((item) => item.value);
 
-export const JOB_INVITATION_STATUS_VALUES=JOB_INVITATION_STATUS.map((item)=>item.value)
+export const JOB_INVITATION_STATUS_VALUES = JOB_INVITATION_STATUS.map(
+  (item) => item.value,
+);
 
 export const EXPERIENCE_LEVELS = [
   "Beginner",

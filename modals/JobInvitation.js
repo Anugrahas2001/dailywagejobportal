@@ -10,6 +10,10 @@ const JobInvitationSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  jobId: {
+    type: String,
+    required: true,
+  },
   workerId: {
     type: String,
     required: true,

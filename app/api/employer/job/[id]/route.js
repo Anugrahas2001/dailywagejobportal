@@ -106,7 +106,7 @@ export async function PUT(request, { params }) {
     // for (const job of candidateJobs) {
     await matchQueue.add(
       "compute-matches",
-      { jobId: updatedJob._id },
+      { jobId: updatedJob._id,employerId:uid },
       { jobId: `job-${updatedJob._id}` },
       // { jobId: `job-${updatedJob._id}`, delay: 10000 }, // debounce rapid edits
     );

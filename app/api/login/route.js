@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
+    console.log("app\api\login\route.js - POST");
     await connectDB();
 
     const { uid, email, firebase } = await verifyFirebaseToken(request);
@@ -67,8 +68,8 @@ export async function POST(request) {
     }
 
     // NEW: enqueue matching computation — don't block the response on it
- 
-    console.log("DATA SENT TO THE QUEUE SUCCESSFULLY");
+
+    console.log(userDoc, "DATA SENT TO THE QUEUE SUCCESSFULLY");
 
     return NextResponse.json(
       {
@@ -78,6 +79,7 @@ export async function POST(request) {
           onboardPage: userDoc.onboardPage || 1,
           isOnboardingComplete: userDoc.isOnboardingComplete || false,
           role: userDoc.role,
+          profileImage: userDoc.profileImage,
         },
       },
       { status: isNew ? 201 : 200 },
@@ -96,6 +98,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   try {
+    console.log("app\api\login\route.js - GET");
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
 
@@ -114,6 +117,7 @@ export async function GET(request) {
         },
       );
     }
+    console.log(exUser, "EXISTING USER");
     return NextResponse.json(
       {
         message: "User verification successful.",
@@ -121,6 +125,7 @@ export async function GET(request) {
           onboardPage: exUser.onboardPage || 0,
           isOnboardingComplete: exUser.isOnboardingComplete || false,
           role: exUser.role,
+          profileImage: exUser.profileImage,
           userId: uid,
         },
       },

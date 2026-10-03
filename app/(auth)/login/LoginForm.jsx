@@ -61,7 +61,11 @@ const LoginForm = () => {
         const token = await auth.currentUser.getIdToken();
 
         try {
-          await dispatch(login({ token, role })).unwrap();
+          const { data } = await dispatch(
+            login({ token, role }),
+          ).unwrap();
+          console.log(data, "SECOND PROFILE IMAGE");
+          localStorage.setItem("profileImage", data?.profileImage);
           return;
         } catch (error) {
           // Login failed
@@ -115,7 +119,11 @@ const LoginForm = () => {
       const token = await userCredential.user.getIdToken();
 
       try {
-        await dispatch(login({ token, role })).unwrap();
+        const { data } = await dispatch(
+          login({ token, role }),
+        ).unwrap();
+        console.log(data, "FIRST PROFILE IMAGE");
+        localStorage.setItem("profileImage", data?.profileImage);
       } catch (error) {
         // Login failed
         console.log(error.message || "Login failed:", error);

@@ -1,4 +1,5 @@
 import { connectDB } from "@/lib/mongodb";
+import { sendNotification } from "@/lib/notificationService";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobApplication from "@/modals/JobApplication";
 import JobDetails from "@/modals/JobDetails";
@@ -71,6 +72,8 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     let jobApplication;
 
+    // const job=await JobDetails.findById(jobId).select("employerId").lean()
+
     if (type === "applications") {
       jobApplication = await JobApplication.findOneAndUpdate(
         { jobId, workerId: id },
@@ -84,7 +87,16 @@ export async function PUT(request, { params }) {
           upsert: false,
         },
       );
-      if (status === "rejected") {
+
+      await sendNotification({
+        title: "Application status updated",
+        message:
+          "The status of your job application has changed. Open your applications to see the latest update.",
+        senderId: uid,
+        recepientId: id,
+      });
+
+      if (status === "accepted" || "rejected") {
         const jobData = await JobDetails.findOneAndUpdate(
           { employerId: uid, _id: jobId, applicantsCount: { $gt: 0 } },
           {
@@ -116,7 +128,7 @@ export async function PUT(request, { params }) {
           upsert: false,
         },
       );
-     
+
       if (status === "rejected") {
         const jobData = await JobDetails.findOneAndUpdate(
           { employerId: uid, _id: jobId, aiMatchesCount: { $gt: 0 } },

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import useLoading from "./hooks/useLoading";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import Loading from "./Loading";
-import { BriefcaseBusiness, CircleUserRound } from "lucide-react";
+import { BellDot, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 
@@ -85,6 +85,7 @@ const NavBar = () => {
         </button>
 
         <div className="flex items-center">
+          <BellDot className="m-2" />
           {onboardPage >= 4 && role === "worker" && (
             <Link href="/workerDashboard/myjobs">
               <div className="flex cursor-pointer m-4">

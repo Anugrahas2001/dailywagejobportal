@@ -37,10 +37,11 @@ import { toggleSavedJobs } from "@/lib/features/workerJobs/savedjobs/savedJobThu
 import Loading from "./Loading";
 import SearchAndFilter from "./SearchAndFilter";
 import Error from "./Error";
-import { clearJobsError } from "@/lib/features/jobs/jobSlice";
+import { clearJobsError, removeJobById } from "@/lib/features/jobs/jobSlice";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
 import Slider from "./Slider";
+import TestNotifications from "./TestNotifications";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
@@ -93,10 +94,6 @@ const DashboardPage = ({ role }) => {
   const savedJobs = useSelector((state) => state.saved.savedJobs);
 
   useEffect(() => {
-    console.log(val, "CHECK THIS VALUE INSIDE THE USEEFFECT");
-  }, [val]);
-
-  useEffect(() => {
     if (role === "employer") {
       if (status) {
         // Employer selected a specific status
@@ -121,10 +118,11 @@ const DashboardPage = ({ role }) => {
       dispatch(
         fetchActiveJobs({
           page,
+          val,
         }),
       );
     }
-  }, [page, status, role, dispatch]);
+  }, [page, status, role, val, dispatch]);
 
   const goToPage = (p) => {
     console.log(p, "ANUGRAHA ANUGRAHA");
@@ -134,12 +132,15 @@ const DashboardPage = ({ role }) => {
   const handleToggleSavedJob = async (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
     // console.log(jobId, isSavedValue, "FROM THE SAVED TOGGLE BUTTON");
-    await dispatch(
+    const { data } = await dispatch(
       toggleSavedJobs({
         jobId,
         toggle: isSavedValue,
       }),
     ).unwrap();
+
+    console.log(data, "SAVED JOB DATA VERIFICATION");
+    dispatch(removeJobById(data._id));
     setPage(1);
     await dispatch(fetchActiveJobs({ page: 1 })).unwrap();
   };
@@ -163,6 +164,8 @@ const DashboardPage = ({ role }) => {
   return (
     <main className="min-h-screen bg-gray-100 p-4 md:py-6 md:px-16">
       {/* Analytics */}
+
+      <TestNotifications/>
 
       {role === "worker" && (
         <section className="w-full m-3">
@@ -189,6 +192,7 @@ const DashboardPage = ({ role }) => {
               </Link>
               {/* </section> */}
             </div>
+
             <div className="grid grid-cols-1 gap-4 mt-3 sm:grid-cols-5">
               <AnalyticsCard
                 dot={getStatusColor("All").dot}
@@ -244,12 +248,15 @@ const DashboardPage = ({ role }) => {
         </>
       )}
 
-      <div className="mt-4">
-        <Slider value={val} onChange={setVal} />
-      </div>
-
       {/* Available Jobs */}
-      <h2 className="mt-8 text-2xl font-bold">Available Jobs</h2>
+      {role === "worker" && (
+        <>
+          <h2 className="mt-8 text-2xl font-bold">Available Jobs</h2>
+          <div className="mt-4">
+            <Slider value={val} onChange={setVal} />
+          </div>
+        </>
+      )}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
         {loadingStatus === "pending" ? (
           <div className="flex justify-center py-10">
@@ -257,6 +264,19 @@ const DashboardPage = ({ role }) => {
           </div>
         ) : jobs.length > 0 ? (
           jobs.map((job) => {
+            const details = (
+              <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
+                <p>
+                  📍 {job.city}, {job.state}
+                </p>
+                <p>🕘 {getShiftLabel(job.jobShift)}</p>
+                <p>📅 {getJoingDate(job.availability)}</p>
+                <p>
+                  💰 ₹{job.minSalary} - ₹{job.maxSalary}
+                </p>
+                <p>👥 Openings: {job.numberOfOpenings}</p>
+              </div>
+            );
             return (
               <article
                 className="rounded-lg bg-white p-4 shadow mt-7"
@@ -290,7 +310,7 @@ const DashboardPage = ({ role }) => {
                   </div>
 
                   <div onClick={() => handleJobViews(job._id)}>
-                    <Link href={`/${role}Dashboard/jobs/${job._id}`}>
+                    {/* <Link href={`/${role}Dashboard/jobs/${job._id}`}>
                       <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
                         <p>
                           📍 {job.city}, {job.state}
@@ -301,9 +321,18 @@ const DashboardPage = ({ role }) => {
                           💰 ₹{job.minSalary} - ₹{job.maxSalary}
                         </p>
                         <p>👥 Openings: {job.numberOfOpenings}</p>
-                        {/* <div className="bg-red-700 w-10 h-20">{job.matchingScore}</div> */}
+
                       </div>
-                    </Link>
+                    </Link> */}
+
+                    {role === "worker" ? (
+                      <Link href={`/${role}Dashboard/jobs/${job._id}`}>
+                        {details}
+                      </Link>
+                    ) : (
+                      details
+                    )}
+
                     <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
                       <div className="flex items-center gap-2 md:justify-end">
                         <span
@@ -384,9 +413,11 @@ const DashboardPage = ({ role }) => {
                     {role === "employer" ? (
                       <>
                         <div className="flex w-full justify-between items-center m-1">
-                          <button className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white">
-                            View Applications
-                          </button>
+                          <Link href={`/${role}Dashboard/jobs/${job._id}`}>
+                            <button className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white">
+                              View Applications
+                            </button>
+                          </Link>
                           <div className="flex gap-2">
                             <div className="group relative inline-block">
                               <button className="flex items-center gap-1 py-2">

@@ -21,6 +21,10 @@ import {
   cancelAppliedJobs,
   fetchAppliedJobs,
 } from "@/lib/features/workerJobs/appliedjobs/appliedJobThunk";
+import {
+  fetchJobInvitations,
+  updateJobInvitationStatus,
+} from "@/lib/features/workerJobs/jobinvitations/jobinvitationThunk";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
 import {
   fetchSavedJobs,
@@ -33,6 +37,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 const page = () => {
   // const [search, setSearch] = useState("");
+  const [jobInviteType, setJobInviteType] = useState("sent");
   const [jobType, setJobType] = useState("saved");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
@@ -52,17 +57,41 @@ const page = () => {
   const appliedTotalCount = useSelector((state) => state.applied.totalCount);
   const appliedLoadingStatus = useSelector((state) => state.applied.status);
 
-  // console.log(savedJobs.length, appliedJobs?.length, "ALL SAVED JOBS");
-  const jobs = jobType === "saved" ? savedJobs : appliedJobs;
+  const jobInvitations = useSelector(
+    (state) => state.jobinvitations.jobInvitations,
+  );
+  const jobInvitationTotalCount = useSelector(
+    (state) => state.jobinvitations.totalCount,
+  );
+  const jobInvitationLoadingStatus = useSelector(
+    (state) => state.jobinvitations.status,
+  );
 
-  const totalCount = jobType === "saved" ? savedTotalCount : appliedTotalCount;
+  // console.log(savedJobs.length, appliedJobs?.length, "ALL SAVED JOBS");
+  const jobs =
+    jobType === "saved"
+      ? savedJobs
+      : jobType === "applied"
+        ? appliedJobs
+        : jobInvitations;
+
+  const totalCount =
+    jobType === "saved"
+      ? savedTotalCount
+      : jobType === "applied"
+        ? appliedTotalCount
+        : jobInvitationTotalCount;
 
   const savedError = useSelector((state) => state.saved.error);
   const appliedError = useSelector((state) => state.applied.error);
   const error = savedError || appliedError;
 
   const loadingStatus =
-    jobType === "saved" ? savedLoadingStatus : appliedLoadingStatus;
+    jobType === "saved"
+      ? savedLoadingStatus
+      : jobType === "applied"
+        ? appliedLoadingStatus
+        : jobInvitationLoadingStatus;
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -79,8 +108,10 @@ const page = () => {
     console.log("CLICKED", jobStatus);
     if (jobStatus === "saved") {
       setJobType("saved");
-    } else {
+    } else if (jobStatus === "applied") {
       setJobType("applied");
+    } else {
+      setJobType("jobInvitation");
     }
   };
 
@@ -136,22 +167,24 @@ const page = () => {
     ).unwrap();
   };
 
+  const handleJobInvitationStatus = ({ status, jobId }) => {
+    dispatch(updateJobInvitationStatus({ status, jobId }));
+  };
+
+  const handleJobInvitationFetches = (status) => {
+    dispatch(fetchJobInvitations({ status, page: 1 }));
+  };
+
   useEffect(() => {
     if (jobType === "saved") {
       console.log("ANUGRAHA 2", jobType);
-      dispatch(fetchSavedJobs({ sort, page }));
-    } else {
-      console.log("ANUGRAHA 6", jobType);
+    } else if (jobType === "applied") {
       dispatch(fetchAppliedJobs({ sort, status, page }));
+    } else {
+      console.log("EVERYTHING IS HAPPENS FOR A REASON");
+      dispatch(fetchJobInvitations({ status: "sent", page }));
     }
   }, [jobType, sort, status, page]);
-
-  const ids = jobs.map((job) => job._id);
-
-  console.log(jobType, "JOB TYPE VALUE");
-  // console.log("IDs:", ids);
-  // console.log("Jobs:", jobs.length,jobType);
-  // console.log("Unique IDs:", new Set(ids).size);
 
   const uniqueJobs = Array.from(
     new Map(jobs.map((job) => [job._id, job])).values(),
@@ -177,6 +210,16 @@ const page = () => {
         >
           Applied Jobs
         </button>
+
+        <button
+          // onClick={handleJobInvitations}
+          onClick={() => {
+            handleJobStatus("jobInvitation");
+          }}
+          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+        >
+          Job Invitations
+        </button>
       </div>
       {/* <div className="relative w-full">
         <input
@@ -188,44 +231,68 @@ const page = () => {
         <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
       </div> */}
 
-      <div className="relative inline-block">
-        <div className="flex items-center gap-2 mt-3">
-          {jobType === "applied" && (
-            <FilterButtons
-              title="Status"
-              setDropdownStatus={setShowStatusDropdown}
-              dropDown={showStatusDropdown}
-              setValue={setStatus}
-              defaultLabel="Applied"
-              value={status}
-              options={appliedjobStatus}
-              onClick={() => {
-                console.log("ANUGRAHA 7", jobType);
-                dispatch(fetchAppliedJobs({ sort, status, page }));
-              }}
-            />
-          )}
+      {jobType !== "jobInvitation" && (
+        <div className="relative inline-block">
+          <div className="flex items-center gap-2 mt-3">
+            {jobType === "applied" && (
+              <FilterButtons
+                title="Status"
+                setDropdownStatus={setShowStatusDropdown}
+                dropDown={showStatusDropdown}
+                setValue={setStatus}
+                defaultLabel="Applied"
+                value={status}
+                options={appliedjobStatus}
+                onClick={() => {
+                  console.log("ANUGRAHA 7", jobType);
+                  dispatch(fetchAppliedJobs({ sort, status, page }));
+                }}
+              />
+            )}
 
-          <FilterButtons
-            title="Sort"
-            setDropdownStatus={setShowSortDropdown}
-            dropDown={showSortDropdown}
-            setValue={setSort}
-            value={sort}
-            defaultLabel={defaultLabel}
-            onClick={() => {
-              if (jobType === "applied") {
-                console.log("ANUGRAHA 8", jobType);
-                dispatch(fetchAppliedJobs({ sort, status, page }));
-              } else {
-                console.log("ANUGRAHA 3", jobType);
-                dispatch(fetchSavedJobs({ sort, page }));
-              }
-            }}
-            options={sortOptions}
-          />
+            <FilterButtons
+              title="Sort"
+              setDropdownStatus={setShowSortDropdown}
+              dropDown={showSortDropdown}
+              setValue={setSort}
+              value={sort}
+              defaultLabel={defaultLabel}
+              onClick={() => {
+                if (jobType === "applied") {
+                  console.log("ANUGRAHA 8", jobType);
+                  dispatch(fetchAppliedJobs({ sort, status, page }));
+                } else {
+                  console.log("ANUGRAHA 3", jobType);
+                  dispatch(fetchSavedJobs({ sort, page }));
+                }
+              }}
+              options={sortOptions}
+            />
+          </div>
         </div>
-      </div>
+      )}
+
+      {jobType === "jobInvitation" && (
+        <div className="flex gap-2 mt-4">
+          <button
+            className="bg-blue-600 p-2 text-white rounded-md"
+            onClick={() => {
+              (handleJobInvitationFetches("sent"), setJobInviteType("sent"));
+            }}
+          >
+            All Invitations
+          </button>
+          <button
+            className="bg-blue-600 p-2 text-white rounded-md"
+            onClick={() => {
+              (handleJobInvitationFetches("accepted"),
+                setJobInviteType("accepted"));
+            }}
+          >
+            Accepted Jobs
+          </button>
+        </div>
+      )}
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
         {loadingStatus === "pending" ? (
@@ -234,10 +301,6 @@ const page = () => {
           </div>
         ) : uniqueJobs.length > 0 ? (
           uniqueJobs.map((job) => {
-            // const applicationStatus = job.applicationStatus
-            //   ? job.applicationStatus.charAt(0).toUpperCase() +
-            //     job.applicationStatus.slice(1)
-            //   : "Applied";
             console.log(job?.applicationStatus, "APPLICATION STATUS");
             return (
               <article
@@ -285,58 +348,90 @@ const page = () => {
                       <p>👥 Openings: {job.numberOfOpenings}</p>
                     </div>
 
-                    <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
-                      <div className="flex items-center gap-2 md:justify-end">
-                        <span
-                          className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
-                        ></span>
-                        <p
-                          className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
-                        >
-                          {jobType === "saved"
-                            ? job.status
-                            : job.applicationStatus}
-                        </p>
+                    {jobType !== "jobInvitation" && (
+                      <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
+                        <div className="flex items-center gap-2 md:justify-end">
+                          <span
+                            className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
+                          ></span>
+                          <p
+                            className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
+                          >
+                            {jobType === "saved"
+                              ? job.status
+                              : job.applicationStatus}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </Link>
                 </div>
                 {/* Footer */}
-                <div
-                  className={`flex justify-between border-t pt-4 flex-row items-center`}
-                >
-                  {/* md:flex-row */}
-                  <p className="text-sm text-gray-500">
-                    {" "}
-                    {getPostedText({
-                      createdAt:
-                        jobType === "saved" ? job.createdAt : job.appliedAt,
-                      jobType,
-                    })}
-                  </p>
+                {jobType !== "jobInvitation" ? (
+                  <div
+                    className={`flex justify-between border-t pt-4 flex-row items-center`}
+                  >
+                    {/* md:flex-row */}
+                    <p className="text-sm text-gray-500">
+                      {" "}
+                      {getPostedText({
+                        createdAt:
+                          jobType === "saved" ? job.createdAt : job.appliedAt,
+                        jobType,
+                      })}
+                    </p>
 
-                  <div className="flex gap-2 md:gap-3 md:mt-0">
-                    {jobType === "saved" ? (
+                    <div className="flex gap-2 md:gap-3 md:mt-0">
+                      {jobType === "saved" ? (
+                        <button
+                          className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                          onClick={() => {
+                            handleAppliedJobs({ jobId: job._id });
+                          }}
+                        >
+                          Apply Now
+                        </button>
+                      ) : (
+                        <button
+                          className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                          onClick={() =>
+                            handleCancelAppliedJob({ jobId: job._id })
+                          }
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  jobInviteType === "sent" && (
+                    <div className="flex justify-between mt-3">
                       <button
-                        className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                        className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
                         onClick={() => {
-                          handleAppliedJobs({ jobId: job._id });
+                          handleJobInvitationStatus({
+                            status: "rejected",
+                            jobId: job._id,
+                          });
                         }}
                       >
-                        Apply Now
+                        Reject
                       </button>
-                    ) : (
+
                       <button
-                        className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                        onClick={() =>
-                          handleCancelAppliedJob({ jobId: job._id })
-                        }
+                        className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                        onClick={() => {
+                          handleJobInvitationStatus({
+                            status: "accepted",
+                            jobId: job._id,
+                          });
+                        }}
                       >
-                        Cancel
+                        Accept
                       </button>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                  )
+                )}
               </article>
             );
           })

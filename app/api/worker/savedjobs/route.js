@@ -52,7 +52,7 @@ export async function POST(request) {
     const isNew = !savedJob?.lastErrorObject?.updatedExisting;
     const savedJobObj = isNew ? validation.data : savedJob.value;
     const savedJobDoc = await JobDetails.findById(savedJobObj?.jobId).lean();
-
+    console.log(savedJobDoc, "SAVED JOB DOCUMENT");
     return NextResponse.json(
       {
         success: true,
