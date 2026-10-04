@@ -85,7 +85,9 @@ const NavBar = () => {
         </button>
 
         <div className="flex items-center">
-          <BellDot className="m-2" />
+          <Link href={"/employerDashboard/notifications"}>
+            <BellDot className="m-3 h-8 w-8" />
+          </Link>
           {onboardPage >= 4 && role === "worker" && (
             <Link href="/workerDashboard/myjobs">
               <div className="flex cursor-pointer m-4">

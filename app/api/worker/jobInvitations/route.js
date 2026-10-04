@@ -89,6 +89,7 @@ export async function PUT(request) {
     if (invitationStatus === "accepted") {
       await sendNotification({
         title: "Invitation accepted",
+        notifType:"JOB_INVITATION_ACCEPTED",
         message:
           "A candidate accepted your job invitation. View their profile to take the next step.",
         senderId: uid,

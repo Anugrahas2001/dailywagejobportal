@@ -29,13 +29,15 @@ export async function POST(request) {
     }
 
     const newJob = await JobDetails.create(validation.data);
-
+    console.log(uid, "EMPLOYER USER ID 1");
     // NEW: enqueue matching computation — don't block the response on it
     await matchQueue.add(
       "compute-matches",
-      { jobId: newJob._id },
+      { jobId: newJob._id, employerId: uid },
       { jobId: `job-${newJob._id}` }, // dedupe key
     );
+
+    console.log(uid, "EMPLOYER USER ID 2");
 
     return NextResponse.json(
       {

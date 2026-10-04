@@ -41,7 +41,6 @@ import { clearJobsError, removeJobById } from "@/lib/features/jobs/jobSlice";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
 import Slider from "./Slider";
-import TestNotifications from "./TestNotifications";
 
 const DashboardPage = ({ role }) => {
   const [page, setPage] = useState(1);
@@ -164,8 +163,6 @@ const DashboardPage = ({ role }) => {
   return (
     <main className="min-h-screen bg-gray-100 p-4 md:py-6 md:px-16">
       {/* Analytics */}
-
-      <TestNotifications/>
 
       {role === "worker" && (
         <section className="w-full m-3">

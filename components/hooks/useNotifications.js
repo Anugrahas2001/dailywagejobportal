@@ -153,6 +153,7 @@ console.log("🔥 useNotifications.js FILE LOADED");
 
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function useNotifications() {
   const [items, setItems] = useState([]);
@@ -280,7 +281,20 @@ export function useNotifications() {
             const notification = JSON.parse(event.data);
 
             console.log("✅ Notification parsed:", notification);
-            // alert(`${notification.message} A NEW MESSAGE`);
+
+            //             Notification: {
+            //   _id: '01b801a9ea9ecddc06b6d825e0bb',
+            //   title: 'Application status updated',
+            //   message: 'The status of your job application has changed. Open your applications to see the latest update.',
+            //   fromId: 'Q2c5A9SXtYcIBBaqMyvJIfuOKbd2',
+            //   toId: 'hJwhgPovT9efMzPVoSqwTzwIDaw2',
+            //   createdAt: '2026-10-03T08:10:49.766Z',
+            //   updatedAt: '2026-10-03T08:10:49.766Z',
+            //   __v: 0
+            // }
+            toast(notification?.title ?? "New notification", {
+              description: notification?.message,
+            });
             setItems((previousItems) => [notification, ...previousItems]);
           } catch (error) {
             console.error("❌ Invalid WebSocket message:", error);

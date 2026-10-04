@@ -18,7 +18,7 @@ import {
   Phone,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Pagination from "./Pagination";
 import Slider from "./Slider";
 
@@ -34,48 +34,99 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
 
   console.log(applicants, "ALL THE AVALIABLE APPLICANTS");
 
-  useEffect(() => {
-    console.log(jobId, "JOB ID CHANGED");
+  // useEffect(() => {
+  //   console.log(jobId, "JOB ID CHANGED");
+  //   if (!jobId || !type) return;
+  //   const url =
+  //     type === "applications"
+  //       ? `/api/employer/viewjobapplications?jobId=${jobId}&page=1&limit=12`
+  //       : `/api/employer/recommendedprofiles?jobId=${jobId}&matching=${val}&page=1&limit=12`;
+
+  //   console.log(url, "URL DATA FOR FETCH WORKERS PROFILES");
+
+  //   const handleApplicantsProfiles = async () => {
+  //     try {
+  //       const token = await fetchUserToken();
+  //       setLoading(true);
+  //       const response = await fetch(url, {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+
+  //       console.log(response, "RESPONSE DATA");
+  //       const { data, totalCount, message } = await response.json();
+
+  //       if (!response.ok) {
+  //         throw new Error("Failed to fetch applicants");
+  //       }
+
+  //       console.log(data, totalCount, message, "TELL ME ABOT APPLICANTS");
+  //       setApplicants(data);
+  //       setTotalCount(totalCount);
+  //       setLoading(false);
+  //     } catch (error) {
+  //       console.error("Failed to fetch applicants:", error);
+  //     } finally {
+  //       setLoading(false);
+  //       console.log("USEEFFECT CALLED");
+  //     }
+  //   };
+
+  //   handleApplicantsProfiles();
+  // }, [jobId, val]);
+
+  const fetchApplicants = useCallback(async () => {
     if (!jobId || !type) return;
+
     const url =
       type === "applications"
-        ? `/api/employer/viewjobapplications?jobId=${jobId}&page=1&limit=12`
-        : `/api/employer/recommendedprofiles?jobId=${jobId}&matching=${val}&page=1&limit=12`;
+        ? `/api/employer/viewjobapplications?jobId=${jobId}&page=${page}&limit=12`
+        : `/api/employer/recommendedprofiles?jobId=${jobId}&matching=${val}&page=${page}&limit=12`;
 
-    console.log(url, "URL DATA FOR FETCH WORKERS PROFILES");
+    try {
+      const token = await fetchUserToken();
+      setLoading(true);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
+      });
 
-    const handleApplicantsProfiles = async () => {
-      try {
-        const token = await fetchUserToken();
-        setLoading(true);
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const { data, totalCount } = await response.json();
+      if (!response.ok) throw new Error("Failed to fetch applicants");
 
-        console.log(response, "RESPONSE DATA");
-        const { data, totalCount, message } = await response.json();
+      setApplicants(data);
+      setTotalCount(totalCount);
+    } catch (error) {
+      console.error("Failed to fetch applicants:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [jobId, type, val, page]);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch applicants");
-        }
+  // Normal fetch when params change
+  useEffect(() => {
+    fetchApplicants();
+  }, [fetchApplicants]);
 
-        console.log(data, totalCount, message, "TELL ME ABOT APPLICANTS");
-        setApplicants(data);
-        setTotalCount(totalCount);
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch applicants:", error);
-      } finally {
-        setLoading(false);
-        console.log("USEEFFECT CALLED");
-      }
+  // Refetch when user comes back to this page
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") fetchApplicants();
+    };
+    const onPageShow = (e) => {
+      if (e.persisted) fetchApplicants(); // restored from bfcache
     };
 
-    handleApplicantsProfiles();
-  }, [jobId, val]);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, [fetchApplicants]);
 
   const goToPage = (p) => {
     console.log(p, "ANUGRAHA ANUGRAHA");

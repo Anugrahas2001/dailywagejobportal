@@ -76,10 +76,13 @@ export async function PUT(request, { params }) {
 
     if (type === "applications") {
       jobApplication = await JobApplication.findOneAndUpdate(
-        { jobId, workerId: id },
+        {
+          jobId,
+          workerId: id,
+        },
         {
           $set: {
-            status: status,
+            status,
           },
         },
         {
@@ -88,28 +91,74 @@ export async function PUT(request, { params }) {
         },
       );
 
+      // Application does not exist
+      if (!jobApplication) {
+        return NextResponse.json(
+          {
+            message: "Job application not found.",
+          },
+          {
+            status: 404,
+          },
+        );
+      }
+
+      // const previousStatus = jobApplication.status;
+
+      // const wasFinalStatus =
+      //   previousStatus === "accepted" || previousStatus === "rejected";
+
+      // const isFinalStatus = status === "accepted" || status === "rejected";
+
+      /*
+       * Decrease applicantsCount only when:
+       *
+       * previous status = non-final
+       * new status      = accepted/rejected
+       *
+       * Example:
+       *
+       * applied -> accepted   => decrement
+       * applied -> rejected   => decrement
+       *
+       * accepted -> rejected  => DON'T decrement
+       * rejected -> accepted  => DON'T decrement
+       * applied -> shortlisted => DON'T decrement
+       */
+      // const shouldDecreaseApplicantsCount = !wasFinalStatus && isFinalStatus;
+
+      // if (shouldDecreaseApplicantsCount) {
+      //   await JobDetails.findOneAndUpdate(
+      //     {
+      //       employerId: uid,
+      //       _id: jobId,
+      //       applicantsCount: {
+      //         $gt: 0,
+      //       },
+      //     },
+      //     {
+      //       $inc: {
+      //         applicantsCount: -1,
+      //       },
+      //     },
+      //   );
+      // }
+
       await sendNotification({
         title: "Application status updated",
+        notifType:"UPDATED_JOB_APP_STATUS",
         message:
           "The status of your job application has changed. Open your applications to see the latest update.",
         senderId: uid,
         recepientId: id,
       });
 
-      if (status === "accepted" || "rejected") {
-        const jobData = await JobDetails.findOneAndUpdate(
-          { employerId: uid, _id: jobId, applicantsCount: { $gt: 0 } },
-          {
-            $inc: {
-              applicantsCount: -1,
-            },
-          },
-          {
-            returnDocument: "after",
-            upsert: false,
-          },
-        );
-      }
+      console.log("NOTIFICATION SENT ");
+      // // Return updated application data
+      // const updatedApplication = {
+      //   ...previousApplication.toObject(),
+      //   status,
+      // };
     } else {
       const user = await UserMatches.findOne({
         workerId: id,

@@ -1,9 +1,10 @@
-
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import Providers from "./providers";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
+import NotificationProvider from "@/components/provider/NotificationProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,7 @@ const geistMono = Geist_Mono({
 
 // const inter = Inter({
 //   subsets: ["latin"],
-//   variable: "--font-inter", 
+//   variable: "--font-inter",
 // });
 
 export const metadata = {
@@ -37,9 +38,31 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <Providers>
-          <NavBar />
-          {children}
-          <Footer />
+          <NotificationProvider>
+            <NavBar />
+            {children}
+            {/* <Toaster /> */}
+            {/* <Toaster position="top-center" richColors /> */}
+            <Toaster
+              position="top-center"
+              closeButton
+              toastOptions={{
+                style: {
+                  borderRadius: "12px",
+                  padding: "16px",
+                },
+                classNames: {
+                  toast: "bg-white border border-gray-200 shadow-lg",
+                  title: "text-sm font-semibold text-gray-900",
+                  description: "text-sm text-gray-500",
+                  actionButton: "bg-blue-600 text-white",
+                  closeButton: "bg-white border-gray-200",
+                  icon: "text-blue-600",
+                },
+              }}
+            />
+            <Footer />
+          </NotificationProvider>
         </Providers>
       </body>
     </html>

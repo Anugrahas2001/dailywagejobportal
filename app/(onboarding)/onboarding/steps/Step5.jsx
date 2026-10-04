@@ -21,9 +21,11 @@ const Step5 = () => {
   const [active, setActive] = useState(false);
   const dispatch = useDispatch();
 
-  const role = useSelector((state) => state.user.role);
+  // const role = useSelector((state) => state.user.role);
   const status = useSelector((state) => state.user.status);
   const error = useSelector((state) => state.user.error);
+
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     // startCamera();

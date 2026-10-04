@@ -16,6 +16,14 @@ const notificationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    notifType: {
+      type: String,
+      required: true,
+    },
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
     fromId: {
       type: String,
       required: true,

@@ -16,11 +16,11 @@ export async function POST(request) {
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
-    const body = await request.json();
+    const { jobId } = await request.json();
 
     const jobObj = {
       _id: generateId(),
-      jobId: body.jobId,
+      jobId,
       workerId: uid,
     };
 
@@ -32,14 +32,12 @@ export async function POST(request) {
     }
 
     const alreadyApplied = await JobApplication.findOne({
-      jobId: body.jobId,
+      jobId,
       workerId: uid,
       status: { $ne: "rejected" },
     });
 
-    const job = await JobDetails.findById(body.jobId)
-      .select("employerId")
-      .lean();
+    const job = await JobDetails.findById(jobId).select("employerId").lean();
 
     console.log(alreadyApplied, "ALREADY APPLIED");
 
@@ -58,7 +56,7 @@ export async function POST(request) {
     console.log(application, "APPLICATION CREATED NEWLY");
 
     const updateApplicantCount = await JobDetails.findByIdAndUpdate(
-      { _id: body.jobId },
+      { _id: jobId },
       {
         $inc: { applicantsCount: 1 },
       },
@@ -68,7 +66,7 @@ export async function POST(request) {
     );
 
     const savedJob = await SavedJobs.findOneAndUpdate(
-      { jobId: body.jobId, workerId: uid },
+      { jobId: jobId, workerId: uid },
       {
         $set: {
           isDeleted: true,
@@ -82,16 +80,20 @@ export async function POST(request) {
 
     await sendNotification({
       title: "New job application",
+      notifType: "NEW_JOB_APPLICATION",
       message:
         "A candidate just applied to your job posting. Review their profile to see if they're a good fit.",
       senderId: uid,
       recepientId: job?.employerId,
+      data: {
+        jobId,
+      },
     });
 
     return NextResponse.json(
       {
         message: "Your job application was submitted successfully.",
-        data: updateApplicantCount,
+        data: application,
       },
       {
         status: 201,

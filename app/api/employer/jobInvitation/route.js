@@ -39,7 +39,6 @@
 //   }
 // }
 
-
 import { generateId } from "@/lib/generateRandomId";
 import { sendNotification } from "@/lib/notificationService";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
@@ -66,7 +65,7 @@ export async function POST(request) {
     if (!workerId || !jobId) {
       return NextResponse.json(
         { message: "workerId and jobId are required." },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -83,6 +82,7 @@ export async function POST(request) {
       await sendNotification({
         title: "A new Job Invitation",
         message: "You have received a new job invitation.",
+        notifType: "JOB_INVITATION",
         senderId: uid,
         recepientId: workerId,
       });
@@ -95,13 +95,13 @@ export async function POST(request) {
         message: "Successfully created a new Job Invitation",
         data: jobInvitation,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("Job invitation error:", error);
     return NextResponse.json(
       { message: "Unable to send job invitation." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

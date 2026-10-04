@@ -1,19 +1,19 @@
 
 
-"use client";
+// "use client";
 
-import { useNotifications } from "./hooks/useNotifications";
+// import { useNotifications } from "./hooks/useNotifications";
 
 
-export default function TestNotifications() {
-  console.log("🟢 TestNotifications rendered");
+// export default function TestNotifications() {
+//   console.log("🟢 TestNotifications rendered");
 
-  const notifications = useNotifications();
+//   const notifications = useNotifications();
 
-  console.log(
-    "🟢 Notifications:",
-    notifications
-  );
+//   console.log(
+//     "🟢 Notifications:",
+//     notifications
+//   );
 
-  return <div>Notification test</div>;
-}
+//   return <div>Notification test</div>;
+// }

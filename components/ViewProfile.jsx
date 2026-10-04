@@ -198,11 +198,7 @@ const ViewProfile = ({
 
       await fetchUserJobDetails({ workerId, status, jobId, type });
 
-      // router.replace(`/employerDashboard/appliedworkers?jobId=${jobId}`);
       router.back();
-      // await fetchUserData();
-      // // Refresh the previous route
-      // router.refresh();
       setLoading(false);
     } catch (error) {
       console.log(error, "ERROR DATA");
