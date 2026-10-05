@@ -49,6 +49,7 @@ export async function GET(request) {
       JobInvitation.find({
         workerId: { $in: allTheUserIds },
         employerId: uid,
+        jobId,
         status: "sent",
       }),
     ]);

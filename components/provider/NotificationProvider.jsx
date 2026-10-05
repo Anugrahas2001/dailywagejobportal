@@ -1,5 +1,3 @@
-
-
 // "use client";
 
 // import {
@@ -175,7 +173,6 @@
 //     };
 //   }, [connect]);
 
-
 //   /*
 //    * --------------------------------------------------
 //    * Context value
@@ -295,8 +292,10 @@ export function NotificationProvider({ children }) {
         ws.onmessage = (event) => {
           try {
             const notification = JSON.parse(event.data);
-            toast(notification?.title ?? "New notification", {// avoids duplicate toasts
+            toast(notification?.title ?? "New notification", {
+              // avoids duplicate toasts
               description: notification?.message,
+              duration: 10000,
             });
           } catch (error) {
             console.error("❌ Invalid WebSocket message:", error);

@@ -172,6 +172,17 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           <Slider value={val} onChange={setVal} />
         </div>
 
+        {type === "applications" && (
+          <div className="flex gap-2">
+            <button className="bg-blue-600 text-white p-3">
+              All Applications
+            </button>
+            <button className="bg-blue-600 text-white p-3">
+              Accepted Applications
+            </button>
+          </div>
+        )}
+
         {/* Applicants */}
         {applicants.length > 0 ? (
           <div className="mt-2">

@@ -19,11 +19,16 @@ export async function GET(request) {
       .skip(skip)
       .limit(limit);
 
+    const notificationsCount = await Notifications.countDocuments({
+      toId: uid,
+    });
+
     console.log(allNotifications, "ALL THE AVILABLE NOTIFICATIONS");
     return NextResponse.json(
       {
         message: "Successfully fetched all the avilable notifications.",
         data: allNotifications,
+        totalCount: notificationsCount,
       },
       {
         status: 200,

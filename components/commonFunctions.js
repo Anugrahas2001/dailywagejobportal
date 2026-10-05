@@ -238,3 +238,9 @@ export const timeAgo = (createdAt) => {
     year: "numeric",
   });
 };
+
+
+ export const goToPage = (p) => {
+    console.log(p, "ANUGRAHA ANUGRAHA");
+    if (p >= 1 && p <= totalPages) setPage(p);
+  };

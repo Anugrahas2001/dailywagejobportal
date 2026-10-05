@@ -4,13 +4,15 @@ import React, { useEffect, useState } from "react";
 import { timeAgo } from "./commonFunctions";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Pagination from "./Pagination";
 
 const ShowNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const pageLimit = 12;
-  const pageNumbers = totalCount / pageLimit;
+  const pageSize = 12;
+
+  const totalPages = Math.ceil(totalCount / pageSize) || 0;
   const router = useRouter();
 
   useEffect(() => {
@@ -45,6 +47,11 @@ const ShowNotifications = () => {
     fetchNotifications();
   }, [page]);
 
+   const goToPage = (p) => {
+    console.log(p, "ANUGRAHA ANUGRAHA");
+    if (p >= 1 && p <= totalPages) setPage(p);
+  };
+
   const handleNavigation = ({ notifType, jobId }) => {
     switch (notifType) {
       case "NEW_JOB_CREATED":
@@ -70,31 +77,11 @@ const ShowNotifications = () => {
   };
 
   return (
-    //   <div className="flex flex-col gap-3">
-    //     {notifications.map((notif) => (
-    //       <div
-    //         key={notif?._id}
-    //         className="flex items-start justify-between gap-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition hover:bg-gray-50"
-    //       >
-    //         <div className="flex min-w-0 flex-col gap-1">
-    //           <h3 className="truncate text-sm font-semibold text-gray-900">
-    //             {notif?.title}
-    //           </h3>
-    //           <p className="text-sm text-gray-600">{notif?.message}</p>
-    //         </div>
-
-    //         <span className="shrink-0 whitespace-nowrap text-xs text-gray-400">
-    //           {timeAgo(notif?.createdAt)}
-    //         </span>
-    //       </div>
-    //     ))}
-    //   </div>
-
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-3">
+    <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-3">
       {notifications.map((notif) => (
         <div
           key={notif?._id}
-          className={`group relative flex items-start gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+          className={`group relative flex items-start cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
             notif?.isRead
               ? "border-gray-100 bg-white"
               : "border-indigo-100 bg-indigo-50/60"
@@ -143,6 +130,13 @@ const ShowNotifications = () => {
         )} */}
         </div>
       ))}
+
+      <Pagination
+        onClick={goToPage}
+        totalPages={totalPages}
+        page={page}
+        totalCount={totalCount}
+      />
     </div>
   );
 };

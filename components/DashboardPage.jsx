@@ -5,6 +5,7 @@ import {
   getPostedText,
   getShiftLabel,
   getStatusColor,
+  goToPage,
 } from "@/components/commonFunctions";
 import {
   Bookmark,
@@ -123,10 +124,10 @@ const DashboardPage = ({ role }) => {
     }
   }, [page, status, role, val, dispatch]);
 
-  const goToPage = (p) => {
-    console.log(p, "ANUGRAHA ANUGRAHA");
-    if (p >= 1 && p <= totalPages) setPage(p);
-  };
+  // const goToPage = (p) => {
+  //   console.log(p, "ANUGRAHA ANUGRAHA");
+  //   if (p >= 1 && p <= totalPages) setPage(p);
+  // };
 
   const handleToggleSavedJob = async (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
