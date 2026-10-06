@@ -12,18 +12,29 @@ export async function GET(request) {
     const { uid } = verifyFirebaseToken(request);
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
+    const applicationStatus = searchParams.get("status"); // all, accepted
     const page = searchParams.get("page");
     const limit = searchParams.get("limit");
     const skip = (page - 1) * limit;
 
-    const userApplications = await JobApplication.find({
+    console.log(applicationStatus, "CHECK THIS VALUE");
+
+    const filter = {
       jobId,
       cancelled: false,
-    })
+    };
+
+    if (applicationStatus === "accepted") {
+      filter.status = applicationStatus;
+    }
+
+    const userApplications = await JobApplication.find(filter)
       .select("workerId status")
       .lean()
       .skip(skip)
       .limit(limit);
+
+    console.log(userApplications, "ALL THE USER APPLICATIONS");
 
     const jobApplicationMap = new Map(
       userApplications.map((application) => [

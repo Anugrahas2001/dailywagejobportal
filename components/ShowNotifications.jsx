@@ -1,7 +1,7 @@
 "use client";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import React, { useEffect, useState } from "react";
-import { timeAgo } from "./commonFunctions";
+import { goToPage, timeAgo } from "./commonFunctions";
 import { Bell } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Pagination from "./Pagination";
@@ -47,10 +47,6 @@ const ShowNotifications = () => {
     fetchNotifications();
   }, [page]);
 
-   const goToPage = (p) => {
-    console.log(p, "ANUGRAHA ANUGRAHA");
-    if (p >= 1 && p <= totalPages) setPage(p);
-  };
 
   const handleNavigation = ({ notifType, jobId }) => {
     switch (notifType) {

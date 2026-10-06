@@ -18,11 +18,14 @@ export async function GET(request, { params }) {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
 
-    const jobApplicationStatus = await JobApplication.findOne({
+    const filter = {
       workerId: id,
       jobId,
       cancelled: false,
-    })
+    };
+
+
+    const jobApplicationStatus = await JobApplication.findOne(filter)
       .select("status")
       .lean();
 
@@ -146,7 +149,7 @@ export async function PUT(request, { params }) {
 
       await sendNotification({
         title: "Application status updated",
-        notifType:"UPDATED_JOB_APP_STATUS",
+        notifType: "UPDATED_JOB_APP_STATUS",
         message:
           "The status of your job application has changed. Open your applications to see the latest update.",
         senderId: uid,

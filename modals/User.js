@@ -49,6 +49,7 @@ const UserSchema = new mongoose.Schema(
       type: { type: String, default: "Point" },
       coordinates: { type: [Number], default: [0, 0] },
     },
+    fcmToken: { type: String },
     city: { type: String },
     state: { type: String },
     country: { type: String },
@@ -67,7 +68,7 @@ const UserSchema = new mongoose.Schema(
       },
     ],
     isVerified: {
-      required: false,  
+      required: false,
       type: Boolean,
     },
   },

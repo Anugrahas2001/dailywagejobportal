@@ -1,5 +1,5 @@
 "use client";
-import { fetchUserJobDetails } from "@/components/commonFunctions";
+import { fetchUserJobDetails, goToPage } from "@/components/commonFunctions";
 import Loading from "@/components/Loading";
 import {
   getMatchStyle,
@@ -24,6 +24,7 @@ import Slider from "./Slider";
 
 const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [applicants, setApplicants] = useState([]);
+  const [status, setStatus] = useState("all");
   const [totalCount, setTotalCount] = useState(0);
   const [expandedSkills, setExpandedSkills] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -32,57 +33,14 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const pageSize = 12;
   const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
-  console.log(applicants, "ALL THE AVALIABLE APPLICANTS");
-
-  // useEffect(() => {
-  //   console.log(jobId, "JOB ID CHANGED");
-  //   if (!jobId || !type) return;
-  //   const url =
-  //     type === "applications"
-  //       ? `/api/employer/viewjobapplications?jobId=${jobId}&page=1&limit=12`
-  //       : `/api/employer/recommendedprofiles?jobId=${jobId}&matching=${val}&page=1&limit=12`;
-
-  //   console.log(url, "URL DATA FOR FETCH WORKERS PROFILES");
-
-  //   const handleApplicantsProfiles = async () => {
-  //     try {
-  //       const token = await fetchUserToken();
-  //       setLoading(true);
-  //       const response = await fetch(url, {
-  //         method: "GET",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-
-  //       console.log(response, "RESPONSE DATA");
-  //       const { data, totalCount, message } = await response.json();
-
-  //       if (!response.ok) {
-  //         throw new Error("Failed to fetch applicants");
-  //       }
-
-  //       console.log(data, totalCount, message, "TELL ME ABOT APPLICANTS");
-  //       setApplicants(data);
-  //       setTotalCount(totalCount);
-  //       setLoading(false);
-  //     } catch (error) {
-  //       console.error("Failed to fetch applicants:", error);
-  //     } finally {
-  //       setLoading(false);
-  //       console.log("USEEFFECT CALLED");
-  //     }
-  //   };
-
-  //   handleApplicantsProfiles();
-  // }, [jobId, val]);
+  console.log(applicants, status, "ALL THE AVALIABLE APPLICANTS");
 
   const fetchApplicants = useCallback(async () => {
     if (!jobId || !type) return;
 
     const url =
       type === "applications"
-        ? `/api/employer/viewjobapplications?jobId=${jobId}&page=${page}&limit=12`
+        ? `/api/employer/viewjobapplications?jobId=${jobId}&status=${status}&page=${page}&limit=12`
         : `/api/employer/recommendedprofiles?jobId=${jobId}&matching=${val}&page=${page}&limit=12`;
 
     try {
@@ -104,7 +62,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
     } finally {
       setLoading(false);
     }
-  }, [jobId, type, val, page]);
+  }, [jobId, type, val, status, page]);
 
   // Normal fetch when params change
   useEffect(() => {
@@ -127,11 +85,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
       window.removeEventListener("pageshow", onPageShow);
     };
   }, [fetchApplicants]);
-
-  const goToPage = (p) => {
-    console.log(p, "ANUGRAHA ANUGRAHA");
-    if (p >= 1 && p <= totalPages) setPage(p);
-  };
 
   const handleSatusUpdates = async ({ status, workerId, jobId }) => {
     try {
@@ -168,16 +121,30 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </p>
         </div>
 
-        <div className="mt-4">
-          <Slider value={val} onChange={setVal} />
-        </div>
+        {type === "recommendation" && (
+          <div className="mt-4">
+            <Slider value={val} onChange={setVal} />
+          </div>
+        )}
 
         {type === "applications" && (
           <div className="flex gap-2">
-            <button className="bg-blue-600 text-white p-3">
+            <button
+              className="bg-blue-600 text-white p-3"
+              onClick={() => {
+                setStatus("all");
+                setPage(1);
+              }}
+            >
               All Applications
             </button>
-            <button className="bg-blue-600 text-white p-3">
+            <button
+              className="bg-blue-600 text-white p-3"
+              onClick={() => {
+                setStatus("accepted");
+                setPage(1);
+              }}
+            >
               Accepted Applications
             </button>
           </div>
@@ -249,21 +216,16 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                               </p>
                             </div>
 
-                            <div className="flex">
-                              <Phone className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
-                              <p className="mt-0.5 text-sm text-gray-600">
-                                {profile?.mobileNumber?.code}-
-                                {profile?.mobileNumber?.number}{" "}
-                              </p>
-                            </div>
+                            {profile?.mobileNumber?.number && (
+                              <div className="flex">
+                                <Phone className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
+                                <p className="mt-0.5 text-sm text-gray-600">
+                                  {profile?.mobileNumber?.code}-
+                                  {profile?.mobileNumber?.number}{" "}
+                                </p>
+                              </div>
+                            )}
 
-                            {/* <p className="mt-0.5 text-sm text-gray-600">
-                            {profile?.jobTitle}
-                          </p>
-
-                          <span className="mt-1 inline-block rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-600">
-                            {profile?.jobCategory}
-                          </span> */}
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
                               <p className="mt-0.5 text-sm text-gray-600">
@@ -386,43 +348,9 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                       </div>
                     )}
                     {/* Bottom Actions */}
-                    {/* <div className="mt-5 flex items-center justify-between border-t pt-4">
-                    {profile?.applicationAvailable && (
-                      <span>Job Invitation Sent.</span>
-                    )}
-                    <Link
-                      href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}&matching=${profile.matchPercentage}`}
-                    >
-                      <button
-                        type="button"
-                        className="rounded-md border flex justify-end cursor-pointer border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-blue-100"
-                        onClick={() => {
-                          if (!profile?.status) {
-                            handleSatusUpdates({
-                              status: "viewed",
-                              workerId: profile?.userId,
-                              jobId,
-                            });
-                          }
-                        }}
-                      >
-                        View Profile
-                      </button>
-                    </Link>
-
-                    {profile?.status ? (
-                      <button className="bg-blue-600 text-white text-center px-2 py-1 rounded-md">
-                        {profile?.status}
-                      </button>
-                    ) : (
-                      <></>
-                    )}
-                  </div> */}
                     <div className="mt-5 flex items-center justify-between border-t pt-4">
                       {/* View Profile */}
-                      {/* <Link
-                        href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}&matching=${profile.matchPercentage}&jobInvitation=${profile?.applicationAvailable}`}
-                      > */}
+
                       <Link
                         href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}${
                           type === "recommendation"
