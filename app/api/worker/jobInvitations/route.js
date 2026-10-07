@@ -71,7 +71,7 @@ export async function PUT(request) {
       status: invitationStatus,
       employerId,
     } = await request.json();
-    console.log(jobId, invitationStatus, "VERIFYING BODY DATA");
+    console.log(jobId, invitationStatus, employerId, "VERIFYING BODY DATA");
     const updatedJobInvitation = await JobInvitation.findOneAndUpdate(
       { jobId, workerId: uid },
       {
@@ -89,7 +89,7 @@ export async function PUT(request) {
     if (invitationStatus === "accepted") {
       await sendNotification({
         title: "Invitation accepted",
-        notifType:"JOB_INVITATION_ACCEPTED",
+        notifType: "JOB_INVITATION_ACCEPTED",
         message:
           "A candidate accepted your job invitation. View their profile to take the next step.",
         senderId: uid,

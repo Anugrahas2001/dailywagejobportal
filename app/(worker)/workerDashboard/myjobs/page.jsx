@@ -60,6 +60,7 @@ const page = () => {
   const jobInvitations = useSelector(
     (state) => state.jobinvitations.jobInvitations,
   );
+  console.log(jobInvitations, "JOB ALL INVITATIONS");
   const jobInvitationTotalCount = useSelector(
     (state) => state.jobinvitations.totalCount,
   );
@@ -167,8 +168,9 @@ const page = () => {
     ).unwrap();
   };
 
-  const handleJobInvitationStatus = ({ status, jobId }) => {
-    dispatch(updateJobInvitationStatus({ status, jobId }));
+  const handleJobInvitationStatus = ({ status, jobId, employerId }) => {
+    console.log(status, jobId, employerId, "JOB_INVITATION FUNCTION");
+    dispatch(updateJobInvitationStatus({ status, jobId, employerId }));
   };
 
   const handleJobInvitationFetches = (status) => {
@@ -412,6 +414,7 @@ const page = () => {
                           handleJobInvitationStatus({
                             status: "rejected",
                             jobId: job._id,
+                            employerId: job.employerId,
                           });
                         }}
                       >
@@ -424,6 +427,7 @@ const page = () => {
                           handleJobInvitationStatus({
                             status: "accepted",
                             jobId: job._id,
+                            employerId: job.employerId,
                           });
                         }}
                       >

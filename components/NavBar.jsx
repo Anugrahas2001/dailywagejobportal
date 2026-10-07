@@ -9,6 +9,7 @@ import Loading from "./Loading";
 import { BellDot, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
+import { logout } from "@/lib/features/profiles/userSlice";
 
 const NavBar = () => {
   const [show, setShow] = useState(false);
@@ -33,11 +34,11 @@ const NavBar = () => {
 
   const reduxRole = useSelector((state) => state.user.role);
   const reduxOnboardPage = useSelector((state) => state.user.onboardPage);
-  const reduxProfileImage = useSelector((state) => state.user.profileImage);
+  // const reduxProfileImage = useSelector((state) => state.user.profileImage);
 
   const role = userRole || reduxRole;
   const onboardPage = onboardingPage || reduxOnboardPage;
-  const profileimage = profileImage || reduxProfileImage;
+  const profileimage = profileImage;
 
   console.log(userRole, profileImage, onboardingPage, "PROFILE IMAGES DATA");
 
@@ -57,9 +58,15 @@ const NavBar = () => {
       localStorage.removeItem("role");
       localStorage.removeItem("profileImage");
       localStorage.clear();
+      dispatch(logout());
       router.replace("/");
     }
     setLoading(false);
+    setShow(false);
+  };
+
+  const handleNotifications = () => {
+    router.push("handleNotifications");
     setShow(false);
   };
 
@@ -85,7 +92,7 @@ const NavBar = () => {
         </button>
 
         <div className="flex items-center">
-          <Link href={"/employerDashboard/notifications"}>
+          <Link href={"/commonDashboard/notifications"}>
             <BellDot className="m-3 h-8 w-8" />
           </Link>
           {onboardPage >= 4 && role === "worker" && (
@@ -119,8 +126,16 @@ const NavBar = () => {
       {show && (
         <div className="absolute top-full right-0 mt-2 w-24 mr-2 md:w-32 bg-white shadow-lg rounded-lg border z-50">
           <ul>
-            <li className="px-4 py-2 hover:bg-red-100">Sign In</li>
-            <li className="px-4 py-2 hover:bg-red-200">Profile</li>
+            <li className="px-4 py-2 hover:bg-red-200">My Profile</li>
+            <li className="px-4 py-2 hover:bg-red-200">My Jobs</li>
+            {/* <Link href={"/commonDashboard/notifications"}> */}
+            <li
+              className="px-4 py-2 hover:bg-red-200"
+              onClick={handleNotifications}
+            >
+              Notifications
+            </li>
+            {/* </Link> */}
             <li className="px-4 py-2 hover:bg-red-300" onClick={handleLogOut}>
               Logout
             </li>
