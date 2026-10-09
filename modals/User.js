@@ -53,7 +53,22 @@ const UserSchema = new mongoose.Schema(
     city: { type: String },
     state: { type: String },
     country: { type: String },
-    // yearsOfExperience: { type: Number },
+    yearsOfExperience: { type: Number },
+    currentJobStatus: {
+      type: "String",
+    },
+    currentJobStatus: {
+      type: String,
+    },
+    completedJobs: {
+      type: Number,
+      default: 0,
+    },
+    workingSitePics: {
+      type: Map,
+      of: [String], // key = jobId, value = array of image URLs/strings
+      default: {},
+    },
     skills: [
       {
         skill: {

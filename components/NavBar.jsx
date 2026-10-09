@@ -66,7 +66,29 @@ const NavBar = () => {
   };
 
   const handleNotifications = () => {
-    router.push("handleNotifications");
+    router.push("/commonDashboard/notifications");
+    setShow(false);
+  };
+
+  const handleMyJobs = () => {
+    router.push("/workerDashboard/myjobs");
+    setShow(false);
+  };
+
+  const handleViewProfile = () => {
+    router.push("/commonDashboard/profile");
+    setShow(false);
+  };
+
+  const routes = {
+    notifications: "/commonDashboard/notifications",
+    myjobs: "/workerDashboard/myjobs",
+    profile: "/commonDashboard/profile",
+  };
+
+  const handleNavigation = (pagename) => {
+    const path = routes[pagename];
+    if (path) router.push(path);
     setShow(false);
   };
 
@@ -126,12 +148,23 @@ const NavBar = () => {
       {show && (
         <div className="absolute top-full right-0 mt-2 w-24 mr-2 md:w-32 bg-white shadow-lg rounded-lg border z-50">
           <ul>
-            <li className="px-4 py-2 hover:bg-red-200">My Profile</li>
-            <li className="px-4 py-2 hover:bg-red-200">My Jobs</li>
-            {/* <Link href={"/commonDashboard/notifications"}> */}
             <li
               className="px-4 py-2 hover:bg-red-200"
-              onClick={handleNotifications}
+              onClick={() => handleNavigation("profile")}
+            >
+              My Profile
+            </li>
+            {role === "worker" && (
+              <li
+                className="px-4 py-2 hover:bg-red-200"
+                onClick={() => handleNavigation("myjobs")}
+              >
+                My Jobs
+              </li>
+            )}
+            <li
+              className="px-4 py-2 hover:bg-red-200"
+              onClick={() => handleNavigation("notifications")}
             >
               Notifications
             </li>
