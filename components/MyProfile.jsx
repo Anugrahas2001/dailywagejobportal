@@ -1,478 +1,614 @@
-// "use client";
-// import { SquarePen, Verified } from "lucide-react";
-// import React from "react";
-
-// const MyProfile = () => {
-//   console.log("My profile pge");
-//   return (
-//     <div className="m-4">
-//       <div className="flex flex-col items-center">
-//         <div
-//           class="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-5xl font-semibold text-white select-none"
-//           id="avatar"
-//         >
-//           {/* <img
-//             id="avatar-img"
-//             src="profile.jpg"
-//             alt="Profile photo"
-//             class="absolute inset-0 h-full w-full object-cover"
-//             onerror="this.classList.add('hidden')"
-//           /> */}
-//           <div class="avatar-initials">AK</div>
-//         </div>
-//         <div className="flex">
-//           <h1>Akshay Kumar</h1>
-//           <Verified className="w-5 h-5 text-blue-500" />
-//         </div>
-//         <div className="flex">
-//           <p>Masor (Primary) | </p>
-//           <p> Palakkad, Kerala | </p>
-//           <p> 28 Yrs</p>
-//         </div>
-//         <div className="flex">
-//           <p>128 jobs completed</p>
-//           <p className="font-bold">₹800-1000/day</p>
-//         </div>
-//         <button className="w-40 h-10 border rounded-md border-gray-600 cursor-pointer">
-//           Change photo/Camera
-//         </button>
-//       </div>
-//       <div className="grid grid-cols-4 gap-3 mt-5">
-//         <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//           <span className="text-3xl font-bold">128</span>
-//           <span>Jobs done</span>
-//         </div>
-//         <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//           <span className="text-3xl font-bold">6 Yrs</span>
-//           <span>Experience</span>
-//         </div>
-//         <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//           <span className="text-3xl font-bold">28</span>
-//           <span>Saved Jobs</span>
-//         </div>
-//         <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//           <span className="text-3xl font-bold">18</span>
-//           <span>Job Invitations</span>
-//         </div>
-//       </div>
-//       <div className="border border-gray-500 p-2 rounded-md flex justify-between items-center mt-3">
-//         <span>Profile completeness</span>
-//         <span>70%</span>
-//       </div>
-//       <div className="mt-3">
-//         <div className="flex justify-between">
-//           <h1 className="text-3xl font-bold">Skills</h1>
-//           <SquarePen />
-//         </div>
-
-//         <div className="grid grid-cols-4 gap-3 mt-5">
-//           <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//             <span className="text-xl font-bold">Construction</span>
-//             <span>Beginner</span>
-//           </div>
-//           <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//             <span className="text-xl font-bold">Painter</span>
-//             <span>Intermediate</span>
-//           </div>
-//           <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//             <span className="text-xl font-bold">Electrician</span>
-//             <span>Experienced</span>
-//           </div>
-//           <div className="flex flex-col items-center border border-gray-500 p-2 rounded-md">
-//             <span className="text-xl font-bold">Carpenter</span>
-//             <span>Advanced</span>
-//           </div>
-//         </div>
-//       </div>
-
-//       <div>
-//         <div className="flex justify-between">
-//           <h1>Job Prefrences</h1>
-//           <SquarePen />
-//         </div>
-//         <div>
-//           <p>Daily Wage</p>
-//           <p>₹800-1000/day</p>
-//         </div>
-//         <div>
-//           <p>Job Type</p>
-//           <p>mason</p>
-//         </div>
-//         <div>
-//           <p>Job Category</p>
-//           <p>Construction</p>
-//         </div>
-//         <div>
-//           <p>joiningPeriod</p>
-//           <p>10 KM</p>
-//         </div>
-//         <div>
-//           <p>shiftType</p>
-//           <p>Morning</p>
-//         </div>
-//         <div>
-//           <p>Job Category</p>
-//           <p>Construction</p>
-//         </div>
-//         <div>
-//           <p>locRange</p>
-//           <p>10</p>
-//         </div>
-//       </div>
-
-//       <div>
-//         <div className="flex justify-between">
-//           <h1>Contact Info</h1>
-//           <SquarePen />
-//         </div>
-//         <div>
-//           <p>Mobile Number</p>
-//           <p>+91-718818188191</p>
-//         </div>
-//         <div>
-//           <p>Email</p>
-//           <p>worker@gmail.com</p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default MyProfile;
-
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  BadgeCheck,
+  Briefcase,
   Camera,
-  MapPin,
+  Clock,
   Mail,
-  Phone,
+  MapPin,
   Pencil,
+  Phone,
+  RefreshCw,
   Star,
-  Verified,
+  Tag,
+  Wallet,
+  X,
 } from "lucide-react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
-// const skills = [
-//   { name: "Construction", level: "Beginner" },
-//   { name: "Painter", level: "Intermediate" },
-//   { name: "Electrician", level: "Experienced" },
-//   { name: "Carpenter", level: "Advanced" },
-// ];
-// const stats = [
-//   { value: "128", label: "Jobs Done" },
-//   { value: "6 Yrs", label: "Experience" },
-//   { value: "28", label: "Saved Jobs" },
-//   { value: "18", label: "Invitations" },
-// ];
-// const preferences = [
-//   { icon: Wallet, label: "Daily Wage", value: "₹800 – ₹1,000 / day" },
-//   { icon: BriefcaseBusiness, label: "Job Type", value: "Mason" },
-//   { icon: BriefcaseBusiness, label: "Job Category", value: "Construction" },
-//   { icon: CalendarDays, label: "Joining Period", value: "Immediate" },
-//   { icon: Clock3, label: "Shift Type", value: "Morning" },
-//   { icon: MapPin, label: "Preferred Distance", value: "Within 10 KM" },
-// ];
+import { EXPERIENCE_LEVELS, JOB_SKILLS } from "@/constants/constant";
+
+/* ---------- helpers ---------- */
+
+const getAge = (dob) => {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const hadBirthday =
+    now.getMonth() > birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate());
+  if (!hadBirthday) age -= 1;
+  return age >= 0 ? age : null;
+};
+
+const formatINR = (n) =>
+  typeof n === "number" ? `₹${n.toLocaleString("en-IN")}` : null;
+
+const formatSalary = (min, max) => {
+  const a = formatINR(Number(min));
+  const b = formatINR(Number(max));
+  if (a && b) return `${a} – ${b}`;
+  return a || b || null;
+};
+
+const progressColor = (pct) =>
+  pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-indigo-600" : "bg-amber-500";
+
+/* ---------- small building blocks ---------- */
+
+const Card = ({ children, className = "" }) => (
+  <section
+    className={`rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ${className}`}
+  >
+    {children}
+  </section>
+);
+
+const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
+  <div className="flex items-start justify-between gap-3">
+    <div>
+      <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+      {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
+    </div>
+    <button
+      type="button"
+      onClick={onEdit}
+      aria-label={editLabel}
+      className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+    >
+      <Pencil className="h-5 w-5" />
+    </button>
+  </div>
+);
+
+const InfoRow = ({ icon: Icon, label, value, breakAll = false }) => (
+  <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+      <Icon className="h-5 w-5" />
+    </div>
+    <div className="min-w-0">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p
+        className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
+      >
+        {value || <span className="text-gray-400">Not added</span>}
+      </p>
+    </div>
+  </div>
+);
+
+const Stat = ({ value, label }) => (
+  <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
+    <p className="text-2xl font-bold text-gray-900">{value ?? "–"}</p>
+    <p className="mt-1 text-sm text-gray-500">{label}</p>
+  </div>
+);
+
+const Skeleton = () => (
+  <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-5xl animate-pulse space-y-5">
+      <div className="h-64 rounded-2xl bg-gray-200" />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-20 rounded-xl bg-gray-200" />
+        ))}
+      </div>
+      <div className="h-24 rounded-2xl bg-gray-200" />
+      <div className="h-40 rounded-2xl bg-gray-200" />
+    </div>
+  </main>
+);
+
+/* ---------- page ---------- */
 
 const MyProfile = () => {
-  const [profile, setProfile] = useState({});
-  console.log(profile, "PROFILE DATA MY PROFILE");
+  const [profile, setProfile] = useState(null);
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedText, setEditedText] = useState("");
+  const [isSkillEditing, setIsSkillEditing] = useState(false);
+  const [requiredSkills, setRequiredSkills] = useState([
+    {
+      skill: "",
+      experience: "",
+    },
+  ]);
+  const [skill, setSkill] = useState("");
+  const [experience, setExperience] = useState("");
 
   useEffect(() => {
-    const fetchProfileDetails = async () => {
+    const loadProfile = async () => {
       try {
-        const token=await fetchUserToken();
-        const response = await fetch("/api/common/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const token = await fetchUserToken();
+        const res = await fetch("/api/common/profile", {
+          headers: { Authorization: `Bearer ${token}` },
         });
-        const { data } = await response.json();
+        if (!res.ok) throw new Error(`Request failed (${res.status})`);
+        const { data } = await res.json();
         setProfile(data);
-      } catch (error) {
-        console.log(error, "ERROR DATA");
+        setStatus("ready");
+      } catch (err) {
+        console.error("Profile load failed:", err);
+        setStatus("error");
       }
     };
 
-    fetchProfileDetails();
+    loadProfile();
   }, []);
 
+  const user = profile?.user;
+  const pref = profile?.preference;
+
+  const preferenceItems = useMemo(
+    () => [
+      { icon: Briefcase, label: "Job title", value: pref?.jobTitle },
+      { icon: Tag, label: "Job category", value: pref?.jobCategory },
+      { icon: MapPin, label: "Location range", value: pref?.locRange },
+      { icon: Clock, label: "Joining period", value: pref?.joiningPeriod },
+      { icon: Clock, label: "Shift type", value: pref?.shiftType },
+      {
+        icon: Wallet,
+        label: "Expected salary",
+        value: formatSalary(pref?.minSalary, pref?.maxSalary),
+      },
+    ],
+    [pref],
+  );
+
+  if (status === "loading" && !profile) return <Skeleton />;
+
+  if (status === "error" && !profile) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+          <p className="font-semibold text-gray-900">
+            We couldn't load your profile
+          </p>
+          <p className="mt-1 text-sm text-gray-500">
+            Check your connection and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => load()}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            <RefreshCw className="h-4 w-4" /> Try again
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  const age = getAge(user?.dob);
+  const bio = user?.bio;
+  const location = [user?.city, user?.state].filter(Boolean).join(", ");
+  const salary = formatSalary(pref?.minSalary, pref?.maxSalary);
+  const completeness = profile?.profileCompleteness ?? 0;
+  const phone = user?.mobileNumber
+    ? `${user.mobileNumber.code ?? ""}-${user.mobileNumber.number ?? ""}`.trim()
+    : null;
+  const skills = user?.skills ?? [];
+  // const rating = profile?.stats?.rating; // optional – see API notes
+  // const ratingCount = profile?.stats?.ratingCount;
+  // const jobsDone = profile?.stats?.jobsDone;
+  const missing = profile?.missingFields ?? []; // optional – see API notes
+
+  const handleEditBio = () => {
+    setEditedText(bio);
+    setIsEditing(true);
+  };
+
+  const handleCancelBio = () => {
+    setEditedText(bio);
+    setIsEditing(false);
+  };
+
+  const handleSaveBio = () => {
+    // API CALL
+    console.log(editedText, "THIS IS THE EDITED TEXT");
+    setProfile((prev) => ({
+      ...prev,
+      user: {
+        ...prev.user,
+        bio: editedText.trim(),
+      },
+    }));
+
+    setIsEditing(false);
+  };
+
+  const handleRemoveSkills = (skillVal) => {
+    console.log(skillVal, "SKILL TO REMOVE");
+    setProfile((prev) => ({
+      ...prev,
+      user: {
+        ...prev.user,
+        skills: skills.filter((s) => s.skill !== skillVal),
+      },
+    }));
+  };
+
+
+  const handleSkillEdit = (jobCat) => {
+    setIsSkillEditing(true);
+    const skillsReq = JOB_SKILLS[jobCat];
+    console.log(skillsReq, jobCat, "=========================");
+    setRequiredSkills(skillsReq)
+  };
+
+  const handleSkillCreation = () => {
+    if (!skill.trim()) return;
+
+    setProfile((prev) => ({
+      ...prev,
+      user: {
+        ...prev.user,
+        skills: [
+          ...(prev.user.skills || []),
+          { skill: skill.trim(), experience },
+        ],
+      },
+    }));
+
+    setSkill("");
+    setExperience("");
+  };
+
   return (
-    <></>
-    // <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
-    //   {" "}
-    //   <div className="mx-auto max-w-5xl space-y-5">
-    //     {" "}
-    //     {/* Profile Header */}{" "}
-    //     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-    //       {" "}
-    //       <div className="flex flex-col items-center text-center">
-    //         {" "}
-    //         {/* Profile Image */}{" "}
-    //         <div className="relative">
-    //           {" "}
-    //           <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-4xl font-bold text-white ring-4 ring-indigo-50">
-    //             {" "}
-    //             AK{" "}
-    //           </div>{" "}
-    //           {/* <button
-    //             type="button"
-    //             className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gray-900 text-white shadow-md transition hover:bg-gray-700"
-    //             aria-label="Change profile photo"
-    //           >
-    //             {" "}
-    //             <Camera className="h-4 w-4" />{" "}
-    //           </button>{" "} */}
-    //         </div>{" "}
-    //         {/* Name */}{" "}
-    //         <div className="mt-4 flex items-center gap-2">
-    //           {" "}
-    //           <h1 className="text-2xl font-bold text-gray-900">
-    //             {" "}
-    //             Akshay Kumar{" "}
-    //           </h1>{" "}
-    //           <Verified
-    //             className="h-5 w-5 fill-blue-500 text-white"
-    //             aria-label="Verified profile"
-    //           />{" "}
-    //         </div>{" "}
-    //         {/* Basic Information */}{" "}
-    //         <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-500">
-    //           {" "}
-    //           <span className="font-medium text-gray-700">Mason</span>{" "}
-    //           <span className="hidden sm:inline">•</span>{" "}
-    //           <span className="flex items-center gap-1">
-    //             {" "}
-    //             <MapPin className="h-4 w-4" /> Palakkad, Kerala{" "}
-    //           </span>{" "}
-    //           <span className="hidden sm:inline">•</span>{" "}
-    //           <span>28 Yrs</span>{" "}
-    //         </div>{" "}
-    //         {/* Rating / Wage */}{" "}
-    //         <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm">
-    //           {" "}
-    //           <span className="flex items-center gap-1 text-gray-600">
-    //             {" "}
-    //             <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />{" "}
-    //             <strong className="text-gray-900">4.8</strong>{" "}
-    //             <span>(128 jobs)</span>{" "}
-    //           </span>{" "}
-    //           <span className="font-semibold text-green-600">
-    //             {" "}
-    //             ₹800 – ₹1,000/day{" "}
-    //           </span>{" "}
-    //         </div>{" "}
-    //         {/* Change Photo */}{" "}
-    //         <button
-    //           type="button"
-    //           className="mt-5 flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-    //         >
-    //           {" "}
-    //           <Camera className="h-4 w-4" /> Change Photo{" "}
-    //         </button>{" "}
-    //       </div>{" "}
-    //     </section>{" "}
-    //     {/* Stats */}{" "}
-    //     <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-    //       {" "}
-    //       {stats.map((stat) => (
-    //         <div
-    //           key={stat.label}
-    //           className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm"
-    //         >
-    //           {" "}
-    //           <p className="text-2xl font-bold text-gray-900">
-    //             {" "}
-    //             {stat.value}{" "}
-    //           </p>{" "}
-    //           <p className="mt-1 text-sm text-gray-500"> {stat.label} </p>{" "}
-    //         </div>
-    //       ))}{" "}
-    //     </section>{" "}
-    //     {/* Profile Completeness */}{" "}
-    //     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-    //       {" "}
-    //       <div className="flex items-center justify-between">
-    //         {" "}
-    //         <div>
-    //           {" "}
-    //           <h2 className="font-semibold text-gray-900">
-    //             {" "}
-    //             Profile Completeness{" "}
-    //           </h2>{" "}
-    //           <p className="mt-1 text-sm text-gray-500">
-    //             {" "}
-    //             Complete your profile to get better job matches.{" "}
-    //           </p>{" "}
-    //         </div>{" "}
-    //         <span className="text-lg font-bold text-indigo-600">
-    //           {" "}
-    //           70%{" "}
-    //         </span>{" "}
-    //       </div>{" "}
-    //       <div className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100">
-    //         {" "}
-    //         <div
-    //           className="h-full rounded-full bg-indigo-600"
-    //           style={{ width: "70%" }}
-    //         />{" "}
-    //       </div>{" "}
-    //     </section>{" "}
-    //     {/* Skills */}{" "}
-    //     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-    //       {" "}
-    //       <div className="flex items-center justify-between">
-    //         {" "}
-    //         <div>
-    //           {" "}
-    //           <h2 className="text-xl font-bold text-gray-900"> Skills </h2>{" "}
-    //           <p className="mt-1 text-sm text-gray-500">
-    //             {" "}
-    //             Your professional skills and experience level.{" "}
-    //           </p>{" "}
-    //         </div>{" "}
-    //         <button
-    //           type="button"
-    //           className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    //           aria-label="Edit skills"
-    //         >
-    //           {" "}
-    //           <Pencil className="h-5 w-5" />{" "}
-    //         </button>{" "}
-    //       </div>{" "}
-    //       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-    //         {" "}
-    //         {skills.map((skill) => (
-    //           <div
-    //             key={skill.name}
-    //             className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-    //           >
-    //             {" "}
-    //             <p className="font-semibold text-gray-900">
-    //               {" "}
-    //               {skill.name}{" "}
-    //             </p>{" "}
-    //             <span className="mt-2 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
-    //               {" "}
-    //               {skill.level}{" "}
-    //             </span>{" "}
-    //           </div>
-    //         ))}{" "}
-    //       </div>{" "}
-    //     </section>{" "}
-    //     {/* Job Preferences */}{" "}
-    //     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-    //       {" "}
-    //       <div className="flex items-center justify-between">
-    //         {" "}
-    //         <div>
-    //           {" "}
-    //           <h2 className="text-xl font-bold text-gray-900">
-    //             {" "}
-    //             Job Preferences{" "}
-    //           </h2>{" "}
-    //           <p className="mt-1 text-sm text-gray-500">
-    //             {" "}
-    //             Your preferred job requirements.{" "}
-    //           </p>{" "}
-    //         </div>{" "}
-    //         <button
-    //           type="button"
-    //           className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    //           aria-label="Edit job preferences"
-    //         >
-    //           {" "}
-    //           <Pencil className="h-5 w-5" />{" "}
-    //         </button>{" "}
-    //       </div>{" "}
-    //       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    //         {" "}
-    //         {preferences.map((item) => {
-    //           const Icon = item.icon;
-    //           return (
-    //             <div
-    //               key={item.label}
-    //               className="flex items-start gap-3 rounded-xl border border-gray-200 p-4"
-    //             >
-    //               {" "}
-    //               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-    //                 {" "}
-    //                 <Icon className="h-4 w-4" />{" "}
-    //               </div>{" "}
-    //               <div>
-    //                 {" "}
-    //                 <p className="text-sm text-gray-500"> {item.label} </p>{" "}
-    //                 <p className="mt-1 font-semibold capitalize text-gray-900">
-    //                   {" "}
-    //                   {item.value}{" "}
-    //                 </p>{" "}
-    //               </div>{" "}
-    //             </div>
-    //           );
-    //         })}{" "}
-    //       </div>{" "}
-    //     </section>{" "}
-    //     {/* Contact Information */}{" "}
-    //     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-    //       {" "}
-    //       <div className="flex items-center justify-between">
-    //         {" "}
-    //         <div>
-    //           {" "}
-    //           <h2 className="text-xl font-bold text-gray-900">
-    //             {" "}
-    //             Contact Information{" "}
-    //           </h2>{" "}
-    //           <p className="mt-1 text-sm text-gray-500">
-    //             {" "}
-    //             Your registered contact details.{" "}
-    //           </p>{" "}
-    //         </div>{" "}
-    //         <button
-    //           type="button"
-    //           className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
-    //           aria-label="Edit contact information"
-    //         >
-    //           {" "}
-    //           <Pencil className="h-5 w-5" />{" "}
-    //         </button>{" "}
-    //       </div>{" "}
-    //       <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-    //         {" "}
-    //         <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
-    //           {" "}
-    //           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-    //             {" "}
-    //             <Phone className="h-5 w-5" />{" "}
-    //           </div>{" "}
-    //           <div>
-    //             {" "}
-    //             <p className="text-sm text-gray-500"> Mobile Number </p>{" "}
-    //             <p className="mt-1 font-medium text-gray-900">
-    //               {" "}
-    //               +91 71881 818819{" "}
-    //             </p>{" "}
-    //           </div>{" "}
-    //         </div>{" "}
-    //         <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
-    //           {" "}
-    //           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-    //             {" "}
-    //             <Mail className="h-5 w-5" />{" "}
-    //           </div>{" "}
-    //           <div>
-    //             {" "}
-    //             <p className="text-sm text-gray-500"> Email </p>{" "}
-    //             <p className="mt-1 break-all font-medium text-gray-900">
-    //               {" "}
-    //               worker@gmail.com{" "}
-    //             </p>{" "}
-    //           </div>{" "}
-    //         </div>{" "}
-    //       </div>{" "}
-    //     </section>{" "}
-    //   </div>{" "}
-    // </main>
+    <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-5xl space-y-5">
+        {/* Header */}
+        <Card className="p-6">
+          <div className="flex flex-col items-center text-center">
+            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-4xl font-bold text-white ring-4 ring-indigo-50">
+              {user?.profileImage ? (
+                <img
+                  src={user.profileImage}
+                  alt={
+                    user.name ? `${user.name}'s profile photo` : "Profile photo"
+                  }
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span aria-hidden="true">
+                  {user?.name?.charAt(0).toUpperCase() || "?"}
+                </span>
+              )}
+            </div>
+
+            <div className="mt-4 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {user?.name || "Your name"}
+              </h1>
+              {user?.isVerified && (
+                <BadgeCheck
+                  className="h-6 w-6 fill-blue-500 text-white"
+                  aria-label="Verified profile"
+                />
+              )}
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-500">
+              {pref?.jobTitle && (
+                <span className="font-medium capitalize text-gray-700">
+                  {pref.jobTitle}
+                </span>
+              )}
+              {location && (
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" /> {location}
+                </span>
+              )}
+              {age !== null && <span>{age} yrs old</span>}
+            </div>
+
+            <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm">
+              {/* {typeof rating === "number" && (
+                <span className="flex items-center gap-1 text-gray-600">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <strong className="text-gray-900">{rating.toFixed(1)}</strong>
+                  {ratingCount != null && <span>({ratingCount} reviews)</span>}
+                </span>
+              )} */}
+              {salary && (
+                <span className="font-semibold text-green-600">{salary}</span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="mt-5 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+            >
+              <Camera className="h-4 w-4" /> Change photo
+            </button>
+          </div>
+        </Card>
+        <Card>
+          <SectionHeader
+            title="Bio"
+            subtitle="Tell employers a little about yourself and your work."
+            editLabel="Edit bio"
+            onEdit={handleEditBio}
+          />
+          {isEditing ? (
+            <>
+              <textarea
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 p-3"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  aria-label="cancel Bio"
+                  onClick={handleCancelBio}
+                  className="bg-gray-600 text-white p-2 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  aria-label="Save Bio"
+                  onClick={handleSaveBio}
+                  className="bg-blue-500 text-white p-2 rounded-md"
+                >
+                  Save
+                </button>
+              </div>
+            </>
+          ) : (
+            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+              {bio || editedText}
+            </p>
+          )}
+        </Card>
+
+        {/* Stats */}
+        <section
+          aria-label="Profile statistics"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+        >
+          <Stat
+            value={
+              typeof user?.yearsOfExperience === "number"
+                ? `${user.yearsOfExperience} yrs`
+                : null
+            }
+            label="Experience"
+          />
+          <Stat value={""} label="Jobs done" />
+          <Stat value={profile?.savedJobs ?? 0} label="Saved jobs" />
+          <Stat value={profile?.jobInvitations ?? 0} label="Job invitations" />
+        </section>
+
+        {/* Completeness */}
+        {completeness < 100 && (
+          <Card>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">
+                  Profile completeness
+                </h2>
+                <p className="mt-0.5 text-sm text-gray-500">
+                  Complete your profile to get better job matches.
+                </p>
+              </div>
+              <span className="text-lg font-bold text-indigo-600">
+                {completeness}%
+              </span>
+            </div>
+            <div
+              className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100"
+              role="progressbar"
+              aria-valuenow={completeness}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Profile completeness"
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${progressColor(completeness)}`}
+                style={{ width: `${completeness}%` }}
+              />
+            </div>
+            {missing.length > 0 && (
+              <p className="mt-3 text-sm text-gray-600">
+                Still missing:{" "}
+                <span className="font-medium">{missing.join(", ")}</span>
+              </p>
+            )}
+          </Card>
+        )}
+
+        {/* Skills */}
+        <Card>
+          <SectionHeader
+            title="Skills"
+            subtitle="Your professional skills and experience level."
+            editLabel="Edit skills"
+            onEdit={() => handleSkillEdit(pref.jobCategory)}
+          />
+          {skills.length > 0 ? (
+            <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {skills.map((s) => (
+                <li
+                  key={s.skill}
+                  className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                >
+                  <div className="flex justify-between">
+                    <p className="font-semibold text-gray-900">{s.skill}</p>
+                    <button
+                      type="button"
+                      aria-label="Delete Skill"
+                      onClick={() => handleRemoveSkills(s.skill)}
+                    >
+                      {isSkillEditing && <X className="h-4 w-4 text-red-600" />}
+                    </button>
+                  </div>
+                  {s.experience && (
+                    <span className="mt-2 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
+                      {s.experience}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-5 rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+              No skills added yet. Add your skills so employers can find you.
+            </p>
+          )}
+          {/* {isSkillEditing && (
+            <div className="flex flex-wrap gap-2 w-full mt-4">
+              {skillsRequired.map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setSkill(item)}
+                  type="button"
+                  className={`rounded-full border px-4 py-2 text-sm transition cursor-pointer
+    ${
+      skill === item
+        ? "bg-blue-600 text-white border-blue-600"
+        : "bg-white text-gray-700 hover:bg-blue-50"
+    }
+  `}
+                >
+                  {item}
+                </button>
+              ))}
+
+              <p className="mb-3 font-medium">Experience Level</p>
+
+              <div className="flex flex-wrap gap-5">
+                {EXPERIENCE_LEVELS.map((level) => (
+                  <label
+                    key={level}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="experience"
+                      value={level}
+                      checked={experience === level}
+                      onChange={(e) => setExperience(e.target.value)}
+                    />
+                    <span>{level}</span>
+                  </label>
+                ))}
+              </div>
+              <button
+                className="rounded-lg bg-blue-600 px-4 py-2 text-white"
+                onClick={handleSkillCreation}
+              >
+                + Add Skill
+              </button>
+            </div>
+          )} */}
+
+          {isSkillEditing && (
+  <div className="mt-4 flex w-full flex-col gap-4">
+    {/* Skill Selection */}
+    <div className="flex flex-wrap gap-2">
+      {requiredSkills.map((item) => (
+        <button
+          key={item}
+          type="button"
+          onClick={() => setSkill(item)}
+          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+            skill === item
+              ? "border-blue-600 bg-blue-600 text-white"
+              : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
+          }`}
+        >
+          {item}
+        </button>
+      ))}
+    </div>
+
+    {/* Experience Level */}
+    <div>
+      <p className="mb-3 font-medium">Experience Level</p>
+
+      <div className="flex flex-wrap gap-5">
+        {EXPERIENCE_LEVELS.map((level) => (
+          <label
+            key={level}
+            className="flex cursor-pointer items-center gap-2"
+          >
+            <input
+              type="radio"
+              name="experience"
+              value={level}
+              checked={experience === level}
+              onChange={(e) => setExperience(e.target.value)}
+              className="accent-blue-600"
+            />
+
+            <span className="text-sm text-gray-700">{level}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* Add Skill */}
+    <div>
+      <button
+        type="button"
+        onClick={handleSkillCreation}
+        disabled={!skill || !experience}
+        className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        + Add Skill
+      </button>
+    </div>
+  </div>
+)}
+        </Card>
+
+        <Card>
+          <SectionHeader
+            title="Job preferences"
+            subtitle="The work you're looking for."
+            editLabel="Edit job preferences"
+          />
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {preferenceItems.map((item) => (
+              <InfoRow
+                key={item.label}
+                icon={item.icon}
+                label={item.label}
+                value={item.value}
+              />
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader
+            title="Contact information"
+            subtitle="Your registered contact details."
+            editLabel="Edit contact information"
+          />
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <InfoRow icon={Phone} label="Mobile number" value={phone} />
+            <InfoRow icon={Mail} label="Email" value={user?.email} breakAll />
+          </div>
+        </Card>
+      </div>
+    </main>
   );
 };
+
 export default MyProfile;
