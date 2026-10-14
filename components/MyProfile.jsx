@@ -16,7 +16,13 @@ import {
   X,
 } from "lucide-react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
-import { EXPERIENCE_LEVELS, JOB_SKILLS } from "@/constants/constant";
+import {
+  EXPERIENCE_LEVELS,
+  JOB_SKILLS,
+  JOINING_TYPE_VALUES,
+  SALARY_CREDIT_TYPES,
+  SHIFT_TYPE_VALUES,
+} from "@/constants/constant";
 
 /* ---------- helpers ---------- */
 
@@ -73,21 +79,21 @@ const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
   </div>
 );
 
-const InfoRow = ({ icon: Icon, label, value, breakAll = false }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-      <Icon className="h-5 w-5" />
-    </div>
-    <div className="min-w-0">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p
-        className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
-      >
-        {value || <span className="text-gray-400">Not added</span>}
-      </p>
-    </div>
-  </div>
-);
+// const InfoRow = ({ icon: Icon, label, value, breakAll = false }) => (
+//   <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
+//     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+//       <Icon className="h-5 w-5" />
+//     </div>
+//     <div className="min-w-0">
+//       <p className="text-sm text-gray-500">{label}</p>
+//       <p
+//         className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
+//       >
+//         {value || <span className="text-gray-400">Not added</span>}
+//       </p>
+//     </div>
+//   </div>
+// );
 
 const Stat = ({ value, label }) => (
   <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
@@ -115,11 +121,9 @@ const Skeleton = () => (
 
 const MyProfile = () => {
   const [profile, setProfile] = useState(null);
+  const [isEditing, setIsEditing] = useState("");
   const [status, setStatus] = useState("loading"); // loading | ready | error
-
-  const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState("");
-  const [isSkillEditing, setIsSkillEditing] = useState(false);
   const [requiredSkills, setRequiredSkills] = useState([
     {
       skill: "",
@@ -128,6 +132,18 @@ const MyProfile = () => {
   ]);
   const [skill, setSkill] = useState("");
   const [experience, setExperience] = useState("");
+  const [preferences, setPreferences] = useState({
+    jobTitle: "Frontend Developer",
+    jobCategory: "", // should match one of the JOB_SKILLS options
+    locRange: 10, // number (type: "number")
+    joiningPeriod: "", // should match one of the JOINING_TYPES options
+    shiftType: "", // should match one of the SHIFT_TYPES options
+    minSalary: 400, // replaces the old single `salary` field
+    maxSalary: 800,
+    salaryCreditType: "", // should match one of the SALARY_CREDIT_TYPES options
+  });
+  const [draft, setDraft] = useState(preferences);
+  console.log(draft, "DRAFT VALUE OF PREFERENCES");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -154,15 +170,57 @@ const MyProfile = () => {
 
   const preferenceItems = useMemo(
     () => [
-      { icon: Briefcase, label: "Job title", value: pref?.jobTitle },
-      { icon: Tag, label: "Job category", value: pref?.jobCategory },
-      { icon: MapPin, label: "Location range", value: pref?.locRange },
-      { icon: Clock, label: "Joining period", value: pref?.joiningPeriod },
-      { icon: Clock, label: "Shift type", value: pref?.shiftType },
+      {
+        icon: Briefcase,
+        label: "Job title",
+        value: pref?.jobTitle,
+        type: "text",
+        key: "jobtitle",
+      },
+      {
+        icon: Tag,
+        label: "Job category",
+        value: pref?.jobCategory,
+        type: "select",
+        options: JOB_SKILLS[pref?.jobCategory],
+        key: "jobcategory",
+      },
+      {
+        icon: MapPin,
+        label: "Location range",
+        value: pref?.locRange,
+        type: "number",
+        key: "locRange",
+      },
+      {
+        icon: Clock,
+        label: "Joining period",
+        value: pref?.joiningPeriod,
+        type: "select",
+        options: JOINING_TYPE_VALUES,
+        key: "joiningperiod",
+      },
+      {
+        icon: Clock,
+        label: "Shift type",
+        value: pref?.shiftType,
+        type: "select",
+        options: SHIFT_TYPE_VALUES,
+        key: "shifttype",
+      },
       {
         icon: Wallet,
         label: "Expected salary",
         value: formatSalary(pref?.minSalary, pref?.maxSalary),
+        type: "range",
+        keys: ["minSalary", "maxSalary"],
+      },
+      {
+        icon: Star,
+        label: "Salary Credit Type",
+        value: pref?.salaryCreditType,
+        type: "text",
+        options: SALARY_CREDIT_TYPES,
       },
     ],
     [pref],
@@ -208,12 +266,12 @@ const MyProfile = () => {
 
   const handleEditBio = () => {
     setEditedText(bio);
-    setIsEditing(true);
+    setIsEditing("bio");
   };
 
   const handleCancelBio = () => {
     setEditedText(bio);
-    setIsEditing(false);
+    setIsEditing("");
   };
 
   const handleSaveBio = () => {
@@ -227,7 +285,7 @@ const MyProfile = () => {
       },
     }));
 
-    setIsEditing(false);
+    setIsEditing("");
   };
 
   const handleRemoveSkills = (skillVal) => {
@@ -241,12 +299,11 @@ const MyProfile = () => {
     }));
   };
 
-
   const handleSkillEdit = (jobCat) => {
-    setIsSkillEditing(true);
+    setEditedText("skills");
     const skillsReq = JOB_SKILLS[jobCat];
     console.log(skillsReq, jobCat, "=========================");
-    setRequiredSkills(skillsReq)
+    setRequiredSkills(skillsReq);
   };
 
   const handleSkillCreation = () => {
@@ -265,6 +322,81 @@ const MyProfile = () => {
 
     setSkill("");
     setExperience("");
+  };
+
+  const handleJobPrefEdit = () => {
+    setDraft(preferences); // start from the saved values
+    setIsEditing("jobpref");
+  };
+
+  const handleChange = (key, val) =>
+    setDraft((prev) => ({ ...prev, [key]: val }));
+
+  const handleSave = () => {
+    setPreferences(draft); // or call your API here
+    setIsEditing("");
+  };
+
+  const handleCancel = () => setIsEditing("");
+
+  const inputClass =
+    "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 " +
+    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600";
+
+  const InfoRow = ({ field, value, isEditing, onChange }) => {
+    const Icon = field.icon;
+
+    const renderEditor = () => {
+      switch (field.type) {
+        case "select":
+          return (
+            <select
+              className={inputClass}
+              value={value}
+              onChange={(e) => onChange(field.key, e.target.value)}
+            >
+              <option value="">Select…</option>
+              {field.options.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          );
+        case "number":
+          return (
+            <input
+              type="number"
+              className={inputClass}
+              value={value}
+              onChange={(e) => onChange(field.key, e.target.value)}
+            />
+          );
+        default:
+          return (
+            <input
+              type="text"
+              className={inputClass}
+              value={value}
+              onChange={(e) => onChange(field.key, e.target.value)}
+            />
+          );
+      }
+    };
+
+    return (
+      <div className="flex items-start gap-3">
+        <Icon className="mt-1 h-5 w-5 text-gray-400" />
+        <div className="min-w-0 flex-1">
+          <label className="text-sm text-gray-500">{field.label}</label>
+          {isEditing ? (
+            renderEditor()
+          ) : (
+            <p className="mt-0.5 font-medium text-gray-900">{value || "—"}</p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -343,7 +475,7 @@ const MyProfile = () => {
             editLabel="Edit bio"
             onEdit={handleEditBio}
           />
-          {isEditing ? (
+          {isEditing === "bio" ? (
             <>
               <textarea
                 value={editedText}
@@ -454,7 +586,9 @@ const MyProfile = () => {
                       aria-label="Delete Skill"
                       onClick={() => handleRemoveSkills(s.skill)}
                     >
-                      {isSkillEditing && <X className="h-4 w-4 text-red-600" />}
+                      {isEditing === "skills" && (
+                        <X className="h-4 w-4 text-red-600" />
+                      )}
                     </button>
                   </div>
                   {s.experience && (
@@ -470,118 +604,73 @@ const MyProfile = () => {
               No skills added yet. Add your skills so employers can find you.
             </p>
           )}
-          {/* {isSkillEditing && (
-            <div className="flex flex-wrap gap-2 w-full mt-4">
-              {skillsRequired.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => setSkill(item)}
-                  type="button"
-                  className={`rounded-full border px-4 py-2 text-sm transition cursor-pointer
-    ${
-      skill === item
-        ? "bg-blue-600 text-white border-blue-600"
-        : "bg-white text-gray-700 hover:bg-blue-50"
-    }
-  `}
-                >
-                  {item}
-                </button>
-              ))}
 
-              <p className="mb-3 font-medium">Experience Level</p>
-
-              <div className="flex flex-wrap gap-5">
-                {EXPERIENCE_LEVELS.map((level) => (
-                  <label
-                    key={level}
-                    className="flex items-center gap-2 cursor-pointer"
+          {isEditing === "skills" && (
+            <div className="mt-4 flex w-full flex-col gap-4">
+              {/* Skill Selection */}
+              <div className="flex flex-wrap gap-2">
+                {requiredSkills.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => setSkill(item)}
+                    className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                      skill === item
+                        ? "border-blue-600 bg-blue-600 text-white"
+                        : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
+                    }`}
                   >
-                    <input
-                      type="radio"
-                      name="experience"
-                      value={level}
-                      checked={experience === level}
-                      onChange={(e) => setExperience(e.target.value)}
-                    />
-                    <span>{level}</span>
-                  </label>
+                    {item}
+                  </button>
                 ))}
               </div>
-              <button
-                className="rounded-lg bg-blue-600 px-4 py-2 text-white"
-                onClick={handleSkillCreation}
-              >
-                + Add Skill
-              </button>
+
+              {/* Experience Level */}
+              <div>
+                <p className="mb-3 font-medium">Experience Level</p>
+
+                <div className="flex flex-wrap gap-5">
+                  {EXPERIENCE_LEVELS.map((level) => (
+                    <label
+                      key={level}
+                      className="flex cursor-pointer items-center gap-2"
+                    >
+                      <input
+                        type="radio"
+                        name="experience"
+                        value={level}
+                        checked={experience === level}
+                        onChange={(e) => setExperience(e.target.value)}
+                        className="accent-blue-600"
+                      />
+
+                      <span className="text-sm text-gray-700">{level}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Add Skill */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleSkillCreation}
+                  disabled={!skill || !experience}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  + Add Skill
+                </button>
+              </div>
             </div>
-          )} */}
-
-          {isSkillEditing && (
-  <div className="mt-4 flex w-full flex-col gap-4">
-    {/* Skill Selection */}
-    <div className="flex flex-wrap gap-2">
-      {requiredSkills.map((item) => (
-        <button
-          key={item}
-          type="button"
-          onClick={() => setSkill(item)}
-          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
-            skill === item
-              ? "border-blue-600 bg-blue-600 text-white"
-              : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
-          }`}
-        >
-          {item}
-        </button>
-      ))}
-    </div>
-
-    {/* Experience Level */}
-    <div>
-      <p className="mb-3 font-medium">Experience Level</p>
-
-      <div className="flex flex-wrap gap-5">
-        {EXPERIENCE_LEVELS.map((level) => (
-          <label
-            key={level}
-            className="flex cursor-pointer items-center gap-2"
-          >
-            <input
-              type="radio"
-              name="experience"
-              value={level}
-              checked={experience === level}
-              onChange={(e) => setExperience(e.target.value)}
-              className="accent-blue-600"
-            />
-
-            <span className="text-sm text-gray-700">{level}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-
-    {/* Add Skill */}
-    <div>
-      <button
-        type="button"
-        onClick={handleSkillCreation}
-        disabled={!skill || !experience}
-        className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        + Add Skill
-      </button>
-    </div>
-  </div>
-)}
+          )}
         </Card>
 
-        <Card>
+        {/* <Card>
           <SectionHeader
             title="Job preferences"
             subtitle="The work you're looking for."
             editLabel="Edit job preferences"
+            onEdit={() => handleJobPrefEdit}
           />
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {preferenceItems.map((item) => (
@@ -593,6 +682,46 @@ const MyProfile = () => {
               />
             ))}
           </div>
+        </Card> */}
+
+        <Card>
+          <SectionHeader
+            title="Job preferences"
+            subtitle="The work you're looking for."
+            editLabel="Edit job preferences"
+            onEdit={handleJobPrefEdit}
+          />
+
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {preferenceItems.map((field) => (
+              <InfoRow
+                key={field.key}
+                field={field}
+                value={isEditing ? draft[field.key] : preferences[field.key]}
+                isEditing={isEditing}
+                onChange={handleChange}
+              />
+            ))}
+          </div>
+
+          {isEditing && (
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Save
+              </button>
+            </div>
+          )}
         </Card>
 
         <Card>
