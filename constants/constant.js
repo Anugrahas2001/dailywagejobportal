@@ -485,3 +485,11 @@ export const getMatchStyle = (rate) => {
     className: "bg-red-50 text-red-600 border-red-200",
   };
 };
+
+export const getJoiningPeriodType = (jValue) => {
+  return JOINING_TYPES?.find((j) => j.value === jValue)?.label || "_";
+};
+
+export const getShiftTypes = (sValue) => {
+  return SHIFT_TYPES?.find((s) => s.value === sValue)?.label || "-";
+};

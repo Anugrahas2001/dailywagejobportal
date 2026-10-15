@@ -46,6 +46,11 @@ const Step3 = () => {
       return;
     }
 
+    if (skills.length > 8) {
+      alert("User allowed to select only 8 skills.");
+      return;
+    }
+
     const data = {
       bio,
       skills,

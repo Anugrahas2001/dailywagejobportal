@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   BadgeCheck,
   Briefcase,
@@ -11,6 +11,7 @@ import {
   Phone,
   RefreshCw,
   Star,
+  Sun,
   Tag,
   Wallet,
   X,
@@ -18,11 +19,14 @@ import {
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import {
   EXPERIENCE_LEVELS,
+  getJoiningPeriodType,
   JOB_SKILLS,
   JOINING_TYPE_VALUES,
   SALARY_CREDIT_TYPES,
   SHIFT_TYPE_VALUES,
 } from "@/constants/constant";
+import { getShiftTypes } from "./commonFunctions";
+import useLoading from "./hooks/useLoading";
 
 /* ---------- helpers ---------- */
 
@@ -39,18 +43,83 @@ const getAge = (dob) => {
   return age >= 0 ? age : null;
 };
 
-const formatINR = (n) =>
-  typeof n === "number" ? `₹${n.toLocaleString("en-IN")}` : null;
+const toNumberOrNull = (v) => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+const formatINR = (n) => {
+  const num = toNumberOrNull(n);
+  return num === null ? null : `₹${num.toLocaleString("en-IN")}`;
+};
 
 const formatSalary = (min, max) => {
-  const a = formatINR(Number(min));
-  const b = formatINR(Number(max));
+  const a = formatINR(min);
+  const b = formatINR(max);
   if (a && b) return `${a} – ${b}`;
   return a || b || null;
 };
 
 const progressColor = (pct) =>
   pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-indigo-600" : "bg-amber-500";
+
+// Accepts ["a","b"] or [{ value, label }] and always returns [{ value, label }]
+const toOptions = (options) =>
+  (options ?? [])
+    .map((o) =>
+      o !== null && typeof o === "object"
+        ? { value: o.value, label: o.label ?? o.value }
+        : { value: o, label: o },
+    )
+    .filter((o) => o.value !== "" && o.value != null);
+
+/* ---------- static config (outside the component) ---------- */
+
+const PREFERENCE_FIELDS = [
+  { icon: Briefcase, label: "Job title", type: "text", key: "jobTitle" },
+  {
+    icon: Tag,
+    label: "Job category",
+    type: "select",
+    key: "jobCategory",
+    options: toOptions(Object.keys(JOB_SKILLS ?? {})), // categories, not skills
+  },
+  { icon: MapPin, label: "Location range", type: "number", key: "locRange" },
+  {
+    icon: Clock,
+    label: "Joining period",
+    type: "select",
+    key: "joiningPeriod",
+    options: toOptions(JOINING_TYPE_VALUES),
+    format: (v) => getJoiningPeriodType(v), // shows the label in view mode
+  },
+  {
+    icon: Sun,
+    label: "Shift type",
+    type: "select",
+    key: "shiftType",
+    options: toOptions(SHIFT_TYPE_VALUES),
+    format: (v) => getShiftTypes(v),
+  },
+  {
+    icon: Wallet,
+    label: "Expected salary",
+    type: "range",
+    keys: ["minSalary", "maxSalary"],
+  },
+  {
+    icon: Star,
+    label: "Salary credit type",
+    type: "select",
+    key: "salaryCreditType",
+    options: toOptions(SALARY_CREDIT_TYPES),
+  },
+];
+
+const inputClass =
+  "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 " +
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600";
 
 /* ---------- small building blocks ---------- */
 
@@ -68,18 +137,21 @@ const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
       <h2 className="text-lg font-bold text-gray-900">{title}</h2>
       {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
     </div>
-    <button
-      type="button"
-      onClick={onEdit}
-      aria-label={editLabel}
-      className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
-    >
-      <Pencil className="h-5 w-5" />
-    </button>
+    {onEdit && (
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={editLabel}
+        className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+      >
+        <Pencil className="h-5 w-5" />
+      </button>
+    )}
   </div>
 );
 
-// const InfoRow = ({ icon: Icon, label, value, breakAll = false }) => (
+// Read-only row (contact section)
+// const ContactRow = ({ icon: Icon, label, value, breakAll = false }) => (
 //   <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
 //     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
 //       <Icon className="h-5 w-5" />
@@ -94,6 +166,102 @@ const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
 //     </div>
 //   </div>
 // );
+
+// Editable row (job preferences).
+// Defined OUTSIDE MyProfile so it isn't re-created on every render,
+// which would make inputs lose focus after each keystroke.
+const PreferenceRow = ({ field, source, isEditing, onChange }) => {
+  const Icon = field.icon;
+
+  const renderEditor = () => {
+    switch (field.type) {
+      case "select":
+        return (
+          <select
+            className={inputClass}
+            value={source[field.key] ?? ""}
+            onChange={(e) => onChange(field.key, e.target.value)}
+          >
+            <option value="">Select…</option>
+            {field.options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        );
+      case "number":
+        return (
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={source[field.key] ?? ""}
+            onChange={(e) => onChange(field.key, e.target.value)}
+          />
+        );
+      case "range": {
+        const [minKey, maxKey] = field.keys;
+        return (
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="0"
+              placeholder="Min"
+              aria-label="Minimum salary"
+              className={inputClass}
+              value={source[minKey] ?? ""}
+              onChange={(e) => onChange(minKey, e.target.value)}
+            />
+            <input
+              type="number"
+              min="0"
+              placeholder="Max"
+              aria-label="Maximum salary"
+              className={inputClass}
+              value={source[maxKey] ?? ""}
+              onChange={(e) => onChange(maxKey, e.target.value)}
+            />
+          </div>
+        );
+      }
+      default:
+        return (
+          <input
+            type="text"
+            className={inputClass}
+            value={source[field.key] ?? ""}
+            onChange={(e) => onChange(field.key, e.target.value)}
+          />
+        );
+    }
+  };
+
+  const renderValue = () => {
+    if (field.type === "range") {
+      return formatSalary(source[field.keys[0]], source[field.keys[1]]);
+    }
+    const raw = source[field.key];
+    if (raw === undefined || raw === null || raw === "") return null;
+    return field.format ? field.format(raw) : raw;
+  };
+
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="mt-1 h-5 w-5 text-gray-400" />
+      <div className="min-w-0 flex-1">
+        <span className="text-sm text-gray-500">{field.label}</span>
+        {isEditing ? (
+          renderEditor()
+        ) : (
+          <p className="mt-0.5 font-medium text-gray-900">
+            {renderValue() || "—"}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Stat = ({ value, label }) => (
   <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
@@ -117,287 +285,325 @@ const Skeleton = () => (
   </main>
 );
 
+const ContactRow = ({
+  icon: Icon,
+  label,
+  value,
+  breakAll = false,
+  editor = null, // pass JSX to show instead of the value
+  onEdit, // pass to show a pencil button (editable rows only)
+  editLabel,
+}) => (
+  <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+      <Icon className="h-5 w-5" />
+    </div>
+    <div className="min-w-0 flex-1">
+      <p className="text-sm text-gray-500">{label}</p>
+      {editor ?? (
+        <p
+          className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
+        >
+          {value || <span className="text-gray-400">Not added</span>}
+        </p>
+      )}
+    </div>
+    {onEdit && !editor && (
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label={editLabel}
+        className="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+    )}
+  </div>
+);
+
 /* ---------- page ---------- */
 
 const MyProfile = () => {
   const [profile, setProfile] = useState(null);
-  const [isEditing, setIsEditing] = useState("");
-  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const { loading, setLoading } = useLoading(); // loading | ready | error
+  const [isEditing, setIsEditing] = useState(""); // "" | "bio" | "skills" | "jobpref
+  console.log(isEditing, "WHICH FIELD IS ACTUALLY EDITING");
+  // bio
   const [editedText, setEditedText] = useState("");
-  const [requiredSkills, setRequiredSkills] = useState([
-    {
-      skill: "",
-      experience: "",
-    },
-  ]);
+  console.log(editedText, "BIO VALUE");
+  // skills
   const [skill, setSkill] = useState("");
   const [experience, setExperience] = useState("");
-  const [preferences, setPreferences] = useState({
-    jobTitle: "Frontend Developer",
-    jobCategory: "", // should match one of the JOB_SKILLS options
-    locRange: 10, // number (type: "number")
-    joiningPeriod: "", // should match one of the JOINING_TYPES options
-    shiftType: "", // should match one of the SHIFT_TYPES options
-    minSalary: 400, // replaces the old single `salary` field
-    maxSalary: 800,
-    salaryCreditType: "", // should match one of the SALARY_CREDIT_TYPES options
-  });
-  const [draft, setDraft] = useState(preferences);
-  console.log(draft, "DRAFT VALUE OF PREFERENCES");
+const [skillsDraft, setSkillsDraft] = useState([]);
+  console.log(skill, experience, "SKILL AND EXPERIENCE AND ALL");
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const token = await fetchUserToken();
-        const res = await fetch("/api/common/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error(`Request failed (${res.status})`);
-        const { data } = await res.json();
-        setProfile(data);
-        setStatus("ready");
-      } catch (err) {
-        console.error("Profile load failed:", err);
-        setStatus("error");
-      }
-    };
+  // job preferences: only a temporary copy while editing.
+  // The saved values live in profile.preference (single source of truth).
+  const [draft, setDraft] = useState({});
+  // const [prefError, setPrefError] = useState("");
+  console.log(draft, "JOB PREFERENCE");
 
-    loadProfile();
+  // Mobile Number.
+  const [phoneDraft, setPhoneDraft] = useState("");
+  console.log(phoneDraft, "EDITED PHONE NUMBER VALUE");
+
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = await fetchUserToken();
+      const res = await fetch("/api/common/profile", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const { data } = await res.json();
+      setProfile(data);
+      setLoading(false);
+    } catch (err) {
+      console.error("Profile load failed:", err);
+      setLoading(false);
+    }
   }, []);
 
+  const saveProfile = async (type, data) => {
+    
+    setLoading(true);
+    try {
+
+      console.log(type,data,"UPDATE PROFILE DATA")
+      const token = await fetchUserToken();
+      const res = await fetch("/api/common/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ type, data }),
+      });
+      if (!res.ok) throw new Error(`Update failed (${res.status})`);
+
+      const json = await res.json();
+      setProfile(json.data ?? json.result); // match whatever your API returns
+      return true;
+    } catch (err) {
+      console.error("Profile update failed:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  //
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+
+  if (loading && !profile) return <Skeleton />;
+
+  // if (status === "error" && !profile) {
+  //   return (
+  //     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+  //       <div className="max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+  //         <p className="font-semibold text-gray-900">
+  //           We couldn't load your profile
+  //         </p>
+  //         <p className="mt-1 text-sm text-gray-500">
+  //           Check your connection and try again.
+  //         </p>
+  //         <button
+  //           type="button"
+  //           onClick={loadProfile}
+  //           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+  //         >
+  //           <RefreshCw className="h-4 w-4" /> Try again
+  //         </button>
+  //       </div>
+  //     </main>
+  //   );
+  // }
+
   const user = profile?.user;
-  const pref = profile?.preference;
-
-  const preferenceItems = useMemo(
-    () => [
-      {
-        icon: Briefcase,
-        label: "Job title",
-        value: pref?.jobTitle,
-        type: "text",
-        key: "jobtitle",
-      },
-      {
-        icon: Tag,
-        label: "Job category",
-        value: pref?.jobCategory,
-        type: "select",
-        options: JOB_SKILLS[pref?.jobCategory],
-        key: "jobcategory",
-      },
-      {
-        icon: MapPin,
-        label: "Location range",
-        value: pref?.locRange,
-        type: "number",
-        key: "locRange",
-      },
-      {
-        icon: Clock,
-        label: "Joining period",
-        value: pref?.joiningPeriod,
-        type: "select",
-        options: JOINING_TYPE_VALUES,
-        key: "joiningperiod",
-      },
-      {
-        icon: Clock,
-        label: "Shift type",
-        value: pref?.shiftType,
-        type: "select",
-        options: SHIFT_TYPE_VALUES,
-        key: "shifttype",
-      },
-      {
-        icon: Wallet,
-        label: "Expected salary",
-        value: formatSalary(pref?.minSalary, pref?.maxSalary),
-        type: "range",
-        keys: ["minSalary", "maxSalary"],
-      },
-      {
-        icon: Star,
-        label: "Salary Credit Type",
-        value: pref?.salaryCreditType,
-        type: "text",
-        options: SALARY_CREDIT_TYPES,
-      },
-    ],
-    [pref],
-  );
-
-  if (status === "loading" && !profile) return <Skeleton />;
-
-  if (status === "error" && !profile) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-          <p className="font-semibold text-gray-900">
-            We couldn't load your profile
-          </p>
-          <p className="mt-1 text-sm text-gray-500">
-            Check your connection and try again.
-          </p>
-          <button
-            type="button"
-            onClick={() => load()}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-          >
-            <RefreshCw className="h-4 w-4" /> Try again
-          </button>
-        </div>
-      </main>
-    );
-  }
-
+  const pref = profile?.preference ?? {};
   const age = getAge(user?.dob);
   const bio = user?.bio;
   const location = [user?.city, user?.state].filter(Boolean).join(", ");
-  const salary = formatSalary(pref?.minSalary, pref?.maxSalary);
+  const salary = formatSalary(pref.minSalary, pref.maxSalary);
   const completeness = profile?.profileCompleteness ?? 0;
-  const phone = user?.mobileNumber
-    ? `${user.mobileNumber.code ?? ""}-${user.mobileNumber.number ?? ""}`.trim()
+  const phone = user?.mobileNumber?.number
+    ? `${user.mobileNumber.code ?? ""}-${user.mobileNumber.number}`
     : null;
   const skills = user?.skills ?? [];
-  // const rating = profile?.stats?.rating; // optional – see API notes
-  // const ratingCount = profile?.stats?.ratingCount;
-  // const jobsDone = profile?.stats?.jobsDone;
-  const missing = profile?.missingFields ?? []; // optional – see API notes
+  const missing = profile?.missingFields ?? [];
+  const requiredSkills = JOB_SKILLS?.[pref.jobCategory] ?? [];
+
+  /* ----- bio ----- */
 
   const handleEditBio = () => {
-    setEditedText(bio);
+    setEditedText(bio ?? "");
     setIsEditing("bio");
   };
 
   const handleCancelBio = () => {
-    setEditedText(bio);
+    setEditedText("");
     setIsEditing("");
   };
 
-  const handleSaveBio = () => {
-    // API CALL
-    console.log(editedText, "THIS IS THE EDITED TEXT");
-    setProfile((prev) => ({
-      ...prev,
-      user: {
-        ...prev.user,
-        bio: editedText.trim(),
-      },
-    }));
-
-    setIsEditing("");
+  const handleSaveBio = async () => {
+    const ok = await saveProfile("userinfo", { bio: editedText.trim() });
+    if (ok) setIsEditing("");
   };
 
-  const handleRemoveSkills = (skillVal) => {
-    console.log(skillVal, "SKILL TO REMOVE");
-    setProfile((prev) => ({
-      ...prev,
-      user: {
-        ...prev.user,
-        skills: skills.filter((s) => s.skill !== skillVal),
-      },
-    }));
-  };
+  /* ----- skills ----- */
 
-  const handleSkillEdit = (jobCat) => {
-    setEditedText("skills");
-    const skillsReq = JOB_SKILLS[jobCat];
-    console.log(skillsReq, jobCat, "=========================");
-    setRequiredSkills(skillsReq);
+  // const handleSkillEdit = () => {
+  //   setSkill("");
+  //   setExperience("");
+  //   setIsEditing((cur) => (cur === "skills" ? "" : "skills"));
+  // };
+
+  // const handleRemoveSkills = (skillVal) => {
+  //   // TODO: API call
+  //   setType("userinfo");
+  //   setProfile((prev) => ({
+  //     ...prev,
+  //     user: {
+  //       ...prev.user,
+  //       skills: (prev.user?.skills ?? []).filter((s) => s.skill !== skillVal),
+  //     },
+  //   }));
+  // };
+
+  // const handleSkillCreation = () => {
+  //   const name = skill.trim();
+  //   if (!name) return;
+  //   setType("userinfo");
+  //   // TODO: API call
+  //   setProfile((prev) => {
+  //     const current = prev.user?.skills ?? [];
+  //     if (current.some((s) => s.skill === name)) return prev; // no duplicates
+  //     return {
+  //       ...prev,
+  //       user: {
+  //         ...prev.user,
+  //         skills: [...current, { skill: name, experience }],
+  //       },
+  //     };
+  //   });
+
+  //   setSkill("");
+  //   setExperience("");
+  // };
+
+  // const handleCancelSkills = () => {
+  //   setSkill("");
+  //   setExperience("");
+  //   setIsEditing("");
+  // };
+
+  // const handleSaveSkills = () => {
+  //   //Api call
+  //   setExperience("");
+  // };
+
+  const handleSkillEdit = () => {
+    setSkillsDraft(skills); // copy saved skills
+    setSkill("");
+    setExperience("");
+    setIsEditing("skills");
   };
 
   const handleSkillCreation = () => {
-    if (!skill.trim()) return;
-
-    setProfile((prev) => ({
-      ...prev,
-      user: {
-        ...prev.user,
-        skills: [
-          ...(prev.user.skills || []),
-          { skill: skill.trim(), experience },
-        ],
-      },
-    }));
-
+    const name = skill.trim();
+    if (!name || skillsDraft.length >= 8) return;
+    setSkillsDraft((prev) =>
+      prev.some((s) => s.skill === name)
+        ? prev
+        : [...prev, { skill: name, experience }],
+    );
     setSkill("");
     setExperience("");
   };
 
+  const handleRemoveSkills = (val) =>
+    setSkillsDraft((prev) => prev.filter((s) => s.skill !== val));
+
+  const handleSaveSkills = async () => {
+    const ok = await saveProfile("userinfo", { skills: skillsDraft });
+    if (ok) setIsEditing("");
+  };
+  /* ----- job preferences ----- */
+
   const handleJobPrefEdit = () => {
-    setDraft(preferences); // start from the saved values
+    // Copy the SAVED values into the draft, so inputs start pre-filled
+    setDraft({
+      jobTitle: pref.jobTitle ?? "",
+      jobCategory: pref.jobCategory ?? "",
+      locRange: pref.locRange ?? "",
+      joiningPeriod: pref.joiningPeriod ?? "",
+      shiftType: pref.shiftType ?? "",
+      minSalary: pref.minSalary ?? "",
+      maxSalary: pref.maxSalary ?? "",
+      salaryCreditType: pref.salaryCreditType ?? "",
+    });
+    // setPrefError("");
     setIsEditing("jobpref");
   };
 
   const handleChange = (key, val) =>
     setDraft((prev) => ({ ...prev, [key]: val }));
 
-  const handleSave = () => {
-    setPreferences(draft); // or call your API here
+  const handleCancel = () => {
+    setDraft({});
+    // setPrefError("");
     setIsEditing("");
   };
 
-  const handleCancel = () => setIsEditing("");
+  const handleSave = async () => {
+    // job preferences
+    const minSalary = toNumberOrNull(draft.minSalary);
+    const maxSalary = toNumberOrNull(draft.maxSalary);
+    if (minSalary !== null && maxSalary !== null && minSalary > maxSalary)
+      return;
 
-  const inputClass =
-    "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 " +
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600";
-
-  const InfoRow = ({ field, value, isEditing, onChange }) => {
-    const Icon = field.icon;
-
-    const renderEditor = () => {
-      switch (field.type) {
-        case "select":
-          return (
-            <select
-              className={inputClass}
-              value={value}
-              onChange={(e) => onChange(field.key, e.target.value)}
-            >
-              <option value="">Select…</option>
-              {field.options.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              ))}
-            </select>
-          );
-        case "number":
-          return (
-            <input
-              type="number"
-              className={inputClass}
-              value={value}
-              onChange={(e) => onChange(field.key, e.target.value)}
-            />
-          );
-        default:
-          return (
-            <input
-              type="text"
-              className={inputClass}
-              value={value}
-              onChange={(e) => onChange(field.key, e.target.value)}
-            />
-          );
-      }
-    };
-
-    return (
-      <div className="flex items-start gap-3">
-        <Icon className="mt-1 h-5 w-5 text-gray-400" />
-        <div className="min-w-0 flex-1">
-          <label className="text-sm text-gray-500">{field.label}</label>
-          {isEditing ? (
-            renderEditor()
-          ) : (
-            <p className="mt-0.5 font-medium text-gray-900">{value || "—"}</p>
-          )}
-        </div>
-      </div>
-    );
+    const ok = await saveProfile("jobinfo", {
+      ...draft,
+      locRange: toNumberOrNull(draft.locRange),
+      minSalary,
+      maxSalary,
+    });
+    if (ok) {
+      setDraft({});
+      setIsEditing("");
+    }
   };
+  /* ----- contact (only the mobile number is editable) ----- */
+
+  const handleEditPhone = () => {
+    setPhoneDraft(user?.mobileNumber?.number ?? "");
+    // setPhoneError("");
+    setIsEditing("phone");
+  };
+
+  const handleCancelPhone = () => {
+    setPhoneDraft("");
+    // setPhoneError("");
+    setIsEditing("");
+  };
+
+  const handleSavePhone = async () => {
+    const digits = phoneDraft.replace(/\D/g, "");
+    if (digits.length < 6 || digits.length > 15) return;
+    const ok = await saveProfile("userinfo", {
+      mobileNumber: { ...user?.mobileNumber, number: digits },
+    });
+    if (ok) {
+      setPhoneDraft("");
+      setIsEditing("");
+    }
+  };
+
+  const isEditingPrefs = isEditing === "jobpref";
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
@@ -434,7 +640,7 @@ const MyProfile = () => {
             </div>
 
             <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-500">
-              {pref?.jobTitle && (
+              {pref.jobTitle && (
                 <span className="font-medium capitalize text-gray-700">
                   {pref.jobTitle}
                 </span>
@@ -448,13 +654,6 @@ const MyProfile = () => {
             </div>
 
             <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm">
-              {/* {typeof rating === "number" && (
-                <span className="flex items-center gap-1 text-gray-600">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <strong className="text-gray-900">{rating.toFixed(1)}</strong>
-                  {ratingCount != null && <span>({ratingCount} reviews)</span>}
-                </span>
-              )} */}
               {salary && (
                 <span className="font-semibold text-green-600">{salary}</span>
               )}
@@ -468,6 +667,8 @@ const MyProfile = () => {
             </button>
           </div>
         </Card>
+
+        {/* Bio */}
         <Card>
           <SectionHeader
             title="Bio"
@@ -480,22 +681,23 @@ const MyProfile = () => {
               <textarea
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 p-3"
+                rows={4}
+                className="mt-3 w-full rounded-lg border border-gray-200 p-3"
               />
-              <div className="flex gap-2">
+              <div className="mt-2 flex gap-2">
                 <button
                   type="button"
-                  aria-label="cancel Bio"
+                  aria-label="Cancel bio"
                   onClick={handleCancelBio}
-                  className="bg-gray-600 text-white p-2 rounded-md"
+                  className="rounded-md bg-gray-600 p-2 text-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  aria-label="Save Bio"
+                  aria-label="Save bio"
                   onClick={handleSaveBio}
-                  className="bg-blue-500 text-white p-2 rounded-md"
+                  className="rounded-md bg-blue-500 p-2 text-white"
                 >
                   Save
                 </button>
@@ -503,7 +705,7 @@ const MyProfile = () => {
             </>
           ) : (
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
-              {bio || editedText}
+              {bio || <span className="text-gray-400">No bio added yet.</span>}
             </p>
           )}
         </Card>
@@ -521,7 +723,7 @@ const MyProfile = () => {
             }
             label="Experience"
           />
-          <Stat value={""} label="Jobs done" />
+          <Stat value={profile?.jobsDone ?? "–"} label="Jobs done" />
           <Stat value={profile?.savedJobs ?? 0} label="Saved jobs" />
           <Stat value={profile?.jobInvitations ?? 0} label="Job invitations" />
         </section>
@@ -570,7 +772,7 @@ const MyProfile = () => {
             title="Skills"
             subtitle="Your professional skills and experience level."
             editLabel="Edit skills"
-            onEdit={() => handleSkillEdit(pref.jobCategory)}
+            onEdit={handleSkillEdit}
           />
           {skills.length > 0 ? (
             <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -581,15 +783,15 @@ const MyProfile = () => {
                 >
                   <div className="flex justify-between">
                     <p className="font-semibold text-gray-900">{s.skill}</p>
-                    <button
-                      type="button"
-                      aria-label="Delete Skill"
-                      onClick={() => handleRemoveSkills(s.skill)}
-                    >
-                      {isEditing === "skills" && (
+                    {isEditing === "skills" && (
+                      <button
+                        type="button"
+                        aria-label={`Delete skill ${s.skill}`}
+                        onClick={() => handleRemoveSkills(s.skill)}
+                      >
                         <X className="h-4 w-4 text-red-600" />
-                      )}
-                    </button>
+                      </button>
+                    )}
                   </div>
                   {s.experience && (
                     <span className="mt-2 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
@@ -607,28 +809,34 @@ const MyProfile = () => {
 
           {isEditing === "skills" && (
             <div className="mt-4 flex w-full flex-col gap-4">
-              {/* Skill Selection */}
-              <div className="flex flex-wrap gap-2">
-                {requiredSkills.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    onClick={() => setSkill(item)}
-                    className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
-                      skill === item
-                        ? "border-blue-600 bg-blue-600 text-white"
-                        : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
+              {/* Skill selection */}
+              {requiredSkills.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {requiredSkills.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => setSkill(item)}
+                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                        skill === item
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Choose a job category in your job preferences to see suggested
+                  skills.
+                </p>
+              )}
 
-              {/* Experience Level */}
+              {/* Experience level */}
               <div>
                 <p className="mb-3 font-medium">Experience Level</p>
-
                 <div className="flex flex-wrap gap-5">
                   {EXPERIENCE_LEVELS.map((level) => (
                     <label
@@ -643,14 +851,13 @@ const MyProfile = () => {
                         onChange={(e) => setExperience(e.target.value)}
                         className="accent-blue-600"
                       />
-
                       <span className="text-sm text-gray-700">{level}</span>
                     </label>
                   ))}
                 </div>
               </div>
 
-              {/* Add Skill */}
+              {/* Add skill */}
               <div>
                 <button
                   type="button"
@@ -663,27 +870,28 @@ const MyProfile = () => {
               </div>
             </div>
           )}
+
+          {isEditing === "skills" && (
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleRemoveSkills}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveSkills}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+              >
+                Save
+              </button>
+            </div>
+          )}
         </Card>
 
-        {/* <Card>
-          <SectionHeader
-            title="Job preferences"
-            subtitle="The work you're looking for."
-            editLabel="Edit job preferences"
-            onEdit={() => handleJobPrefEdit}
-          />
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {preferenceItems.map((item) => (
-              <InfoRow
-                key={item.label}
-                icon={item.icon}
-                label={item.label}
-                value={item.value}
-              />
-            ))}
-          </div>
-        </Card> */}
-
+        {/* Job preferences */}
         <Card>
           <SectionHeader
             title="Job preferences"
@@ -693,18 +901,24 @@ const MyProfile = () => {
           />
 
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {preferenceItems.map((field) => (
-              <InfoRow
-                key={field.key}
+            {PREFERENCE_FIELDS.map((field) => (
+              <PreferenceRow
+                key={field.key ?? field.keys.join("-")}
                 field={field}
-                value={isEditing ? draft[field.key] : preferences[field.key]}
-                isEditing={isEditing}
+                source={isEditingPrefs ? draft : pref}
+                isEditing={isEditingPrefs}
                 onChange={handleChange}
               />
             ))}
           </div>
 
-          {isEditing && (
+          {/* {prefError && (
+            <p role="alert" className="mt-4 text-sm text-red-600">
+              {prefError}
+            </p>
+          )} */}
+
+          {isEditingPrefs && (
             <div className="mt-6 flex justify-end gap-2">
               <button
                 type="button"
@@ -724,15 +938,87 @@ const MyProfile = () => {
           )}
         </Card>
 
+        {/* Contact */}
+        {/* <Card>
+          <SectionHeader
+            title="Contact information"
+            subtitle="Your registered contact details."
+          />
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <ContactRow icon={Phone} label="Mobile number" value={phone} />
+            <ContactRow icon={Mail} label="Email" value={user?.email} breakAll />
+          </div>
+        </Card> */}
+
+        {/* Contact */}
         <Card>
           <SectionHeader
             title="Contact information"
             subtitle="Your registered contact details."
-            editLabel="Edit contact information"
           />
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <InfoRow icon={Phone} label="Mobile number" value={phone} />
-            <InfoRow icon={Mail} label="Email" value={user?.email} breakAll />
+            <ContactRow
+              icon={Phone}
+              label="Mobile number"
+              value={phone}
+              onEdit={handleEditPhone}
+              editLabel="Edit mobile number"
+              editor={
+                isEditing === "phone" ? (
+                  <div>
+                    <div className="mt-1 flex items-center gap-2">
+                      {user?.mobileNumber?.code && (
+                        <span className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                          {user.mobileNumber.code}
+                        </span>
+                      )}
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        autoFocus
+                        aria-label="Mobile number"
+                        value={phoneDraft}
+                        onChange={(e) =>
+                          setPhoneDraft(e.target.value.replace(/\D/g, ""))
+                        }
+                        className={inputClass.replace("mt-1 ", "")}
+                      />
+                    </div>
+
+                    {/* {phoneError && (
+              <p role="alert" className="mt-1 text-xs text-red-600">
+                {phoneError}
+              </p>
+            )} */}
+
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelPhone}
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSavePhone}
+                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : null
+              }
+            />
+
+            {/* Email: no onEdit, so it's read-only */}
+            <ContactRow
+              icon={Mail}
+              label="Email"
+              value={user?.email}
+              breakAll
+            />
           </div>
         </Card>
       </div>
