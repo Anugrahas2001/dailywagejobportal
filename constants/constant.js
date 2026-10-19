@@ -493,3 +493,39 @@ export const getJoiningPeriodType = (jValue) => {
 export const getShiftTypes = (sValue) => {
   return SHIFT_TYPES?.find((s) => s.value === sValue)?.label || "-";
 };
+
+// export const JOB_COMPLETION_STATUS = [
+//   "Assigned",
+//   "Started",
+//   "InProgress",
+//   "Completed",
+//   "Approved",
+//   "Paid",
+//   "Disputed",
+// ];
+
+// export const WORKER_WORKING_STATUS = [
+//   "Not_Available", // off today (leave, sick, etc.)
+//   "Available", // free today, open to job offers
+//   "Working", // currently on a job
+//   "On_break", // short break during the workday
+//   "Start_Tomorrow", // not working today, will start tomorrow
+// ];
+
+export const JOB_COMPLETION_STATUS = Object.freeze({
+  ASSIGNED: "Assigned", // job level: worker hired, no session yet
+  STARTED: "Started", // session: worker started work today
+  IN_PROGRESS: "InProgress", // job level: multi-day job, some days done
+  COMPLETED: "Completed", // session: worker ended the day
+  APPROVED: "Approved", // employer approved the day's work
+  PAID: "Paid", // salary paid
+  DISPUTED: "Disputed", // employer or worker raised an issue
+});
+
+export const WORKER_WORKING_STATUS = Object.freeze({
+  NOT_AVAILABLE: "Not_Available", // off today (leave, sick, etc.)
+  AVAILABLE: "Available", // free today, open to job offers
+  WORKING: "Working", // currently on a job
+  ON_BREAK: "On_break", // short break during the workday
+  START_TOMORROW: "Start_Tomorrow", // not working today, will start tomorrow
+});

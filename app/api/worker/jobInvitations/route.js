@@ -93,13 +93,30 @@ export async function PUT(request) {
         recepientId: employerId,
       });
     }
+    // const [job, worker] = await Promise.all([
+    //   JobDetails.findById(jobId).lean(),
+    //   User.findById(uid).lean(),
+    // ]);
 
-    // create a worker session for this particular job
-    const newWorkerSession = {
-      jobId,
-      employerId,
-      workerId: uid,
-    };
+    // // create a worker session for this particular job
+    // const newWorkerSession = {
+    //   _id: generateId(),
+    //   jobId,
+    //   employerId,
+    //   workerId: uid,
+    //   workDate: null,
+    //   agreedRate: calculateSuggestedRate(job, worker),
+    //   jobCompletionStatus: "Assigned",
+    //   isCurrentlyWorking: false,
+    //   startTime: null,
+    //   endTime: null,
+    //   breaks: [],
+    //   workPics: [],
+    // };
+
+    // const workerSession = await WorkerSession.create(newWorkerSession);
+
+    // console.log(workerSession, "NEWLY CREATED WORKER SESSION");
 
     return NextResponse.json(
       {

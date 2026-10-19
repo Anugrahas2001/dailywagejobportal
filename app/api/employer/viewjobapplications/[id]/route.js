@@ -1,3 +1,5 @@
+import { calculateSuggestedRate } from "@/lib/calculateSuggestedRate";
+import { generateId } from "@/lib/generateRandomId";
 import { connectDB } from "@/lib/mongodb";
 import { sendNotification } from "@/lib/notificationService";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
@@ -6,6 +8,7 @@ import JobDetails from "@/modals/JobDetails";
 import JobPreferences from "@/modals/JobPreferences";
 import User from "@/modals/User";
 import UserMatches from "@/modals/UserMatches";
+import WorkerSession from "@/modals/WorkerSession";
 import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
@@ -23,7 +26,6 @@ export async function GET(request, { params }) {
       jobId,
       cancelled: false,
     };
-
 
     const jobApplicationStatus = await JobApplication.findOne(filter)
       .select("status")
@@ -72,6 +74,7 @@ export async function PUT(request, { params }) {
     const { uid } = await verifyFirebaseToken(request);
     const { status, jobId, type } = await request.json();
     console.log(status, jobId, type, "CHECK THESE 3 VALUES");
+    //workerId
     const { id } = await params;
     let jobApplication;
 
@@ -104,6 +107,32 @@ export async function PUT(request, { params }) {
             status: 404,
           },
         );
+      }
+
+      const [job, worker] = await Promise.all([
+        JobDetails.findById(jobId).lean(),
+        User.findById(id).lean(),
+      ]);
+
+      if (status === "accepted") {
+        // create a worker session for this particular job
+        const newWorkerSession = {
+          _id: generateId(),
+          jobId,
+          employerId: uid,
+          workerId: id,
+          workDate: null,
+          agreedRate: calculateSuggestedRate(job, worker),
+          jobCompletionStatus: "Assigned",
+          isCurrentlyWorking: false,
+          startTime: null,
+          endTime: null,
+          breaks: [],
+          workPics: [],
+        };
+
+        const workerSession = await WorkerSession.create(newWorkerSession);
+        console.log(workerSession, "WORKER SESSION DATA");
       }
 
       // const previousStatus = jobApplication.status;

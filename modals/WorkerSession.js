@@ -1,3 +1,7 @@
+import {
+  JOB_COMPLETION_STATUS,
+  WORKER_WORKING_STATUS,
+} from "@/constants/constant";
 import mongoose from "mongoose";
 
 const WorkSessionSchema = new mongoose.Schema(
@@ -6,38 +10,37 @@ const WorkSessionSchema = new mongoose.Schema(
     jobId: { type: String, required: true, index: true },
     workerId: { type: String, required: true, index: true },
     employerId: { type: String, required: true, index: true },
-    workDate: { type: String, required: true }, // "2026-10-16"
+    workDate: { type: String, default: null, required: true }, // "2026-10-16"
 
     // Rate snapshot taken at hire time
     agreedRate: { type: Number, required: true, min: 0 },
-    rateType: { type: String, enum: ["Hourly", "Daily"], required: true },
+    // rateType: { type: String, enum: ["Hourly", "Daily"], required: true },
 
-    jobCompletionStatus: {
+    // jobCompletionStatus: {
+    //   type: String,
+    //   enum: JOB_COMPLETION_STATUS,
+    //   default: "Assigned",
+    //   index: true,
+    // },
+    // isCurrentlyWorking: {
+    //   enum: WORKER_WORKING_STATUS,
+    //   default: "Not_Available",
+    // },
+    workingStatus: {
       type: String,
-      enum: [
-        "Assigned",
-        "Started",
-        "Completed",
-        "Approved",
-        "Paid",
-        "Disputed",
-      ],
-      default: "Assigned",
+      enum: Object.values(WORKER_WORKING_STATUS),
+      default: WORKER_WORKING_STATUS.NOT_AVAILABLE,
       index: true,
     },
-    isCurrentlyWorking: {
-      type: Boolean,
-      default: false,
+    jobCompletionStatus: {
+      type: String,
+      enum: Object.values(JOB_COMPLETION_STATUS), // if it's an object; remove Object.values if it's already an array
+      default: JOB_COMPLETION_STATUS.STARTED,
+      index: true,
     },
 
     startTime: { type: Date, default: null },
     endTime: { type: Date, default: null },
-    // startLoc: {
-    //   type: { type: String, default: "Point" },
-    //   coordinates: [Number],
-    // },
-    // endLoc: { type: { type: String, default: "Point" }, coordinates: [Number] },
-
     breaks: [
       {
         _id: false,
@@ -47,7 +50,7 @@ const WorkSessionSchema = new mongoose.Schema(
     ],
     breakMinutes: { type: Number, default: 0, min: 0 },
     totalWorkingMinutes: { type: Number, default: 0, min: 0 },
-    totalSalaryAmount: { type: Number, default: 0, },
+    totalSalaryAmount: { type: Number, default: 0 },
     workPics: [String],
     // paymentId: { type: String },
   },

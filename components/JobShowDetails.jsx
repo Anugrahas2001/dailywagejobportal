@@ -5,12 +5,18 @@ import jobFetchUseEffcetHook from "@/components/hooks/jobFetchUseEffcetHook";
 import { getJoingDate, getShiftLabel } from "./commonFunctions";
 import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
 import { useRouter } from "next/navigation";
+import { JOB_COMPLETION_STATUS } from "@/constants/constant";
+import { useState } from "react";
 
-export default function JobDetailsPage({ role, isModal }) {
+export default function JobDetailsPage({ role, isModal, type }) {
+  console.log(role, isModal, type, "CHECK ALL THE 3 VALUES");
   const router = useRouter();
   const { loading, job } = jobFetchUseEffcetHook();
   const { toggleSavedJob, applyToJob } = useWorkerJobActions();
-  useWorkerJobActions();
+  // useWorkerJobActions();
+  const [workStatus, setWorkStatus] = useState("");
+
+  console.log(workStatus, "USER WORKING STATUS");
   if (loading) return <Loading />;
 
   if (!job) {
@@ -113,62 +119,64 @@ export default function JobDetailsPage({ role, isModal }) {
         </ul>
       </div>
 
-      {/* {role && role === "worker" && !isModal ? (
-        <div className="flex flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center">
-          <button
-            className="rounded-lg border cursor-pointer border-blue-600 bg-white px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-50"
-            onClick={() => {
-              toggleSavedJob(job._id);
-            }}
-          >
-            Save for Later
-          </button>
-          <button
-            className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-            onClick={() => handleJobApplication(job._id)}
-          >
-            Apply Now
-          </button>
-        </div>
-      ) : (
-        <button
-          className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-          onClick={() => router.push(`workerDashboard/jobs/${job._id}`)}
-        >
-          View Full Details
-        </button>
-      )} */}
-
       {role === "worker" ? (
-        !isModal ? (
-          <div className="flex flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center items-center">
-            <button
-              disabled={loading}
-              className="rounded-lg border cursor-pointer border-blue-600 bg-white px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-50"
-              onClick={() => handleSavedJobs(job._id)}
-            >
-              Save for Later
-            </button>
+        isModal ? (
+          <div className="flex w-full flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center items-center">
+            {type === "saved" ? (
+              <button
+                disabled={loading}
+                className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+                onClick={() => handleJobApplication(job._id)}
+              >
+                Apply Now
+              </button>
+            ) : type === "accepted" ? (
+              <div className="w-full bg-gray-300">
+                <div className="flex justify-between items-center m-2">
+                  <p className="font-medium">Worker Job Status: </p>
+                <select
+                  className="rounded-lg border border-gray-300 px-4 py-2"
+                  value={workStatus}
+                  onChange={(e) => setWorkStatus(e.target.value)}
+                >
+                  {JOB_COMPLETION_STATUS.map((status) => (
+                    <option key={status} value={status}> 
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                  </div>
 
-            <button
-              disabled={loading}
-              className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-              onClick={() => handleJobApplication(job._id)}
-            >
-              Apply Now
-            </button>
+              </div>
+            ) : type === "applied" || type === "jobInvitation" ? null : (
+              <>
+                <button
+                  disabled={loading}
+                  className="rounded-lg border cursor-pointer border-blue-600 bg-white px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                  onClick={() => handleSavedJobs(job._id)}
+                >
+                  Save for Later
+                </button>
+                <button
+                  disabled={loading}
+                  className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+                  onClick={() => handleJobApplication(job._id)}
+                >
+                  Apply Now
+                </button>
+              </>
+            )}
           </div>
         ) : (
-          // <Link href={``}>
           <button
             className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+            // onClick={() => router.push(`/workerDashboard/jobs/${job._id}`)}
             onClick={() =>
-              window.location.assign(`/workerDashboard/jobs/${job._id}`)
+              window.location.assign(`/workerDashboard/jobs/${job._id}?type=${type}`)
             }
           >
             View Full Details
           </button>
-          // </Link>
         )
       ) : (
         <button

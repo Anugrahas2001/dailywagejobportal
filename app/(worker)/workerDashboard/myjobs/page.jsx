@@ -36,17 +36,19 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 const page = () => {
-  // const [search, setSearch] = useState("");
-  const [jobInviteType, setJobInviteType] = useState("sent");
-  const [jobType, setJobType] = useState("saved");
+  const [jobType, setJobType] = useState("");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [status, setStatus] = useState("applied");
   const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
+  const [role, setRole] = useState("");
   const dispatch = useDispatch();
 
   const pageSize = 12;
+  useEffect(() => {
+    setRole(localStorage.getItem("role"));
+  }, []);
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
   const savedTotalCount = useSelector((state) => state.saved.totalCount);
@@ -115,6 +117,8 @@ const page = () => {
       setJobType("accepted");
     }
   };
+
+  console.log(jobType, "JOB TYPE DATA");
 
   const goToPage = (p) => {
     if (p >= 1 && p <= totalPages) setPage(p);
@@ -343,7 +347,7 @@ const page = () => {
                     )}
                   </div>
 
-                  <Link href={`/employerDashboard/jobs/${job._id}`}>
+                  <Link href={`/${role}Dashboard/jobs/${job._id}?type=${jobType}`}>
                     <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
                       <p>
                         📍 {job.city}, {job.state}
@@ -395,30 +399,32 @@ const page = () => {
                       </p>
                     )}
 
-                    <div className="flex gap-2 md:gap-3 md:mt-0">
-                      {jobType === "saved" ? (
-                        <button
-                          className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                          onClick={() => {
-                            handleAppliedJobs({ jobId: job._id });
-                          }}
-                        >
-                          Apply Now
-                        </button>
-                      ) : (
-                        <button
-                          className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                          onClick={() =>
-                            handleCancelAppliedJob({ jobId: job._id })
-                          }
-                        >
-                          Cancel
-                        </button>
-                      )}
-                    </div>
+                    {(jobType === "saved" || "applied") && (
+                      <div className="flex gap-2 md:gap-3 md:mt-0">
+                        {jobType === "saved" ? (
+                          <button
+                            className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                            onClick={() => {
+                              handleAppliedJobs({ jobId: job._id });
+                            }}
+                          >
+                            Apply Now
+                          </button>
+                        ) : (
+                          <button
+                            className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                            onClick={() =>
+                              handleCancelAppliedJob({ jobId: job._id })
+                            }
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  jobInviteType === "sent" && (
+                  // jobInviteType === "sent" && (
                     <div className="flex justify-between mt-3">
                       <button
                         className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
@@ -446,7 +452,7 @@ const page = () => {
                         Accept
                       </button>
                     </div>
-                  )
+                  
                 )}
               </article>
             );
