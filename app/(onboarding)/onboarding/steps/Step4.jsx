@@ -8,9 +8,10 @@ import Loading from "@/components/Loading";
 import { step4Onboarding } from "@/lib/features/profiles/userThunk";
 import Error from "@/components/Error";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
+import { validateFile } from "@/components/commonFunctions";
 
 const MAX_FILE_SIZE_MB = 5;
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
 
 const Step4 = () => {
   const [file, setFile] = useState(null);
@@ -30,15 +31,7 @@ const Step4 = () => {
     };
   }, [previewUrl]);
 
-  const validateFile = (selectedFile) => {
-    if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
-      return "Only JPG, PNG, or WEBP images are allowed";
-    }
-    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return `Image must be under ${MAX_FILE_SIZE_MB}MB`;
-    }
-    return null;
-  };
+
 
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];

@@ -244,3 +244,15 @@ export const timeAgo = (createdAt) => {
     console.log(p, "ANUGRAHA ANUGRAHA");
     if (p >= 1 && p <= totalPages) setPage(p);
   };
+const MAX_FILE_SIZE_MB = 5;
+  const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+   export const validateFile = (selectedFile) => {
+    if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
+      return "Only JPG, PNG, or WEBP images are allowed";
+    }
+    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      return `Image must be under ${MAX_FILE_SIZE_MB}MB`;
+    }
+    return null;
+  };

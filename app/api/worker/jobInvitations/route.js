@@ -62,9 +62,6 @@ export async function PUT(request) {
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
-    // const { searchParams } = new URL(request.url);
-    // const jobId = searchParams.get("jobId");
-    // const status = searchParams.get("status");
 
     const {
       jobId,
@@ -96,6 +93,13 @@ export async function PUT(request) {
         recepientId: employerId,
       });
     }
+
+    // create a worker session for this particular job
+    const newWorkerSession = {
+      jobId,
+      employerId,
+      workerId: uid,
+    };
 
     return NextResponse.json(
       {

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   BadgeCheck,
   Briefcase,
@@ -25,8 +25,10 @@ import {
   SALARY_CREDIT_TYPES,
   SHIFT_TYPE_VALUES,
 } from "@/constants/constant";
-import { getShiftTypes } from "./commonFunctions";
+import { getShiftTypes, validateFile } from "./commonFunctions";
 import useLoading from "./hooks/useLoading";
+import Loading from "./Loading";
+import { supabase } from "@/lib/supabase";
 
 /* ---------- helpers ---------- */
 
@@ -149,23 +151,6 @@ const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
     )}
   </div>
 );
-
-// Read-only row (contact section)
-// const ContactRow = ({ icon: Icon, label, value, breakAll = false }) => (
-//   <div className="flex items-center gap-3 rounded-xl border border-gray-200 p-4">
-//     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-//       <Icon className="h-5 w-5" />
-//     </div>
-//     <div className="min-w-0">
-//       <p className="text-sm text-gray-500">{label}</p>
-//       <p
-//         className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
-//       >
-//         {value || <span className="text-gray-400">Not added</span>}
-//       </p>
-//     </div>
-//   </div>
-// );
 
 // Editable row (job preferences).
 // Defined OUTSIDE MyProfile so it isn't re-created on every render,
@@ -327,25 +312,23 @@ const MyProfile = () => {
   const [profile, setProfile] = useState(null);
   const { loading, setLoading } = useLoading(); // loading | ready | error
   const [isEditing, setIsEditing] = useState(""); // "" | "bio" | "skills" | "jobpref
-  console.log(isEditing, "WHICH FIELD IS ACTUALLY EDITING");
   // bio
   const [editedText, setEditedText] = useState("");
   console.log(editedText, "BIO VALUE");
   // skills
   const [skill, setSkill] = useState("");
   const [experience, setExperience] = useState("");
-const [skillsDraft, setSkillsDraft] = useState([]);
-  console.log(skill, experience, "SKILL AND EXPERIENCE AND ALL");
-
+  const [skillsDraft, setSkillsDraft] = useState([]);
   // job preferences: only a temporary copy while editing.
   // The saved values live in profile.preference (single source of truth).
   const [draft, setDraft] = useState({});
-  // const [prefError, setPrefError] = useState("");
-  console.log(draft, "JOB PREFERENCE");
-
   // Mobile Number.
   const [phoneDraft, setPhoneDraft] = useState("");
-  console.log(phoneDraft, "EDITED PHONE NUMBER VALUE");
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+  const fileInputRef = useRef(null);
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -357,6 +340,7 @@ const [skillsDraft, setSkillsDraft] = useState([]);
       });
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const { data } = await res.json();
+      console.log(data, "special data");
       setProfile(data);
       setLoading(false);
     } catch (err) {
@@ -366,11 +350,9 @@ const [skillsDraft, setSkillsDraft] = useState([]);
   }, []);
 
   const saveProfile = async (type, data) => {
-    
     setLoading(true);
     try {
-
-      console.log(type,data,"UPDATE PROFILE DATA")
+      console.log(type, data, "UPDATE PROFILE DATA");
       const token = await fetchUserToken();
       const res = await fetch("/api/common/profile", {
         method: "PUT",
@@ -383,7 +365,7 @@ const [skillsDraft, setSkillsDraft] = useState([]);
       if (!res.ok) throw new Error(`Update failed (${res.status})`);
 
       const json = await res.json();
-      setProfile(json.data ?? json.result); // match whatever your API returns
+      setProfile(json.result); // match whatever your API returns
       return true;
     } catch (err) {
       console.error("Profile update failed:", err);
@@ -396,8 +378,7 @@ const [skillsDraft, setSkillsDraft] = useState([]);
   //
   useEffect(() => {
     loadProfile();
-  }, [loadProfile]);
-
+  }, []);
 
   if (loading && !profile) return <Skeleton />;
 
@@ -423,20 +404,32 @@ const [skillsDraft, setSkillsDraft] = useState([]);
   //   );
   // }
 
-  const user = profile?.user;
-  const pref = profile?.preference ?? {};
-  const age = getAge(user?.dob);
-  const bio = user?.bio;
-  const location = [user?.city, user?.state].filter(Boolean).join(", ");
-  const salary = formatSalary(pref.minSalary, pref.maxSalary);
+  const user = profile?.user ?? {};
+  const savedPreference = profile?.preference ?? {};
+  const replaceName = user?.name?.charAt(0).toUpperCase();
+  const pref = isEditing === "jobpref" ? draft : savedPreference;
+
+  const safePref = pref ?? {};
+
+  const age = getAge(user.dob);
+
+  const bio = isEditing === "bio" ? editedText : user.bio;
+
+  const location = [user.city, user.state].filter(Boolean).join(", ");
+
   const completeness = profile?.profileCompleteness ?? 0;
-  const phone = user?.mobileNumber?.number
+
+  const phone = user.mobileNumber?.number
     ? `${user.mobileNumber.code ?? ""}-${user.mobileNumber.number}`
     : null;
-  const skills = user?.skills ?? [];
-  const missing = profile?.missingFields ?? [];
-  const requiredSkills = JOB_SKILLS?.[pref.jobCategory] ?? [];
 
+  const skills = isEditing === "skills" ? skillsDraft : (user.skills ?? []);
+
+  const missing = profile?.missingFields ?? [];
+  const salary = formatSalary(safePref.minSalary, safePref.maxSalary);
+  const requiredSkills = JOB_SKILLS?.[safePref.jobCategory] ?? [];
+
+  console.log(skillsDraft, "ALL THE AVAILABLE SKILLS");
   /* ----- bio ----- */
 
   const handleEditBio = () => {
@@ -454,58 +447,6 @@ const [skillsDraft, setSkillsDraft] = useState([]);
     if (ok) setIsEditing("");
   };
 
-  /* ----- skills ----- */
-
-  // const handleSkillEdit = () => {
-  //   setSkill("");
-  //   setExperience("");
-  //   setIsEditing((cur) => (cur === "skills" ? "" : "skills"));
-  // };
-
-  // const handleRemoveSkills = (skillVal) => {
-  //   // TODO: API call
-  //   setType("userinfo");
-  //   setProfile((prev) => ({
-  //     ...prev,
-  //     user: {
-  //       ...prev.user,
-  //       skills: (prev.user?.skills ?? []).filter((s) => s.skill !== skillVal),
-  //     },
-  //   }));
-  // };
-
-  // const handleSkillCreation = () => {
-  //   const name = skill.trim();
-  //   if (!name) return;
-  //   setType("userinfo");
-  //   // TODO: API call
-  //   setProfile((prev) => {
-  //     const current = prev.user?.skills ?? [];
-  //     if (current.some((s) => s.skill === name)) return prev; // no duplicates
-  //     return {
-  //       ...prev,
-  //       user: {
-  //         ...prev.user,
-  //         skills: [...current, { skill: name, experience }],
-  //       },
-  //     };
-  //   });
-
-  //   setSkill("");
-  //   setExperience("");
-  // };
-
-  // const handleCancelSkills = () => {
-  //   setSkill("");
-  //   setExperience("");
-  //   setIsEditing("");
-  // };
-
-  // const handleSaveSkills = () => {
-  //   //Api call
-  //   setExperience("");
-  // };
-
   const handleSkillEdit = () => {
     setSkillsDraft(skills); // copy saved skills
     setSkill("");
@@ -515,15 +456,22 @@ const [skillsDraft, setSkillsDraft] = useState([]);
 
   const handleSkillCreation = () => {
     const name = skill.trim();
-    if (!name || skillsDraft.length >= 8) return;
+
+    if (!name || skillsDraft.length >= 8) {
+      alert("user allowed to select only 8 skills");
+      return;
+    }
     setSkillsDraft((prev) =>
       prev.some((s) => s.skill === name)
         ? prev
         : [...prev, { skill: name, experience }],
     );
+
     setSkill("");
     setExperience("");
   };
+
+  console.log(setSkillsDraft, "CHECK ITS VALUE SKILL DRAFT");
 
   const handleRemoveSkills = (val) =>
     setSkillsDraft((prev) => prev.filter((s) => s.skill !== val));
@@ -603,6 +551,86 @@ const [skillsDraft, setSkillsDraft] = useState([]);
     }
   };
 
+  //image uploading
+
+  const handleImageChange = (e) => {
+    const selectedFile = e.target.files?.[0];
+
+    if (!selectedFile) return;
+
+    const validationError = validateFile(selectedFile);
+
+    if (validationError) {
+      setError(validationError);
+      e.target.value = "";
+      return;
+    }
+
+    setError("");
+    setFile(selectedFile);
+
+    setPreviewUrl((previousUrl) => {
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+
+      return URL.createObjectURL(selectedFile);
+    });
+  };
+
+  const handleRemove = () => {
+    setFile(null);
+    setPreviewUrl((previousUrl) => {
+      if (previousUrl) URL.revokeObjectURL(previousUrl);
+      return null;
+    });
+
+    setError("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file || uploading) {
+      setError("Please select a file to upload");
+      return;
+    }
+
+    setUploading(true);
+    setError("");
+
+    try {
+      setUploading(true);
+      setError("");
+
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${Date.now()}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("ImageBucket")
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from("ImageBucket")
+        .getPublicUrl(filePath);
+
+      const ok = await saveProfile("userinfo", {
+        profileImage: urlData?.publicUrl,
+      });
+      if (ok) setIsEditing("");
+
+      handleRemove();
+    } catch (err) {
+      console.error("Profile image upload failed:", err);
+      setError(err.message || "Unable to upload profile photo.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const isEditingPrefs = isEditing === "jobpref";
 
   return (
@@ -611,8 +639,8 @@ const [skillsDraft, setSkillsDraft] = useState([]);
         {/* Header */}
         <Card className="p-6">
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-4xl font-bold text-white ring-4 ring-indigo-50">
-              {user?.profileImage ? (
+            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
+              {/* {user?.profileImage ? (
                 <img
                   src={user.profileImage}
                   alt={
@@ -624,9 +652,102 @@ const [skillsDraft, setSkillsDraft] = useState([]);
                 <span aria-hidden="true">
                   {user?.name?.charAt(0).toUpperCase() || "?"}
                 </span>
-              )}
-            </div>
+              )} */}
+              {/* Upload / Preview area */}
+              {/* Profile image */}
+              <div className="flex flex-col items-center">
+                <div className="relative h-28 w-28">
+                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
+                    {previewUrl || user?.profileImage ? (
+                      <img
+                        src={previewUrl || user.profileImage}
+                        alt="Profile photo"
+                        className="h-40 w-40 object-cover"
+                      />
+                    ) : (
+                      <span aria-hidden="true">{replaceName}</span>
+                    )}
+                  </div>
 
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    aria-label="Change profile photo"
+                    className="absolute bottom-0 right-3 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    <Camera className="h-5 w-5" />
+                  </button>
+                </div>
+
+                {/* <div className="relative h-40 w-40">
+                  <div className="fle items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-4xl font-bold text-white ring-4 ring-indigo-50">
+                    {previewUrl || user?.profileImage ? (
+                      <img
+                        src={previewUrl || user.profileImage}
+                        alt="Profile photo"
+                        className="h-full w-full "
+                      />
+                    ) : (
+                      <span aria-hidden="true">
+                        {user?.name?.charAt(0).toUpperCase() || "?"}
+                      </span>
+                    )}
+                  </div>
+
+                
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    aria-label="Change profile photo"
+                    className="absolute bottom-1 right-1 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
+                  >
+                    <Camera className="h-5 w-5" />
+                  </button>
+                </div> */}
+
+                {/* Hidden file input */}
+                <input
+                  id="profile-image-input"
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  disabled={uploading}
+                  className="hidden"
+                />
+
+                {/* Preview actions */}
+                {previewUrl && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleRemove}
+                      disabled={uploading}
+                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleUpload}
+                      disabled={uploading || !file}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {uploading ? "Uploading..." : "Save photo"}
+                    </button>
+                  </div>
+                )}
+
+                {error && (
+                  <p role="alert" className="mt-3 text-sm text-red-600">
+                    {error}
+                  </p>
+                )}
+              </div>
+            </div>
             <div className="mt-4 flex items-center gap-2">
               <h1 className="text-2xl font-bold text-gray-900">
                 {user?.name || "Your name"}
@@ -638,7 +759,6 @@ const [skillsDraft, setSkillsDraft] = useState([]);
                 />
               )}
             </div>
-
             <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-500">
               {pref.jobTitle && (
                 <span className="font-medium capitalize text-gray-700">
@@ -652,19 +772,11 @@ const [skillsDraft, setSkillsDraft] = useState([]);
               )}
               {age !== null && <span>{age} yrs old</span>}
             </div>
-
             <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm">
               {salary && (
                 <span className="font-semibold text-green-600">{salary}</span>
               )}
             </div>
-
-            <button
-              type="button"
-              className="mt-5 inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600"
-            >
-              <Camera className="h-4 w-4" /> Change photo
-            </button>
           </div>
         </Card>
 
@@ -1022,6 +1134,7 @@ const [skillsDraft, setSkillsDraft] = useState([]);
           </div>
         </Card>
       </div>
+      {loading && <Loading />}
     </main>
   );
 };

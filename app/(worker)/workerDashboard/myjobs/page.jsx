@@ -49,7 +49,6 @@ const page = () => {
   const pageSize = 12;
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
-
   const savedTotalCount = useSelector((state) => state.saved.totalCount);
   const savedLoadingStatus = useSelector((state) => state.saved.status);
 
@@ -60,7 +59,6 @@ const page = () => {
   const jobInvitations = useSelector(
     (state) => state.jobinvitations.jobInvitations,
   );
-  console.log(jobInvitations, "JOB ALL INVITATIONS");
   const jobInvitationTotalCount = useSelector(
     (state) => state.jobinvitations.totalCount,
   );
@@ -111,8 +109,10 @@ const page = () => {
       setJobType("saved");
     } else if (jobStatus === "applied") {
       setJobType("applied");
-    } else {
+    } else if (jobStatus === "jobInvitation") {
       setJobType("jobInvitation");
+    } else {
+      setJobType("accepted");
     }
   };
 
@@ -173,18 +173,15 @@ const page = () => {
     dispatch(updateJobInvitationStatus({ status, jobId, employerId }));
   };
 
-  const handleJobInvitationFetches = (status) => {
-    dispatch(fetchJobInvitations({ status, page: 1 }));
-  };
-
   useEffect(() => {
     if (jobType === "saved") {
-      console.log("ANUGRAHA 2", jobType);
+      dispatch(fetchSavedJobs({ sort, page }));
     } else if (jobType === "applied") {
       dispatch(fetchAppliedJobs({ sort, status, page }));
-    } else {
-      console.log("EVERYTHING IS HAPPENS FOR A REASON");
+    } else if (jobType === "jobInvitation") {
       dispatch(fetchJobInvitations({ status: "sent", page }));
+    } else {
+      dispatch(fetchJobInvitations({ status: "accepted", page }));
     }
   }, [jobType, sort, status, page]);
 
@@ -202,7 +199,7 @@ const page = () => {
           }}
           className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "saved" ? "bg-blue-500" : "bg-gray-400"}`}
         >
-          Saved Jobs
+          Saved
         </button>
         <button
           onClick={() => {
@@ -210,7 +207,7 @@ const page = () => {
           }}
           className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
         >
-          Applied Jobs
+          Applied
         </button>
 
         <button
@@ -220,7 +217,16 @@ const page = () => {
           }}
           className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
         >
-          Job Invitations
+          Invitations
+        </button>
+        <button
+          // onClick={handleJobInvitations}
+          onClick={() => {
+            handleJobStatus("accepted");
+          }}
+          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+        >
+          Accepted
         </button>
       </div>
       {/* <div className="relative w-full">
@@ -274,7 +280,7 @@ const page = () => {
         </div>
       )}
 
-      {jobType === "jobInvitation" && (
+      {/* {jobType === "jobInvitation" && (
         <div className="flex gap-2 mt-4">
           <button
             className="bg-blue-600 p-2 text-white rounded-md"
@@ -294,7 +300,7 @@ const page = () => {
             Accepted Jobs
           </button>
         </div>
-      )}
+      )} */}
 
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
         {loadingStatus === "pending" ? (
@@ -353,16 +359,20 @@ const page = () => {
                     {jobType !== "jobInvitation" && (
                       <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
                         <div className="flex items-center gap-2 md:justify-end">
-                          <span
-                            className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
-                          ></span>
-                          <p
-                            className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
-                          >
-                            {jobType === "saved"
-                              ? job.status
-                              : job.applicationStatus}
-                          </p>
+                          {jobType === ("saved" || "applied") && (
+                            <>
+                              <span
+                                className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
+                              ></span>
+                              <p
+                                className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
+                              >
+                                {jobType === "saved"
+                                  ? job.status
+                                  : job.applicationStatus}
+                              </p>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -374,14 +384,16 @@ const page = () => {
                     className={`flex justify-between border-t pt-4 flex-row items-center`}
                   >
                     {/* md:flex-row */}
-                    <p className="text-sm text-gray-500">
-                      {" "}
-                      {getPostedText({
-                        createdAt:
-                          jobType === "saved" ? job.createdAt : job.appliedAt,
-                        jobType,
-                      })}
-                    </p>
+                    {jobType === ("saved" || "applied") && (
+                      <p className="text-sm text-gray-500">
+                        {" "}
+                        {getPostedText({
+                          createdAt:
+                            jobType === "saved" ? job.createdAt : job.appliedAt,
+                          jobType,
+                        })}
+                      </p>
+                    )}
 
                     <div className="flex gap-2 md:gap-3 md:mt-0">
                       {jobType === "saved" ? (
