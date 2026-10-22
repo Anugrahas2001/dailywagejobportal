@@ -13,6 +13,7 @@ import SavedJobs from "@/modals/SavedJobs";
 import WorkerSession from "@/modals/WorkerSession";
 import { WORKER_WORKING_STATUS } from "@/constants/constant";
 import { NextResponse } from "next/server";
+import User from "@/modals/User";
 
 export async function POST(request) {
   console.log("app\api\worker\jobs\route.js - POST");
@@ -333,7 +334,7 @@ export async function GET(request) {
 //       endTime:endTime,
 //       isCurrentlyWorking:workerStatus,
 //       breaks:[...break],
-//       workPics:[imageurls], //multiple images 
+//       workPics:[imageurls], //multiple images
 // breakMinutes: [],
 //     totalWorkingMinutes: (endTime-startTime)-totalBreakTime,
 //     totalSalaryAmount: (totalWorkingMinutes/60)*agreedRate,
@@ -355,7 +356,6 @@ export async function GET(request) {
 //   }
 // }
 
-
 // keep your existing imports: verifyFirebaseToken, JobDetails, User, WorkerSession, generateId, calculateSuggestedRate
 
 const MS_PER_MIN = 60 * 1000;
@@ -365,14 +365,19 @@ const getWorkDate = (d = new Date()) =>
 
 const round2 = (n) => Math.round(n * 100) / 100;
 
-const fail = (message, status) =>
-  NextResponse.json({ message }, { status });
+const fail = (message, status) => NextResponse.json({ message }, { status });
 
 export async function PUT(request) {
   try {
+    await connectDB();
     const { uid } = await verifyFirebaseToken(request);
-    const { jobId, action, workerStatus, imageUrls = [] } = await request.json();
-
+    const {
+      jobId,
+      action,
+      workerStatus,
+      imageUrls = [],
+    } = await request.json();
+    console.log(jobId, "JOB ID DATAAAAA");
     if (!jobId || !action) return fail("jobId and action are required.", 400);
 
     const now = new Date(); // always use server time, never client time
@@ -395,7 +400,8 @@ export async function PUT(request) {
           workerId: uid,
           workDate,
         }).lean();
-        if (existing?.startTime) return fail("Work already started today.", 409);
+        if (existing?.startTime)
+          return fail("Work already started today.", 409);
 
         try {
           const session = await WorkerSession.findOneAndUpdate(
@@ -434,7 +440,8 @@ export async function PUT(request) {
           },
           { new: true },
         );
-        if (!session) return fail("No active working session to take a break from.", 400);
+        if (!session)
+          return fail("No active working session to take a break from.", 400);
         return NextResponse.json({ session });
       }
 
@@ -533,3 +540,14 @@ export async function PUT(request) {
     return fail("Unable to update the worker's session.", 500);
   }
 }
+
+// Client calls:
+
+// javascript
+// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "START" }) });
+// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_START" }) });
+// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_END" }) });
+// fetch("/api/work-session", {
+//   method: "PUT",
+//   body: JSON.stringify({ jobId, action: "END", workerStatus: "START_TOMORROW", imageUrls }),
+// });
