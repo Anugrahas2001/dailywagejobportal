@@ -5,6 +5,7 @@ import { sendNotification } from "@/lib/notificationService";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobApplication from "@/modals/JobApplication";
 import JobDetails from "@/modals/JobDetails";
+import JobInvitation from "@/modals/JobInvitation";
 import JobPreferences from "@/modals/JobPreferences";
 import User from "@/modals/User";
 import UserMatches from "@/modals/UserMatches";
@@ -24,30 +25,47 @@ export async function GET(request, { params }) {
     const filter = {
       workerId: id,
       jobId,
-      cancelled: false,
     };
 
-    const jobApplicationStatus = await JobApplication.findOne(filter)
-      .select("status")
-      .lean();
-
-    const [user, jobPref] = await Promise.all([
+    const [user, jobPref, jobApp, jobInvite] = await Promise.all([
       User.findById({ _id: id })
         .select(
           "name email mobileNumber city state country isVerified profileImage gender dob skills bio",
         )
         .lean(),
-
       JobPreferences.findOne({ userId: id }).lean(),
+      JobApplication.findOne({ ...filter, cancelled: false })
+        .select("status")
+        .lean(),
+      JobInvitation.findOne(filter),
     ]);
 
+    const workerSession = await WorkerSession.find({
+      workerId: id,
+      jobId,
+      employerId: uid,
+    })
+      .sort({ createdAt: -1 })
+      .select("workPics jobCompletionStatus workingStatus")
+      .lean();
+
+    const workerPics = workerSession.flatMap((s) => s.workPics ?? []);
+    console.log(workerPics, "AAAAAAAAAAAAAAAAAAAA");
+
+    const jobWorkingStatus = workerSession[0].jobCompletionStatus;
+    const workerCurrentStatus = workerSession[0].workingStatus;
+    console.log(workerPics, jobInvite?.status, jobApp?.status, "WORKER PICS");
+    console.log(jobWorkingStatus, workerCurrentStatus, "CHECK BOTH STATUS");
     return NextResponse.json(
       {
         message: "Job and user details fetched successfully.",
         data: {
           ...user,
           ...jobPref,
-          status: jobApplicationStatus?.status,
+          workerPics,
+          jobWorkingStatus,
+          workerCurrentStatus,
+          status: jobApp?.status || jobInvite?.status,
         },
       },
       {

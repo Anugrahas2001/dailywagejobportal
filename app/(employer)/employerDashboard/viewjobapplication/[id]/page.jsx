@@ -10,6 +10,7 @@ const page = () => {
 
   const jobId = searchParams.get("jobId");
   const type = searchParams.get("type");
+  const status=searchParams.get("status");
   const matchingRate = searchParams.get("matching");
   const jobInvitation = searchParams.get("jobInvitation");
 
@@ -18,6 +19,7 @@ const page = () => {
       workerId={workerId}
       jobId={jobId}
       type={type}
+      status={status}
       matchingRate={matchingRate}
       jobInvitation={jobInvitation}
     />

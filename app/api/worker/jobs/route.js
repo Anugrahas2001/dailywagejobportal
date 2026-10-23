@@ -11,7 +11,10 @@ import JobDetails from "@/modals/JobDetails";
 import JobMatches from "@/modals/JobMatches";
 import SavedJobs from "@/modals/SavedJobs";
 import WorkerSession from "@/modals/WorkerSession";
-import { WORKER_WORKING_STATUS } from "@/constants/constant";
+import {
+  JOB_COMPLETION_STATUS,
+  WORKER_WORKING_STATUS,
+} from "@/constants/constant";
 import { NextResponse } from "next/server";
 import User from "@/modals/User";
 
@@ -306,248 +309,531 @@ export async function GET(request) {
   }
 }
 
+
+// const MS_PER_MIN = 60 * 1000;
+
+// const getWorkDate = (d = new Date()) =>
+//   d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // "YYYY-MM-DD"
+
+// const round2 = (n) => Math.round(n * 100) / 100;
+
+// const fail = (message, status) => NextResponse.json({ message }, { status });
+
 // export async function PUT(request) {
 //   try {
+//     await connectDB();
 //     const { uid } = await verifyFirebaseToken(request);
-//     const {employerId,jobId,jobStatus,workerStatus,endTime,break,imageurls} = await request.json();
-
-//       const [job, worker] = await Promise.all([
-//       JobDetails.findById(jobId).lean(),
-//       User.findById(uid).lean(),
-//     ]);
-
-//     const newWorkerSession = await WorkerSession.findOneAndUpdate({
+//     const {
 //       jobId,
-//       workerId:uid,
-//       workDate,
-//     },{
-//     $setOnInsert: {
-//       _id: generateId(),
-//       employerId,
-//       workerId:uid,
-//       workDate:Date.now(),
-//       agreedRate: calculateSuggestedRate(job,worker), // copy the rate from the job or hire record
-//     },
-//     $set: {
-//       jobCompletionStatus: jobStatus,
-//       startTime: new Date(),
-//       endTime:endTime,
-//       isCurrentlyWorking:workerStatus,
-//       breaks:[...break],
-//       workPics:[imageurls], //multiple images
-// breakMinutes: [],
-//     totalWorkingMinutes: (endTime-startTime)-totalBreakTime,
-//     totalSalaryAmount: (totalWorkingMinutes/60)*agreedRate,
+//       action,
+//       workerStatus,
+//       imageUrls = [],
+//     } = await request.json();
+//     console.log(jobId, workerStatus, action, "JOB ID DATAAAAA");
+//     if (!jobId || !action) return fail("jobId and action are required.", 400);
 
-//     },
-//   },
-//   { upsert: true, new: true });
+//     const now = new Date(); // always use server time, never client time
+//     const active = { jobId, workerId: uid,  };
+
+//     const latest = await WorkerSession.findOne({ ...active })
+//       .sort({ createdAt: -1 })
+//       .select("_id");
+//     console.log(latest, "LATEST DATA DATA");
+//     // if (!latest) return fail("No session found.", 404);
+
+//     switch (action) {
+//       // ───────────── START THE DAY ─────────────
+//       case "START": {
+//         const [job, worker] = await Promise.all([
+//           JobDetails.findById(jobId).lean(),
+//           User.findById(uid).lean(),
+//         ]);
+//         if (!job) return fail("Job not found.", 404);
+//         // TODO: verify this worker is actually assigned to this job
+
+//         const workDate = getWorkDate(now);
+
+//         const existing = await WorkerSession.findOne({
+//           jobId,
+//           workerId: uid,
+//           workDate,
+//         }).lean();
+//         if (existing?.startTime)
+//           return fail("Work already started today.", 409);
+
+//         try {
+//           const session = await WorkerSession.findOneAndUpdate(
+//             { jobId, workerId: uid, workDate },
+//             {
+//               $setOnInsert: {
+//                 _id: generateId(),
+//                 employerId: job.employerId, // from DB, not from the client
+//                 agreedRate: calculateSuggestedRate(job, worker), // ideally the rate saved at hire time
+//                 rateType: job.rateType || "Hourly",
+//               },
+//               $set: {
+//                 jobCompletionStatus: JOB_COMPLETION_STATUS.STARTED,
+//                 workingStatus: WORKER_WORKING_STATUS.WORKING,
+//                 startTime: now,
+//               },
+//             },
+//             { upsert: true, new: true },
+//           );
+//           return NextResponse.json({ session });
+//         } catch (err) {
+//           // the "one active job per worker" unique index fired
+//           if (err.code === 11000)
+//             return fail("You already have another job in progress.", 409);
+//           throw err;
+//         }
+//       }
+
+//       // ───────────── INPROGESS THE DAY ─────────────
+//       case "INPROGESS": {
+//         try {
+//           const workDate = getWorkDate(now);
+//           const session = await WorkerSession.findOneAndUpdate(
+//             { ...active,jobCompletionStatus: "Started" },
+//             {
+//               $set: {
+//                 jobCompletionStatus: JOB_COMPLETION_STATUS.IN_PROGRESS,
+//               },
+//             },
+//             { upsert: false, new: true },
+//           );
+//           console.log(session, "CHECK THIS VALUE");
+//           return NextResponse.json({ session });
+//         } catch (err) {
+//           // the "one active job per worker" unique index fired
+//           if (err.code === 11000)
+//             return fail("You already have another job in progress.", 409);
+//           throw err;
+//         }
+//       }
+
+//       // ───────────── START BREAK ─────────────
+//       case "BREAK_START": {
+//         const session = await WorkerSession.findOneAndUpdate(
+//           {
+//             _id: latest?._id,
+//             ...active,
+//             workingStatus: WORKER_WORKING_STATUS.WORKING,
+//           },
+//           {
+//             $push: { breaks: { startedAt: now } },
+//             $set: { workingStatus: WORKER_WORKING_STATUS.ON_BREAK },
+//           },
+//           { new: true },
+//         );
+//         if (!session)
+//           return fail("No active working session to take a break from.", 400);
+//         return NextResponse.json({ session });
+//       }
+
+//       // ───────────── END BREAK ─────────────
+//       // case "BREAK_END": {
+//       //   const latest = await WorkerSession.findOne({ ...active })
+//       //     .sort({ createdAt: -1 })
+//       //     .select("_id");
+
+//       //   if (!latest) return fail("No session found.", 404);
+
+//       //   const session = await WorkerSession.findOneAndUpdate(
+//       //     {
+//       //       _id: latest?._id,
+//       //       ...active,
+//       //       workingStatus: WORKER_WORKING_STATUS.ON_BREAK,
+//       //       breaks: { $elemMatch: { endedAt: null } }, // an open break exists
+//       //     },
+//       //     {
+//       //       $set: {
+//       //         "breaks.$[open].endedAt": now,
+//       //         workingStatus: WORKER_WORKING_STATUS.WORKING,
+//       //       },
+//       //     },
+//       //     { new: true, arrayFilters: [{ "open.endedAt": null }] },
+//       //   );
+//       //   if (!session) return fail("No open break to end.", 400);
+//       //   return NextResponse.json({ session });
+//       // }
+//       case "BREAK_END": {
+//         const session = await WorkerSession.findOne({ ...active }).sort({
+//           createdAt: -1,
+//         });
+
+//         if (!session) return fail("No session found.", 404);
+
+//         if (session.workingStatus !== WORKER_WORKING_STATUS.BREAK_START) {
+//           return fail(
+//             `Session status is "${session.workingStatus}", not on break.`,
+//             400,
+//           );
+//         }
+
+//         const openBreak = session.breaks.find((b) => !b.endedAt);
+//         console.log(openBreak, "OPEN BREAK DATA");
+//         if (!openBreak)
+//           return fail("No open break found on this session.", 400);
+
+//         openBreak.endedAt = now;
+//         session.workingStatus = WORKER_WORKING_STATUS.WORKING;
+//         await session.save();
+//         console.log(session, "SESSION DATA");
+//         return NextResponse.json({ session });
+//       }
+
+//       // ───────────── END THE DAY ─────────────
+//       case "COMPLETED": {
+//         const session = await WorkerSession.findOne(active).lean();
+//         if (!session) return fail("No active session to end.", 404);
+
+//         // close an open break, if any, at the end time
+//         const breaks = session.breaks.map((b) => ({
+//           startedAt: b.startedAt,
+//           endedAt: b.endedAt ?? now,
+//         }));
+
+//         const breakMs = breaks.reduce(
+//           (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
+//           0,
+//         );
+//         const workedMs = Math.max(0, now - session.startTime - breakMs);
+
+//         const breakMinutes = Math.round(breakMs / MS_PER_MIN);
+//         const totalWorkingMinutes = Math.round(workedMs / MS_PER_MIN);
+
+//         const totalSalaryAmount =
+//           session.rateType === "Daily"
+//             ? session.agreedRate
+//             : round2((totalWorkingMinutes / 60) * session.agreedRate);
+
+//         const allowed = [
+//           WORKER_WORKING_STATUS.NOT_AVAILABLE,
+//           WORKER_WORKING_STATUS.START_TOMORROW,
+//         ];
+//         const nextStatus = allowed.includes(workerStatus)
+//           ? workerStatus
+//           : WORKER_WORKING_STATUS.NOT_AVAILABLE;
+
+//         const updated = await WorkerSession.findOneAndUpdate(
+//           {
+//             _id: session._id,
+//             jobCompletionStatus: JOB_COMPLETION_STATUS.IN_PROGRESS,
+//           }, // blocks double-submit
+//           {
+//             $set: {
+//               jobCompletionStatus: JOB_COMPLETION_STATUS.COMPLETED,
+//               workingStatus: nextStatus,
+//               endTime: now,
+//               breaks,
+//               breakMinutes,
+//               totalWorkingMinutes,
+//               totalSalaryAmount,
+//             },
+//             ...(imageUrls.length && {
+//               $push: { workPics: { $each: imageUrls } },
+//             }),
+//           },
+//           { new: true },
+//         );
+//         if (!updated) return fail("Session was already ended.", 409);
+//         return NextResponse.json({ session: updated });
+//       }
+
+//       // ───────────── ADD PHOTOS ─────────────
+//       case "ADD_PHOTOS": {
+//         if (!imageUrls.length) return fail("No images provided.", 400);
+//         const session = await WorkerSession.findOneAndUpdate(
+//           active,
+//           { $push: { workPics: { $each: imageUrls } } },
+//           { new: true },
+//         );
+//         if (!session) return fail("No active session.", 404);
+//         return NextResponse.json({ session });
+//       }
+
+//       default:
+//         try {
+//           const workDate = getWorkDate(now);
+//           const session = await WorkerSession.findOneAndUpdate(
+//             { jobId, workerId: uid, workDate },
+//             {
+//               $set: {
+//                 workingStatus: workerStatus,
+//               },
+//             },
+//             { upsert: false, new: true },
+//           );
+//           console.log(session, "CHECK THIS VALUE");
+//           return NextResponse.json({ session });
+//         } catch (err) {
+//           // the "one active job per worker" unique index fired
+//           if (err.code === 11000)
+//             return fail("You already have another job in progress.", 409);
+//           throw err;
+//         }
+//     }
 //   } catch (error) {
 //     console.log(error, "ERROR DATA");
-
-//     return NextResponse.json(
-//       {
-//         message: "Unable to pubdate the worker's job completion status.",
-//       },
-//       {
-//         status: 500,
-//       },
-//     );
+//     return fail("Unable to update the worker's session.", 500);
 //   }
 // }
 
-// keep your existing imports: verifyFirebaseToken, JobDetails, User, WorkerSession, generateId, calculateSuggestedRate
+// // Client calls:
+
+// // javascript
+// // fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "START" }) });
+// // fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_START" }) });
+// // fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_END" }) });
+// // fetch("/api/work-session", {
+// //   method: "PUT",
+// //   body: JSON.stringify({ jobId, action: "END", workerStatus: "START_TOMORROW", imageUrls }),
+// // });
+
+
+
 
 const MS_PER_MIN = 60 * 1000;
+const MAX_PHOTOS = 10;
+
+const { STARTED, IN_PROGRESS, COMPLETED } = JOB_COMPLETION_STATUS;
+const { WORKING, BREAK_START, NOT_AVAILABLE, AVAILABLE, START_TOMORROW } =
+  WORKER_WORKING_STATUS;
+
+const OPEN_STATUSES = [STARTED, IN_PROGRESS];
+const END_OF_DAY_STATUSES = [NOT_AVAILABLE, START_TOMORROW];
+const MANUAL_STATUSES = [NOT_AVAILABLE, WORKING, AVAILABLE, START_TOMORROW];
+
+// old/alternate action names -> canonical
+const ACTION_ALIASES = { INPROGESS: "IN_PROGRESS", END: "COMPLETED" };
 
 const getWorkDate = (d = new Date()) =>
   d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // "YYYY-MM-DD"
 
 const round2 = (n) => Math.round(n * 100) / 100;
-
 const fail = (message, status) => NextResponse.json({ message }, { status });
+const ok = (session) => NextResponse.json({ session });
 
+const cleanImages = (urls) =>
+  Array.isArray(urls)
+    ? urls.filter((u) => typeof u === "string" && u.trim()).slice(0, MAX_PHOTOS)
+    : [];
+
+// ───────────── ACTION HANDLERS ─────────────
+const handlers = {
+  async START({ jobId, uid, now }) {
+    const [job, worker] = await Promise.all([
+      JobDetails.findById(jobId).lean(),
+      User.findById(uid).lean(),
+    ]);
+    if (!job) return fail("Job not found.", 404);
+    // TODO: verify this worker is actually assigned to this job
+
+    try {
+      // Matches only if today's session hasn't started. If it already has,
+      // the upsert tries an insert and the unique index rejects it (11000).
+      const session = await WorkerSession.findOneAndUpdate(
+        { jobId, workerId: uid, workDate: getWorkDate(now), startTime: null },
+        {
+          $setOnInsert: {
+            _id: generateId(),
+            employerId: job.employerId, // from DB, never from the client
+            agreedRate: calculateSuggestedRate(job, worker),
+            rateType: job.rateType || "Hourly",
+          },
+          $set: {
+            jobCompletionStatus: STARTED,
+            workingStatus: WORKING,
+            startTime: now,
+          },
+        },
+        { upsert: true, new: true },
+      );
+      return ok(session);
+    } catch (err) {
+      if (err.code === 11000) {
+        return err.keyPattern?.jobId
+          ? fail("Work already started today.", 409)
+          : fail("You already have another job in progress.", 409);
+      }
+      throw err;
+    }
+  },
+
+  async IN_PROGRESS({ open }) {
+    const session = await WorkerSession.findOneAndUpdate(
+      open,
+      { $set: { jobCompletionStatus: IN_PROGRESS } },
+      { new: true },
+    );
+    if (!session) return fail("No active session found.", 404);
+    return ok(session);
+  },
+
+  async BREAK_START({ open, now }) {
+    const session = await WorkerSession.findOneAndUpdate(
+      { ...open, workingStatus: WORKING },
+      {
+        $push: { breaks: { startedAt: now } },
+        $set: { workingStatus: BREAK_START },
+      },
+      { new: true },
+    );
+    if (!session)
+      return fail("No active working session to take a break from.", 400);
+    return ok(session);
+  },
+
+  async BREAK_END({ open, now }) {
+    const session = await WorkerSession.findOneAndUpdate(
+      {
+        ...open,
+        workingStatus: BREAK_START,
+        breaks: { $elemMatch: { endedAt: null } },
+      },
+      {
+        $set: { "breaks.$[open].endedAt": now, workingStatus: WORKING },
+      },
+      { new: true, arrayFilters: [{ "open.endedAt": null }] },
+    );
+    if (!session) return fail("No open break to end.", 400);
+    return ok(session);
+  },
+
+  async COMPLETED({ open, now, workerStatus, imageUrls }) {
+    const session = await WorkerSession.findOne(open).lean();
+    if (!session?.startTime) return fail("No active session to end.", 404);
+
+    // close an open break at the end time
+    const breaks = session.breaks.map((b) => ({
+      startedAt: b.startedAt,
+      endedAt: b.endedAt ?? now,
+    }));
+
+    const breakMs = breaks.reduce(
+      (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
+      0,
+    );
+    const workedMs = Math.max(0, now - session.startTime - breakMs);
+
+    const breakMinutes = Math.round(breakMs / MS_PER_MIN);
+    const totalWorkingMinutes = Math.round(workedMs / MS_PER_MIN);
+
+    const totalSalaryAmount =
+      session.rateType === "Daily"
+        ? session.agreedRate
+        : round2((totalWorkingMinutes / 60) * session.agreedRate);
+
+    const update = {
+      $set: {
+        jobCompletionStatus: COMPLETED,
+        workingStatus: END_OF_DAY_STATUSES.includes(workerStatus)
+          ? workerStatus
+          : NOT_AVAILABLE,
+        endTime: now,
+        breaks,
+        breakMinutes,
+        totalWorkingMinutes,
+        totalSalaryAmount,
+      },
+    };
+    if (imageUrls.length) update.$push = { workPics: { $each: imageUrls } };
+
+    const updated = await WorkerSession.findOneAndUpdate(
+      {
+        _id: session._id,
+        jobCompletionStatus: { $in: OPEN_STATUSES }, // blocks double-submit
+        updatedAt: session.updatedAt, // blocks a break change mid-calculation
+      },
+      update,
+      { new: true },
+    );
+    if (!updated)
+      return fail("Session was already ended or just changed. Retry.", 409);
+    return ok(updated);
+  },
+
+  async ADD_PHOTOS({ jobId, uid, imageUrls }) {
+    if (!imageUrls.length) return fail("No images provided.", 400);
+    // No status filter, so sort picks the latest session for this job
+    const session = await WorkerSession.findOneAndUpdate(
+      { jobId, workerId: uid },
+      { $push: { workPics: { $each: imageUrls } } },
+      { new: true, sort: { createdAt: -1 } },
+    );
+    if (!session) return fail("No session found.", 404);
+    return ok(session);
+  },
+
+  // Manual status change (Available / Not Available / Start Tomorrow)
+  // async DEFAULT({ jobId, uid, now, workerStatus }) {
+  //   if (!MANUAL_STATUSES.includes(workerStatus))
+  //     return fail("Invalid status for this action.", 400);
+
+  //   const session = await WorkerSession.findOneAndUpdate(
+  //     { jobId, workerId: uid, workDate: getWorkDate(now) },
+  //     { $set: { workingStatus: workerStatus,endTime:now } },
+  //     { new: true, runValidators: true },
+  //   );
+  //   if (!session) return fail("No session found for today.", 404);
+  //   return ok(session);
+  // },
+  async DEFAULT({ jobId, uid, now, workerStatus }) {
+  if (!MANUAL_STATUSES.includes(workerStatus))
+    return fail("Invalid status for this action.", 400);
+
+  const session = await WorkerSession.findOneAndUpdate(
+    { jobId, workerId: uid, workDate: getWorkDate(now) },
+    {
+      $set: {
+        workingStatus: workerStatus,
+        endTime: workerStatus === START_TOMORROW ? now : null,
+      },
+    },
+    { new: true, runValidators: true },
+  );
+  if (!session) return fail("No session found for today.", 404);
+  return ok(session);
+},
+};
+
+// ───────────── ROUTE ─────────────
 export async function PUT(request) {
   try {
     await connectDB();
-    const { uid } = await verifyFirebaseToken(request);
-    const {
-      jobId,
-      action,
-      workerStatus,
-      imageUrls = [],
-    } = await request.json();
-    console.log(jobId, "JOB ID DATAAAAA");
-    if (!jobId || !action) return fail("jobId and action are required.", 400);
 
-    const now = new Date(); // always use server time, never client time
-    const active = { jobId, workerId: uid, jobCompletionStatus: "Started" };
-
-    switch (action) {
-      // ───────────── START THE DAY ─────────────
-      case "START": {
-        const [job, worker] = await Promise.all([
-          JobDetails.findById(jobId).lean(),
-          User.findById(uid).lean(),
-        ]);
-        if (!job) return fail("Job not found.", 404);
-        // TODO: verify this worker is actually assigned to this job
-
-        const workDate = getWorkDate(now);
-
-        const existing = await WorkerSession.findOne({
-          jobId,
-          workerId: uid,
-          workDate,
-        }).lean();
-        if (existing?.startTime)
-          return fail("Work already started today.", 409);
-
-        try {
-          const session = await WorkerSession.findOneAndUpdate(
-            { jobId, workerId: uid, workDate },
-            {
-              $setOnInsert: {
-                _id: generateId(),
-                employerId: job.employerId, // from DB, not from the client
-                agreedRate: calculateSuggestedRate(job, worker), // ideally the rate saved at hire time
-                rateType: job.rateType || "Hourly",
-              },
-              $set: {
-                jobCompletionStatus: "Started",
-                workingStatus: WORKER_WORKING_STATUS.WORKING,
-                startTime: now,
-              },
-            },
-            { upsert: true, new: true },
-          );
-          return NextResponse.json({ session });
-        } catch (err) {
-          // the "one active job per worker" unique index fired
-          if (err.code === 11000)
-            return fail("You already have another job in progress.", 409);
-          throw err;
-        }
-      }
-
-      // ───────────── START BREAK ─────────────
-      case "BREAK_START": {
-        const session = await WorkerSession.findOneAndUpdate(
-          { ...active, workingStatus: WORKER_WORKING_STATUS.WORKING },
-          {
-            $push: { breaks: { startedAt: now } },
-            $set: { workingStatus: WORKER_WORKING_STATUS.ON_BREAK },
-          },
-          { new: true },
-        );
-        if (!session)
-          return fail("No active working session to take a break from.", 400);
-        return NextResponse.json({ session });
-      }
-
-      // ───────────── END BREAK ─────────────
-      case "BREAK_END": {
-        const session = await WorkerSession.findOneAndUpdate(
-          {
-            ...active,
-            workingStatus: WORKER_WORKING_STATUS.ON_BREAK,
-            breaks: { $elemMatch: { endedAt: null } }, // an open break exists
-          },
-          {
-            $set: {
-              "breaks.$[open].endedAt": now,
-              workingStatus: WORKER_WORKING_STATUS.WORKING,
-            },
-          },
-          { new: true, arrayFilters: [{ "open.endedAt": null }] },
-        );
-        if (!session) return fail("No open break to end.", 400);
-        return NextResponse.json({ session });
-      }
-
-      // ───────────── END THE DAY ─────────────
-      case "END": {
-        const session = await WorkerSession.findOne(active).lean();
-        if (!session) return fail("No active session to end.", 404);
-
-        // close an open break, if any, at the end time
-        const breaks = session.breaks.map((b) => ({
-          startedAt: b.startedAt,
-          endedAt: b.endedAt ?? now,
-        }));
-
-        const breakMs = breaks.reduce(
-          (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
-          0,
-        );
-        const workedMs = Math.max(0, now - session.startTime - breakMs);
-
-        const breakMinutes = Math.round(breakMs / MS_PER_MIN);
-        const totalWorkingMinutes = Math.round(workedMs / MS_PER_MIN);
-
-        const totalSalaryAmount =
-          session.rateType === "Daily"
-            ? session.agreedRate
-            : round2((totalWorkingMinutes / 60) * session.agreedRate);
-
-        const allowed = [
-          WORKER_WORKING_STATUS.NOT_AVAILABLE,
-          WORKER_WORKING_STATUS.START_TOMORROW,
-        ];
-        const nextStatus = allowed.includes(workerStatus)
-          ? workerStatus
-          : WORKER_WORKING_STATUS.NOT_AVAILABLE;
-
-        const updated = await WorkerSession.findOneAndUpdate(
-          { _id: session._id, jobCompletionStatus: "Started" }, // blocks double-submit
-          {
-            $set: {
-              jobCompletionStatus: "Completed",
-              workingStatus: nextStatus,
-              endTime: now,
-              breaks,
-              breakMinutes,
-              totalWorkingMinutes,
-              totalSalaryAmount,
-            },
-            ...(imageUrls.length && {
-              $push: { workPics: { $each: imageUrls } },
-            }),
-          },
-          { new: true },
-        );
-        if (!updated) return fail("Session was already ended.", 409);
-        return NextResponse.json({ session: updated });
-      }
-
-      // ───────────── ADD PHOTOS ─────────────
-      case "ADD_PHOTOS": {
-        if (!imageUrls.length) return fail("No images provided.", 400);
-        const session = await WorkerSession.findOneAndUpdate(
-          active,
-          { $push: { workPics: { $each: imageUrls } } },
-          { new: true },
-        );
-        if (!session) return fail("No active session.", 404);
-        return NextResponse.json({ session });
-      }
-
-      default:
-        return fail("Invalid action.", 400);
+    let uid;
+    try {
+      ({ uid } = await verifyFirebaseToken(request));
+    } catch {
+      return fail("Unauthorized.", 401);
     }
+
+    const body = await request.json().catch(() => null);
+    if (!body) return fail("Invalid request body.", 400);
+
+    const { jobId, workerStatus } = body;
+    const rawAction = body.action;
+    if (!jobId || !rawAction) return fail("jobId and action are required.", 400);
+
+    const action = ACTION_ALIASES[rawAction] ?? rawAction;
+    const handler = handlers[action] ?? handlers.DEFAULT;
+
+    return await handler({
+      jobId,
+      uid,
+      workerStatus,
+      imageUrls: cleanImages(body.imageUrls),
+      now: new Date(), // always server time, never client time
+      // the one open session of this worker for this job
+      open: {
+        jobId,
+        workerId: uid,
+        jobCompletionStatus: { $in: OPEN_STATUSES },
+      },
+    });
   } catch (error) {
-    console.log(error, "ERROR DATA");
+    console.error("WorkerSession PUT failed:", error);
     return fail("Unable to update the worker's session.", 500);
   }
 }
-
-// Client calls:
-
-// javascript
-// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "START" }) });
-// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_START" }) });
-// fetch("/api/work-session", { method: "PUT", body: JSON.stringify({ jobId, action: "BREAK_END" }) });
-// fetch("/api/work-session", {
-//   method: "PUT",
-//   body: JSON.stringify({ jobId, action: "END", workerStatus: "START_TOMORROW", imageUrls }),
-// });

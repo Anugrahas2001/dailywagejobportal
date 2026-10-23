@@ -6,6 +6,7 @@ import JobInvitation from "@/modals/JobInvitation";
 import JobPreferences from "@/modals/JobPreferences";
 import SavedJobs from "@/modals/SavedJobs";
 import User from "@/modals/User";
+import WorkerSession from "@/modals/WorkerSession";
 
 const isFilled = (value) => {
   if (value === null || value === undefined) return false;
@@ -55,7 +56,7 @@ const savedJobsCount = async (uid) => {
       .select("jobId")
       .lean(),
     JobApplication.find({ workerId: uid }).select("jobId").lean(),
-    JobInvitation.find({ workerId: uid, status: "sent" }).lean()
+    JobInvitation.find({ workerId: uid, status: "sent" }).lean(),
   ]);
 
   const allSavedJobIds = savedJobsData.map((j) => j?.jobId);
@@ -85,6 +86,14 @@ export async function GET(request) {
 
     const profileCompleteness = calculateProfileCompleteness(userData, jobPref);
     const { savedCount, invitationsCount } = await savedJobsCount(uid);
+    const workerSess = await WorkerSession.findOne({
+      workerId: uid,
+    })
+      .sort({ createdAt: -1 })
+      .select("workingStatus")
+      .lean();
+
+    console.log(workerSess, "CHECK WORKER WORKER SESSION DATA");
 
     const data = {
       user: userData,
@@ -92,6 +101,7 @@ export async function GET(request) {
       profileCompleteness, // e.g. 75
       savedJobs: savedCount,
       jobInvitations: invitationsCount,
+      workingStatus:workerSess?.workingStatus,
     };
     console.log(data, "DATA VALUE");
 
@@ -149,10 +159,10 @@ export async function PUT(request) {
     }
 
     // 2. Fetch the latest user and job preference data
-   const [userData, jobPref] = await Promise.all([
-  User.findById(uid).lean(),
-  JobPreferences.findOne({ userId: uid }).lean(),
-]);
+    const [userData, jobPref] = await Promise.all([
+      User.findById(uid).lean(),
+      JobPreferences.findOne({ userId: uid }).lean(),
+    ]);
 
     if (!userData) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
@@ -171,13 +181,14 @@ export async function PUT(request) {
     return NextResponse.json(
       {
         message: "Successfully updated the user profile page.",
-        result:{
-      user: userData,
-      preference: jobPref,
-      profileCompleteness,
-      savedJobs: savedCount,
-      jobInvitations: invitationsCount,
-    },
+        result: {
+          user: userData,
+          preference: jobPref,
+          profileCompleteness,
+          savedJobs: savedCount,
+          jobInvitations: invitationsCount,
+          
+        },
       },
       { status: 200 },
     );

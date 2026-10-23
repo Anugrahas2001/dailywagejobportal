@@ -24,6 +24,7 @@ import {
   JOINING_TYPE_VALUES,
   SALARY_CREDIT_TYPES,
   SHIFT_TYPE_VALUES,
+  WORKER_WORKING_STATUS,
 } from "@/constants/constant";
 import { getShiftTypes, validateFile } from "./commonFunctions";
 import useLoading from "./hooks/useLoading";
@@ -322,13 +323,15 @@ const MyProfile = () => {
   // job preferences: only a temporary copy while editing.
   // The saved values live in profile.preference (single source of truth).
   const [draft, setDraft] = useState({});
-  // Mobile Number.
   const [phoneDraft, setPhoneDraft] = useState("");
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [workingStatus, setWorkingStatus] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
+  const [isOnBreak, setIsOnBreak] = useState(false);
+  console.log(isOnBreak, "IS ON BREAK DATA");
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -342,6 +345,7 @@ const MyProfile = () => {
       const { data } = await res.json();
       console.log(data, "special data");
       setProfile(data);
+      setWorkingStatus(data?.workingStatus);
       setLoading(false);
     } catch (err) {
       console.error("Profile load failed:", err);
@@ -631,30 +635,107 @@ const MyProfile = () => {
     }
   };
 
+  const handleWorkingStatusUpdate = async (e) => {
+    console.log(e.target.value, "CHCEK THE WORKING STATUS OF THE USER");
+    const status = e.target.value;
+    // if (status === "On Break") {
+    //   setIsOnBreak(!isOnBreak);
+    // }
+    setWorkingStatus(status);
+    const jobId = localStorage.getItem("currentJobId");
+    // const action =
+    //   status === "On Break"
+    //     ? isOnBreak
+    //       ? "BREAK_START"
+    //       : "BREAK_END"
+    //     : "DEFAULT";
+
+    // const action =
+    //   status === "Break Start"
+    //     ? "BREAK_START"
+    //     : status === "Break End"
+    //       ? "BREAK_END"
+    //       : "DEFAULT";
+
+    // try {
+    //   const token = await fetchUserToken();
+    //   const response = await fetch("/api/worker/jobs", {
+    //     method: "PUT",
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //     },
+    //     body: JSON.stringify({
+    //       jobId,
+    //       workerStatus: status,
+    //       action,
+    //     }),
+    //   });
+
+    //   const result = await response.json();
+    //   console.log(result, "RESULT DATA");
+    // } catch (error) {
+    //   console.log(error, "ERROR DATA");
+    // }
+
+    const action =
+      status === "Break Start"
+        ? "BREAK_START"
+        : status === "Break End"
+          ? "BREAK_END"
+          : "DEFAULT";
+
+    try {
+setLoading(true);
+      const token = await fetchUserToken();
+
+      const response = await fetch("/api/worker/jobs", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          jobId,
+          action,
+          workerStatus: status,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update status");
+      }
+
+      // use the server's value, not what the user clicked
+      setWorkingStatus(data.session.workingStatus);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const isEditingPrefs = isEditing === "jobpref";
 
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-5">
         {/* Header */}
-        <Card className="p-6">
+        <Card className="relative p-6">
+          <select
+            className="absolute right-4 top-4 rounded-lg p-2 text-sm bg-green-500"
+            value={workingStatus}
+            onChange={(e) => handleWorkingStatusUpdate(e)}
+          >
+            {Object.values(WORKER_WORKING_STATUS).map((status) => (
+              <option key={status} value={status} className="px-1">
+                {status}
+              </option>
+            ))}
+          </select>
           <div className="flex flex-col items-center text-center">
             <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
-              {/* {user?.profileImage ? (
-                <img
-                  src={user.profileImage}
-                  alt={
-                    user.name ? `${user.name}'s profile photo` : "Profile photo"
-                  }
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span aria-hidden="true">
-                  {user?.name?.charAt(0).toUpperCase() || "?"}
-                </span>
-              )} */}
-              {/* Upload / Preview area */}
-              {/* Profile image */}
               <div className="flex flex-col items-center">
                 <div className="relative h-28 w-28">
                   <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">

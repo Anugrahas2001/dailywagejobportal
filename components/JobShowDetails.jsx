@@ -5,7 +5,7 @@ import { getJoingDate, getShiftLabel } from "./commonFunctions";
 import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
 import { useParams, useRouter } from "next/navigation";
 import { JOB_COMPLETION_STATUS } from "@/constants/constant";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import useLoading from "./hooks/useLoading";
 
@@ -13,6 +13,7 @@ export default function JobDetailsPage({ role, isModal, type }) {
   console.log(role, isModal, type, "CHECK ALL THE 3 VALUES");
   const router = useRouter();
   const { id } = useParams();
+  console.log(id, "ID DATAAA GYAPPPPPP");
   const { toggleSavedJob, applyToJob } = useWorkerJobActions();
   const [workStatus, setWorkStatus] = useState("");
   const [images, setImages] = useState([]); // [{ file, preview }]
@@ -22,35 +23,26 @@ export default function JobDetailsPage({ role, isModal, type }) {
   const [job, setJob] = useState(null);
   const { loading, setLoading } = useLoading();
   console.log(workStatus, "USER WORKING STATUS");
-  if (loading) return <Loading />;
 
-  if (!job) {
-    return <Loading />;
-  }
-
+  // ✅ ALL hooks first
   useEffect(() => {
+    if (!id) return;
+
     const loadJob = async () => {
       try {
         setLoading(true);
-
         const token = await fetchUserToken();
-
-        const response = await fetch(`/api/employer/job/${id}`, {
+        const response = await fetch(`/api/worker/jobs/${id}`, {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch job details.");
-        }
-
+        if (!response.ok) throw new Error("Failed to fetch job details.");
         const { result } = await response.json();
-        console.log(result, "AGAIN JOB DATA");
-
+        console.log(result, "RESULT RESULT RESULT DATA");
         setJob(result);
-        // setImages(data?.job?.workPics);
+        setWorkStatus(result.jobCompletionStatus ?? "");
+        setUploadedImages(result.workPics ?? []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -61,7 +53,12 @@ export default function JobDetailsPage({ role, isModal, type }) {
     if (id) {
       loadJob();
     }
-  }, [id, setLoading]);
+  }, [id]);
+
+  // handlers (handleJobApplication, handleSavedJobs, etc.) go here
+
+  // ✅ early return LAST, right before the JSX
+  if (loading || !job) return <Loading />;
 
   const handleJobApplication = (jobId) => {
     console.log(jobId, "JOB ID");
@@ -77,6 +74,7 @@ export default function JobDetailsPage({ role, isModal, type }) {
 
   const handleJobWorkingStatus = async ({ e, jobId }) => {
     console.log(e.target.value, jobId, "CHECK THIS VALUE");
+    localStorage.setItem("currentJobId", jobId);
     setWorkStatus(e.target.value);
     let action;
     switch (e.target.value) {
@@ -84,7 +82,7 @@ export default function JobDetailsPage({ role, isModal, type }) {
         action = "START";
         break;
       case "InProgress":
-        action = "START";
+        action = "IN_PROGRESS";
         break;
       case "Completed":
         action = "COMPLETED";
@@ -338,7 +336,7 @@ export default function JobDetailsPage({ role, isModal, type }) {
                       handleJobWorkingStatus({ e, jobId: job._id })
                     }
                   >
-                    {Object.values(JOB_COMPLETION_STATUS).map((status) => (
+                    {Object.values(JOB_COMPLETION_STATUS).slice(0,4).map((status) => (
                       <option key={status} value={status}>
                         {status}
                       </option>

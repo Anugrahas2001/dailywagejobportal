@@ -523,9 +523,10 @@ export const JOB_COMPLETION_STATUS = Object.freeze({
 });
 
 export const WORKER_WORKING_STATUS = Object.freeze({
-  NOT_AVAILABLE: "Not_Available", // off today (leave, sick, etc.)
+  NOT_AVAILABLE: "Not Available", // off today (leave, sick, etc.)
   AVAILABLE: "Available", // free today, open to job offers
   WORKING: "Working", // currently on a job
-  ON_BREAK: "On_break", // short break during the workday
-  START_TOMORROW: "Start_Tomorrow", // not working today, will start tomorrow
+  BREAK_START: "Break Start",
+  BREAK_END: "Break End",
+  START_TOMORROW: "Start Tomorrow", // not working today, will start tomorrow
 });

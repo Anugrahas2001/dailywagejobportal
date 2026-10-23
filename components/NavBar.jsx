@@ -8,12 +8,13 @@ import { fetchUserToken } from "@/lib/fetchUserToken";
 import Loading from "./Loading";
 import { BellDot, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import Link from "next/link";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/lib/features/profiles/userSlice";
 
 const NavBar = () => {
   const [show, setShow] = useState(false);
   const { loading, setLoading } = useLoading();
+  const dispatch = useDispatch();
   const router = useRouter();
   const [profileImage, setProfileImage] = useState(null);
   const [onboardingPage, setOnboardingPage] = useState(1);

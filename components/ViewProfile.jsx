@@ -126,10 +126,12 @@ const ViewProfile = ({
   workerId,
   jobId,
   type,
+  status,
   matchingRate,
   jobInvitation,
 }) => {
   const [workerData, setWorkerData] = useState({});
+  console.log(workerData,type, "NEW WORKER DATA");
   const [jobStatus, setJobStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -234,7 +236,6 @@ const ViewProfile = ({
 
   return (
     <div className="bg-gray-50 p-4 md:p-8">
-    
       <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-sm">
         {/* Profile Header */}
         <div className="border-b bg-white p-6 md:p-8">
@@ -445,8 +446,52 @@ const ViewProfile = ({
 
         {/* Application Status */}
         {type === "applications" ? (
-          <section className="p-6 md:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <section className="p-4 md:p-8 border-b">
+            <div className="py-4 border-b flex items-center px-2 justify-between">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Job Completion Status{" "}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Current status of the job
+                </p>
+              </div>
+
+              <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                {workerData?.jobWorkingStatus}
+              </span>
+            </div>
+
+            <div className="py-4 border-b flex items-center px-2 justify-between">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Worker Current Status{" "}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Current status of the worker
+                </p>
+              </div>
+
+              <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                {workerData?.workerCurrentStatus}
+              </span>
+            </div>
+
+            <h2 className="text-lg font-semibold text-gray-900">
+              Work Site Images
+            </h2>
+            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
+              {workerData?.workerPics?.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Work image ${index + 1}`}
+                  className="h-24 w-24 rounded-md object-cover shrink-0"
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">
                   Application Status
@@ -457,7 +502,7 @@ const ViewProfile = ({
                 </p>
               </div>
 
-              <select
+             {status==="all"?( <select
                 value={jobStatus ? jobStatus : workerData?.status}
                 onChange={(e) =>
                   handleJobApplicationStatus(e, {
@@ -476,7 +521,9 @@ const ViewProfile = ({
                 <option value="shortlisted">Shortlisted</option>
                 <option value="accepted">Accepted</option>
                 <option value="rejected">Rejected</option>
-              </select>
+              </select>):(<span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                {workerData?.status}
+              </span>)}
             </div>
           </section>
         ) : (

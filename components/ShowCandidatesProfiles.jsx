@@ -355,7 +355,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}${
                           type === "recommendation"
                             ? `&matching=${profile.matchPercentage}&jobInvitation=${profile?.applicationAvailable}`
-                            : ""
+                            : `&status=${status}`
                         }`}
                       >
                         <button
