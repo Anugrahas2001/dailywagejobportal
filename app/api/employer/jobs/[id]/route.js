@@ -68,12 +68,13 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-   console.log("app/api/employer/job/[id]/route.js - PUT");
+  console.log("app/api/employer/job/[id]/route.js - PUT");
   try {
     await connectDB();
     const { id } = await params;
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();
+    console.log(body, id, uid, "============================");
     const validation = validate(jobDetailSchema, body);
     if (!validation.success) {
       return validationError(validation);
@@ -106,7 +107,7 @@ export async function PUT(request, { params }) {
     // for (const job of candidateJobs) {
     await matchQueue.add(
       "compute-matches",
-      { jobId: updatedJob._id,employerId:uid },
+      { jobId: updatedJob._id, employerId: uid },
       { jobId: `job-${updatedJob._id}` },
       // { jobId: `job-${updatedJob._id}`, delay: 10000 }, // debounce rapid edits
     );
@@ -155,7 +156,7 @@ export async function GET(request, { params }) {
     return NextResponse.json(
       {
         message: "Job Details fetched successfully.",
-        job,
+        result: job,
       },
       {
         status: 200,

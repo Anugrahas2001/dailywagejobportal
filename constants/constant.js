@@ -530,3 +530,9 @@ export const WORKER_WORKING_STATUS = Object.freeze({
   BREAK_END: "Break End",
   START_TOMORROW: "Start Tomorrow", // not working today, will start tomorrow
 });
+
+export const JOB_STATUS_VALUES=Object.freeze({
+  ACTIVE:"Active",
+  PAUSED:"Paused",
+  DELETED:"Deleted"
+})

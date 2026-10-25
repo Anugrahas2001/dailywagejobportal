@@ -222,11 +222,35 @@ const JobForm = ({ mode, initialData }) => {
 
   return (
     <div className="mx-auto max-w-5xl rounded-lg bg-white p-6 shadow">
-      <h2>{mode === "create" ? "Create Job" : "Edit Job"}</h2>
+      {/* <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+    {mode === "create" ? "Create Job" : "Edit Job"}
+  </h2> */}
+      <div className="mb-8 flex items-center gap-3">
+        <span className="h-10 w-1.5 rounded-full bg-blue-600" />
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">
+            {mode === "create" ? "Create Job" : "Edit Job"}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {mode === "create"
+              ? "Post a new opening"
+              : "Modify your job posting"}
+          </p>
+        </div>
+        <span
+          className={`ml-auto rounded-full px-3 py-1 text-xs font-medium ${
+            mode === "create"
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
+          }`}
+        >
+          {mode === "create" ? "New" : "Editing"}
+        </span>
+      </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 gap-5 md:grid-cols-2"
+        className="grid grid-cols-1 gap-5 md:grid-cols-2 mt-6"
       >
         {/* Job Name */}
         <InputField

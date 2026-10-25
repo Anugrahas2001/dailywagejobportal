@@ -330,8 +330,7 @@ const MyProfile = () => {
   const [workingStatus, setWorkingStatus] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
-  const [isOnBreak, setIsOnBreak] = useState(false);
-  console.log(isOnBreak, "IS ON BREAK DATA");
+
 
   const loadProfile = useCallback(async () => {
     setLoading(true);

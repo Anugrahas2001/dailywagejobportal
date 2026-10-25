@@ -1,4 +1,10 @@
-import { JOINING_TYPES, SALARY_CREDIT_TYPES, SHIFT_TYPES } from "@/constants/constant";
+
+
+import {
+  JOINING_TYPES,
+  SALARY_CREDIT_TYPES,
+  SHIFT_TYPES,
+} from "@/constants/constant";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 
 export const getShiftLabel = (shiftValue) => {
@@ -182,10 +188,16 @@ export function getShiftTypes(shiftType) {
 }
 
 export function salaryCreditTypes(salaryType) {
-  return SALARY_CREDIT_TYPES.find((salary) => salary.value === salaryType)?.label;
+  return SALARY_CREDIT_TYPES.find((salary) => salary.value === salaryType)
+    ?.label;
 }
 
-export const fetchUserJobDetails = async ({ workerId, status, jobId,type }) => {
+export const fetchUserJobDetails = async ({
+  workerId,
+  status,
+  jobId,
+  type,
+}) => {
   const token = await fetchUserToken();
   const response = await fetch(
     `/api/employer/viewjobapplications/${workerId}`,
@@ -198,7 +210,7 @@ export const fetchUserJobDetails = async ({ workerId, status, jobId,type }) => {
       body: JSON.stringify({
         status,
         jobId,
-        type
+        type,
       }),
     },
   );
@@ -212,10 +224,10 @@ export const fetchUserJobDetails = async ({ workerId, status, jobId,type }) => {
   return data;
 };
 
-
-
 export const timeAgo = (createdAt) => {
-  const seconds = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+  const seconds = Math.floor(
+    (Date.now() - new Date(createdAt).getTime()) / 1000,
+  );
 
   if (seconds < 60) return "just now";
 
@@ -239,20 +251,19 @@ export const timeAgo = (createdAt) => {
   });
 };
 
+export const goToPage = ({ p, totalPages, setPage }) => {
+  if (p >= 1 && p <= totalPages) setPage(p);
+};
 
- export const goToPage = (p) => {
-    console.log(p, "ANUGRAHA ANUGRAHA");
-    if (p >= 1 && p <= totalPages) setPage(p);
-  };
 const MAX_FILE_SIZE_MB = 5;
-  const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-   export const validateFile = (selectedFile) => {
-    if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
-      return "Only JPG, PNG, or WEBP images are allowed";
-    }
-    if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      return `Image must be under ${MAX_FILE_SIZE_MB}MB`;
-    }
-    return null;
-  };
+export const validateFile = (selectedFile) => {
+  if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
+    return "Only JPG, PNG, or WEBP images are allowed";
+  }
+  if (selectedFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    return `Image must be under ${MAX_FILE_SIZE_MB}MB`;
+  }
+  return null;
+};

@@ -2,15 +2,20 @@
 import jobFetchUseEffcetHook from "@/components/hooks/jobFetchUseEffcetHook";
 import JobForm from "@/components/JobForm";
 import Loading from "@/components/Loading";
+import { useParams } from "next/navigation";
 import React from "react";
 
 const page = () => {
-  const {loading,job}=jobFetchUseEffcetHook();
+  const { id } = useParams();
+  const { res } = jobFetchUseEffcetHook(id); // ✅ top level
+
+  if (!res) return <Loading/>;
+  console.log(res, "DASHBOARD DASHBOARD employer");
 
   return (
     <>
-      <JobForm mode="Edit" initialData={job} />
-      {loading && <Loading />}
+      <JobForm mode="Edit" initialData={res} />
+      {/* {loading && <Loading />} */}
     </>
   );
 };

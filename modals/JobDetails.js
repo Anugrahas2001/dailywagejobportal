@@ -1,5 +1,6 @@
 import {
   GENDER_TYPES_VALUES,
+  JOB_STATUS_VALUES,
   JOINING_TYPE_VALUES,
   SALARY_CREDIT_TYPES_VALUES,
   SHIFT_TYPE_VALUES,
@@ -95,16 +96,6 @@ const JobSchema = new mongoose.Schema(
         },
       ],
       default: [],
-      // validate: {
-      //   validator: function (value) {
-      //     // Allow empty array (optional)
-      //     if (!value || value.length === 0) return true;
-
-      //     // Limit number of responsibilities
-      //     return value.length <= 15;
-      //   },
-      //   message: "You can add a maximum of 15 responsibilities",
-      // },
     },
     currency: {
       type: String,
@@ -119,11 +110,8 @@ const JobSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: {
-        values: ["Active", "Paused", "Completed", "Expired"],
-        message: "{VALUE} is not a valid status",
-      },
-      default: "Active",
+      enum: JOB_STATUS_VALUES,
+      default: JOB_STATUS_VALUES.ACTIVE,
     },
     applicantsCount: {
       type: Number,

@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       // className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex flex-col">
         <Providers>
           <NotificationProvider>
             <NavBar />
@@ -61,7 +61,7 @@ export default function RootLayout({ children }) {
                 },
               }}
             />
-            <Footer />
+            {/* <Footer /> */}
           </NotificationProvider>
         </Providers>
       </body>

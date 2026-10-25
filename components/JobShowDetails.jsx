@@ -3,16 +3,16 @@
 import Loading from "@/components/Loading";
 import { getJoingDate, getShiftLabel } from "./commonFunctions";
 import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { JOB_COMPLETION_STATUS } from "@/constants/constant";
 import { useEffect, useState } from "react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import useLoading from "./hooks/useLoading";
+import JobDetailsSkeleton from "./skeltons/JobDetailsSkeleton";
 
-export default function JobDetailsPage({ role, isModal, type }) {
-  console.log(role, isModal, type, "CHECK ALL THE 3 VALUES");
+export default function JobDetailsPage({ id, role, isModal, type }) {
+  console.log(id, role, isModal, type, "CHECK ALL THE 3 VALUES");
   const router = useRouter();
-  const { id } = useParams();
   console.log(id, "ID DATAAA GYAPPPPPP");
   const { toggleSavedJob, applyToJob } = useWorkerJobActions();
   const [workStatus, setWorkStatus] = useState("");
@@ -25,40 +25,60 @@ export default function JobDetailsPage({ role, isModal, type }) {
   console.log(workStatus, "USER WORKING STATUS");
 
   // ✅ ALL hooks first
+  // useEffect(() => {
+  //   if (!id) return;
+
+  //   const loadJob = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const token = await fetchUserToken();
+  //       const response = await fetch(`/api/${role}/jobs/${id}`, {
+  //         method: "GET",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+
+  //       if (!response.ok) throw new Error("Failed to fetch job details.");
+  //       const { result } = await response.json();
+  //       console.log(result, "RESULT RESULT RESULT DATA");
+  //       setJob(result);
+  //       setWorkStatus(result.jobCompletionStatus ?? "");
+  //       setUploadedImages(result.workPics ?? []);
+  //     } catch (error) {
+  //       console.error(error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   if (id && role) {
+  //     loadJob();
+  //   }
+  // }, [id, role]);
+
   useEffect(() => {
-    if (!id) return;
-
-    const loadJob = async () => {
+    if (!id || !role) return;
+    const ctrl = new AbortController();
+    (async () => {
       try {
-        setLoading(true);
         const token = await fetchUserToken();
-        const response = await fetch(`/api/worker/jobs/${id}`, {
-          method: "GET",
+        const res = await fetch(`/api/${role}/jobs/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
+          signal: ctrl.signal,
         });
-
-        if (!response.ok) throw new Error("Failed to fetch job details.");
-        const { result } = await response.json();
-        console.log(result, "RESULT RESULT RESULT DATA");
+        if (!res.ok) throw new Error(res.status);
+        const { result } = await res.json();
         setJob(result);
         setWorkStatus(result.jobCompletionStatus ?? "");
         setUploadedImages(result.workPics ?? []);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
+      } catch (e) {
+        if (e.name !== "AbortError") setError("Couldn't load this job.");
       }
-    };
-
-    if (id) {
-      loadJob();
-    }
-  }, [id]);
-
-  // handlers (handleJobApplication, handleSavedJobs, etc.) go here
+    })();
+    return () => ctrl.abort();
+  }, [id, role]);
 
   // ✅ early return LAST, right before the JSX
-  if (loading || !job) return <Loading />;
+  if (!job) return <JobDetailsSkeleton />;
 
   const handleJobApplication = (jobId) => {
     console.log(jobId, "JOB ID");
@@ -143,43 +163,6 @@ export default function JobDetailsPage({ role, isModal, type }) {
       return prev.filter((_, i) => i !== index);
     });
   };
-
-  // const handleUploadImages = async (jobId) => {
-  //   if (images.length === 0) return;
-
-  //   const formData = new FormData();
-  //   formData.append("jobId", jobId);
-  //   images.forEach(({ file }) => formData.append("images", file));
-
-  //   try {
-  //     setUploading(true);
-  //     setUploadError("");
-  //     const token = await fetchUserToken();
-  //     const response = await fetch("/api/worker/jobs/images", {
-  //       method: "PUT",
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: formData, // no Content-Type header; the browser adds the boundary
-  //     });
-  //     const { urls } = await response.json();
-  //     setImages(urls);
-
-  //     if (!response.ok) {
-  //       setUploadError(result.error || "Upload failed");
-  //       return;
-  //     }
-
-  //     images.forEach(({ preview }) => URL.revokeObjectURL(preview));
-  //     setImages([]);
-  //     console.log(urls, "UPLOADED URLS");
-  //   } catch (error) {
-  //     console.log(error, "UPLOAD ERROR");
-  //     setUploadError("Something went wrong. Please try again.");
-  //   } finally {
-  //     setUploading(false);
-  //   }
-  // };
 
   const handleUploadImages = async (jobId) => {
     if (images.length === 0) return;
@@ -300,22 +283,8 @@ export default function JobDetailsPage({ role, isModal, type }) {
         </ul>
       </div>
 
-      {role === "worker" ? (
-        isModal && (
-          // (
-          //   <button
-          //     className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-          //     // onClick={() => router.push(`/workerDashboard/jobs/${job._id}`)}
-          //     onClick={() =>
-          //       window.location.assign(
-          //         `/workerDashboard/jobs/${job._id}?type=${type}`,
-          //       )
-          //     }
-          //   >
-          //     View Full Details
-          //   </button>
-          // ):
-
+      {
+        role === "worker" && isModal && (
           <div className="flex w-full flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center items-center">
             {type === "saved" ? (
               <button
@@ -336,11 +305,13 @@ export default function JobDetailsPage({ role, isModal, type }) {
                       handleJobWorkingStatus({ e, jobId: job._id })
                     }
                   >
-                    {Object.values(JOB_COMPLETION_STATUS).slice(0,4).map((status) => (
-                      <option key={status} value={status}>
-                        {status}
-                      </option>
-                    ))}
+                    {Object.values(JOB_COMPLETION_STATUS)
+                      .slice(0, 4)
+                      .map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="m-2 space-y-3">
@@ -437,14 +408,15 @@ export default function JobDetailsPage({ role, isModal, type }) {
             )}
           </div>
         )
-      ) : (
-        <button
-          className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-          onClick={() => router.push(`/employerDashboard/jobs/${job._id}`)}
-        >
-          View Full Details
-        </button>
-      )}
+        // : (
+        //   <button
+        //     className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+        //     onClick={() => router.push(`/employerDashboard/jobs/${job._id}`)}
+        //   >
+        //     View Full Details
+        //   </button>
+        // )
+      }
     </div>
   );
 }
