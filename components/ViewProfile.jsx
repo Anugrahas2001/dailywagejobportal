@@ -14,14 +14,16 @@ import React, { useEffect, useState } from "react";
 import {
   formatDOB,
   calculateAge,
-  getJoiningType,
+  getJoiningPeriodType,
   getShiftTypes,
   fetchUserJobDetails,
   salaryCreditTypes,
+  getMatchStyle,
 } from "./commonFunctions";
-import { useRouter } from "next/navigation";
-import Loading from "./Loading";
-import { getMatchStyle } from "@/constants/constant";
+// import { useRouter } from "next/navigation";
+import ViewProfileSkeleton from "./skeltons/ViewProfileSkeleton";
+import useControls from "./hooks/useControls";
+import useLoading from "./hooks/useLoading";
 
 const ViewProfile = ({
   workerId,
@@ -32,10 +34,17 @@ const ViewProfile = ({
   jobInvitation,
 }) => {
   const [workerData, setWorkerData] = useState({});
-  console.log(workerData,type, "NEW WORKER DATA");
+  console.log(workerData, type, "NEW WORKER DATA");
   const [jobStatus, setJobStatus] = useState("");
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const { loading, setLoading } = useLoading();
+  const {
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
   const isInvited =
     jobInvitation === "false"
       ? false
@@ -78,6 +87,7 @@ const ViewProfile = ({
       console.error("Failed to fetch worker data:", error);
     } finally {
       setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -137,312 +147,332 @@ const ViewProfile = ({
 
   return (
     <div className="bg-gray-50 p-4 md:p-8">
-      <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-sm">
-        {/* Profile Header */}
-        <div className="border-b bg-white p-6 md:p-8">
-          <div className="flex flex-col items-center gap-6 sm:flex-row">
-            {/* Profile Image */}
-            <img
-              src={workerData?.profileImage}
-              alt="User profile"
-              className="h-28 w-28 rounded-full border-4 border-gray-100 object-cover"
-            />
-
-            {/* Basic Information */}
-            {/* <div className="flex items-center justify-between bg-amber-300"> */}
-            <div className="flex-1 text-center sm:text-left">
-              <div className="flex flex-col items-center gap-2 sm:flex-row">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {workerData?.name}
-                </h1>
-
-                {workerData?.isVerified && (
-                  <BadgeCheck className="h-5 w-5 text-white" fill="blue" />
-                )}
-              </div>
-
-              <p className="mt-1 text-lg font-medium text-gray-600">
-                {workerData?.jobTitle}
-              </p>
-
-              <p className="mt-1 text-sm text-gray-500">
-                {workerData?.jobCategory}
-              </p>
-            </div>
-            {type !== "applications" && (
-              <div className="bg-amber-100 m-2">
-                <span
-                  className={`px-3 py-1 rounded-md ${getMatchStyle(matchingRate)?.className}`}
-                >
-                  {matchingRate}%{""}-{getMatchStyle(matchingRate)?.text}
-                </span>
-              </div>
-            )}
-            {/* </div> */}
+      {loading || initialLoading || !workerData ? (
+        <div className="mt-2" role="status" aria-busy="true">
+          <span className="sr-only">Loading candidates…</span>
+          <div className="motion-safe:animate-pulse" aria-hidden="true">
+            <ViewProfileSkeleton />
           </div>
         </div>
+      ) : (
+        <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white shadow-sm">
+          {/* Profile Header */}
+          <div className="border-b bg-white p-6 md:p-8">
+            <div className="flex flex-col items-center gap-6 sm:flex-row">
+              {/* Profile Image */}
+              <img
+                src={workerData?.profileImage}
+                alt="User profile"
+                className="h-28 w-28 rounded-full border-4 border-gray-100 object-cover"
+              />
 
-        {/* Personal Information */}
-        <section className="border-b p-6 md:p-8">
-          <h2 className="mb-5 text-lg font-semibold text-gray-900">
-            Personal Information
-          </h2>
+              {/* Basic Information */}
+              {/* <div className="flex items-center justify-between bg-amber-300"> */}
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex flex-col items-center gap-2 sm:flex-row">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    {workerData?.name}
+                  </h1>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div>
-              <p className="text-sm text-gray-500">Gender</p>
-              <p className="mt-1 font-medium text-gray-800">
-                {workerData?.gender || "-"}
-              </p>
-            </div>
+                  {workerData?.isVerified && (
+                    <BadgeCheck className="h-5 w-5 text-white" fill="blue" />
+                  )}
+                </div>
 
-            <div>
-              <p className="text-sm text-gray-500">Date of Birth</p>
-              <p className="mt-1 font-medium text-gray-800">
-                {formatDOB(workerData?.dob) || "-"}
-              </p>
-            </div>
+                <p className="mt-1 text-lg font-medium text-gray-600">
+                  {workerData?.jobTitle}
+                </p>
 
-            <div>
-              <p className="text-sm text-gray-500">Age</p>
-              <p className="mt-1 font-medium text-gray-800">
-                {calculateAge(workerData?.dob) || "-"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">Location</p>
-              <div className="mt-1 flex items-center gap-2 font-medium text-gray-800">
-                <MapPin className="h-4 w-4 text-gray-500" />
-                {workerData?.city}, {workerData?.state}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Information */}
-        <section className="border-b p-6 md:p-8">
-          <h2 className="mb-5 text-lg font-semibold text-gray-900">
-            Contact Information
-          </h2>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-              <Phone className="h-5 w-5 text-gray-500" />
-
-              <div>
-                <p className="text-xs text-gray-500">Phone</p>
-                <p className="font-medium text-gray-800">
-                  {workerData?.mobileNumber?.code}{" "}
-                  {workerData?.mobileNumber?.number}
+                <p className="mt-1 text-sm text-gray-500">
+                  {workerData?.jobCategory}
                 </p>
               </div>
-            </div>
-
-            <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
-              <Mail className="h-5 w-5 text-gray-500" />
-
-              <div>
-                <p className="text-xs text-gray-500">Email</p>
-                <p className="break-all font-medium text-gray-800">
-                  {workerData?.email || "-"}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Bio */}
-        <section className="border-b p-6 md:p-8">
-          <h2 className="mb-3 text-lg font-semibold text-gray-900">About</h2>
-
-          <p className="leading-7 text-gray-600">
-            {workerData?.bio || "No bio available."}
-          </p>
-        </section>
-
-        {/* Job Preferences */}
-        <section className="border-b p-6 md:p-8">
-          <h2 className="mb-5 text-lg font-semibold text-gray-900">
-            Job Preferences
-          </h2>
-
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Briefcase className="h-4 w-4" />
-                Salary
-              </div>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                ₹{workerData?.minSalary} - ₹{workerData?.maxSalary} / day
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Wallet className="h-4 w-4" />
-                Salary Credit Type
-              </div>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                {salaryCreditTypes(workerData?.salaryCreditType) || "-"}
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-gray-50 p-4">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Clock className="h-4 w-4" />
-                Joining
-              </div>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                {getJoiningType(workerData?.joiningPeriod) || "-"}
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Shift Type</p>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                {getShiftTypes(workerData?.shiftType) || "-"}
-              </p>
-            </div>
-
-            <div className="rounded-lg bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">Location Range</p>
-
-              <p className="mt-2 font-semibold text-gray-800">
-                {workerData?.locRange || "-"} km
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Skills */}
-        <section className="border-b p-6 md:p-8">
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">Skills</h2>
-
-          <div className="flex flex-wrap gap-3">
-            {workerData?.skills?.length > 0 ? (
-              workerData.skills.map((skill) => (
-                <div
-                  key={skill?._id}
-                  className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm"
-                >
-                  <span className="font-medium text-gray-800">
-                    {skill?.skill}
-                  </span>
-
-                  <span className="ml-2 text-gray-500">
-                    {skill?.experience}
+              {type !== "applications" && (
+                <div className="bg-amber-100 m-2">
+                  <span
+                    className={`px-3 py-1 rounded-md ${getMatchStyle(matchingRate)?.className}`}
+                  >
+                    {matchingRate}%{""}-{getMatchStyle(matchingRate)?.text}
                   </span>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500">No skills added.</p>
-            )}
+              )}
+              {/* </div> */}
+            </div>
           </div>
-        </section>
 
-        {/* Application Status */}
-        {type === "applications" ? (
-          <section className="p-4 md:p-8 border-b">
-            <div className="py-4 border-b flex items-center px-2 justify-between">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Job Completion Status{" "}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Current status of the job
-                </p>
-              </div>
-
-              <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                {workerData?.jobWorkingStatus}
-              </span>
-            </div>
-
-            <div className="py-4 border-b flex items-center px-2 justify-between">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Worker Current Status{" "}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Current status of the worker
-                </p>
-              </div>
-
-              <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                {workerData?.workerCurrentStatus}
-              </span>
-            </div>
-
-            <h2 className="text-lg font-semibold text-gray-900">
-              Work Site Images
+          {/* Personal Information */}
+          <section className="border-b p-6 md:p-8">
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">
+              Personal Information
             </h2>
-            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
-              {workerData?.workerPics?.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`Work image ${index + 1}`}
-                  className="h-24 w-24 rounded-md object-cover shrink-0"
-                />
-              ))}
-            </div>
 
-            <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Application Status
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Update the applicant's current status.
+                <p className="text-sm text-gray-500">Gender</p>
+                <p className="mt-1 font-medium text-gray-800">
+                  {workerData?.gender || "-"}
                 </p>
               </div>
 
-             {status==="all"?( <select
-                value={jobStatus ? jobStatus : workerData?.status}
-                onChange={(e) =>
-                  handleJobApplicationStatus(e, {
-                    workerId: workerData?.userId,
-                    jobId,
-                  })
-                }
-                className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
-                  workerData?.status || jobStatus
-                    ? "border-blue-300 bg-blue-50 text-blue-700"
-                    : "border-gray-300 bg-white text-gray-700"
-                }`}
-              >
-                {/* <option>Viewed</option> */}
-                <option value="">Select Status</option>
-                <option value="shortlisted">Shortlisted</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
-              </select>):(<span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                {workerData?.status}
-              </span>)}
+              <div>
+                <p className="text-sm text-gray-500">Date of Birth</p>
+                <p className="mt-1 font-medium text-gray-800">
+                  {formatDOB(workerData?.dob) || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Age</p>
+                <p className="mt-1 font-medium text-gray-800">
+                  {calculateAge(workerData?.dob) || "-"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500">Location</p>
+                <div className="mt-1 flex items-center gap-2 font-medium text-gray-800">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  {workerData?.city}, {workerData?.state}
+                </div>
+              </div>
             </div>
           </section>
-        ) : (
-          <section className="flex justify-center items-center">
-            {isInvited === false && (
-              <button
-                className="m-3 rounded-md bg-blue-600 p-3 text-white"
-                onClick={() => {
-                  handleJobInvitation({ workerId: workerData?.userId, jobId });
-                }}
-              >
-                Send Job Invitation
-              </button>
-            )}
+
+          {/* Contact Information */}
+          <section className="border-b p-6 md:p-8">
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">
+              Contact Information
+            </h2>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
+                <Phone className="h-5 w-5 text-gray-500" />
+
+                <div>
+                  <p className="text-xs text-gray-500">Phone</p>
+                  <p className="font-medium text-gray-800">
+                    {workerData?.mobileNumber?.code}{" "}
+                    {workerData?.mobileNumber?.number}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-4">
+                <Mail className="h-5 w-5 text-gray-500" />
+
+                <div>
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="break-all font-medium text-gray-800">
+                    {workerData?.email || "-"}
+                  </p>
+                </div>
+              </div>
+            </div>
           </section>
-        )}
-      </div>
-      <div>{loading && <Loading />}</div>
+
+          {/* Bio */}
+          <section className="border-b p-6 md:p-8">
+            <h2 className="mb-3 text-lg font-semibold text-gray-900">About</h2>
+
+            <p className="leading-7 text-gray-600">
+              {workerData?.bio || "No bio available."}
+            </p>
+          </section>
+
+          {/* Job Preferences */}
+          <section className="border-b p-6 md:p-8">
+            <h2 className="mb-5 text-lg font-semibold text-gray-900">
+              Job Preferences
+            </h2>
+
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Briefcase className="h-4 w-4" />
+                  Salary
+                </div>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  ₹{workerData?.minSalary} - ₹{workerData?.maxSalary} / day
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Wallet className="h-4 w-4" />
+                  Salary Credit Type
+                </div>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  {salaryCreditTypes(workerData?.salaryCreditType) || "-"}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Clock className="h-4 w-4" />
+                  Joining
+                </div>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  {getJoiningPeriodType(workerData?.joiningPeriod) || "-"}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm text-gray-500">Shift Type</p>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  {getShiftTypes(workerData?.shiftType) || "-"}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-gray-50 p-4">
+                <p className="text-sm text-gray-500">Location Range</p>
+
+                <p className="mt-2 font-semibold text-gray-800">
+                  {workerData?.locRange || "-"} km
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Skills */}
+          <section className="border-b p-6 md:p-8">
+            <h2 className="mb-4 text-lg font-semibold text-gray-900">Skills</h2>
+
+            <div className="flex flex-wrap gap-3">
+              {workerData?.skills?.length > 0 ? (
+                workerData.skills.map((skill) => (
+                  <div
+                    key={skill?._id}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm"
+                  >
+                    <span className="font-medium text-gray-800">
+                      {skill?.skill}
+                    </span>
+
+                    <span className="ml-2 text-gray-500">
+                      {skill?.experience}
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No skills added.</p>
+              )}
+            </div>
+          </section>
+
+          {/* Application Status */}
+          {type === "applications" ? (
+            <section className="p-4 md:p-8 border-b">
+              <div className="py-4 border-b flex items-center px-2 justify-between">
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Job Completion Status{" "}
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Current status of the job
+                  </p>
+                </div>
+
+                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                  {workerData?.jobWorkingStatus}
+                </span>
+              </div>
+
+              <div className="py-4 border-b flex items-center px-2 justify-between">
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Worker Current Status{" "}
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Current status of the worker
+                  </p>
+                </div>
+
+                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                  {workerData?.workerCurrentStatus}
+                </span>
+              </div>
+
+              <h2 className="text-lg font-semibold text-gray-900">
+                Work Site Images
+              </h2>
+              <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
+                {workerData?.workerPics?.map((img, index) => (
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`Work image ${index + 1}`}
+                    className="h-24 w-24 rounded-md object-cover shrink-0"
+                  />
+                ))}
+              </div>
+
+              <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Application Status
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Update the applicant's current status.
+                  </p>
+                </div>
+
+                {status === "all" ? (
+                  <select
+                    value={jobStatus ? jobStatus : workerData?.status}
+                    onChange={(e) =>
+                      handleJobApplicationStatus(e, {
+                        workerId: workerData?.userId,
+                        jobId,
+                      })
+                    }
+                    className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
+                      workerData?.status || jobStatus
+                        ? "border-blue-300 bg-blue-50 text-blue-700"
+                        : "border-gray-300 bg-white text-gray-700"
+                    }`}
+                  >
+                    {/* <option>Viewed</option> */}
+                    <option value="">Select Status</option>
+                    <option value="shortlisted">Shortlisted</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                ) : (
+                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                    {workerData?.status} -{status}
+                  </span>
+                )}
+              </div>
+            </section>
+          ) : (
+            <section className="flex justify-center items-center">
+              {isInvited === false && (
+                <button
+                  disabled={isPending(`sentjobinvite-${workerData?.userId}`)}
+                  aria-busy={isPending(`sentjobinvite-${workerData?.userId}`)}
+                  title="Job Invitation"
+                  className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                  onClick={() => {
+                    handleJobInvitation({
+                      workerId: workerData?.userId,
+                      jobId,
+                    });
+                  }}
+                >
+                  Send Job Invitation
+                </button>
+              )}
+            </section>
+          )}
+        </div>
+      )}
+
+      {/* <div>{loading && <Loading />}</div> */}
     </div>
   );
 };

@@ -18,24 +18,19 @@ const NavBar = () => {
   const router = useRouter();
   const [profileImage, setProfileImage] = useState(null);
   const [onboardingPage, setOnboardingPage] = useState(1);
-  // const [onboardingCompleted, setOnboardingComplete] = useState(false);
   const [userRole, setUserRole] = useState("");
 
   useEffect(() => {
     const image = localStorage.getItem("profileImage");
     const roleUser = localStorage.getItem("role");
     const onboardPage = localStorage.getItem("onboardPage");
-    // const isOnboardingComplete =
-    //   localStorage.getItem("isOnboardingCompleted") === "true";
     setProfileImage(image);
     setUserRole(roleUser);
     setOnboardingPage(Number(onboardPage));
-    // setOnboardingComplete(isOnboardingComplete);
   }, []);
 
   const reduxRole = useSelector((state) => state.user.role);
   const reduxOnboardPage = useSelector((state) => state.user.onboardPage);
-  // const reduxProfileImage = useSelector((state) => state.user.profileImage);
 
   const role = userRole || reduxRole;
   const onboardPage = onboardingPage || reduxOnboardPage;

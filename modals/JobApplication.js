@@ -1,4 +1,4 @@
-import { appliedjobStatus_values } from "@/constants/constant";
+import { JOB_APPLICATION_STATUS } from "@/constants/constant";
 import mongoose from "mongoose";
 
 const JobApplicationSchema = new mongoose.Schema(
@@ -8,30 +8,26 @@ const JobApplicationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     jobId: {
       type: String,
       required: true,
       trim: true,
       index: true,
     },
-
     workerId: {
       type: String,
       required: true,
       trim: true,
       index: true,
     },
-
     appliedAt: {
       type: Date,
       default: Date.now,
     },
-
     status: {
       type: String,
-      enum: appliedjobStatus_values,
-      default: "applied",
+      enum: Object.values(JOB_APPLICATION_STATUS),
+      default: JOB_APPLICATION_STATUS.APPLIED,
       required: true,
     },
     cancelled: {

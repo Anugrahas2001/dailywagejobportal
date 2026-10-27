@@ -1,7 +1,6 @@
 "use client";
 
-import Loading from "@/components/Loading";
-import { getJoingDate, getShiftLabel } from "./commonFunctions";
+import { getJoiningPeriodType, getShiftTypes } from "./commonFunctions";
 import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
 import { useRouter } from "next/navigation";
 import { JOB_COMPLETION_STATUS } from "@/constants/constant";
@@ -222,7 +221,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
 
         <div>
           <h3 className="font-semibold">Shift</h3>
-          <p>{getShiftLabel(job.jobShift)}</p>
+          <p>{getShiftTypes(job.jobShift)}</p>
         </div>
 
         <div>
@@ -239,7 +238,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
 
         <div>
           <h3 className="font-semibold">Joining</h3>
-          <p>{getJoingDate(job.availability)}</p>
+          <p>{getJoiningPeriodType(job.availability)}</p>
         </div>
 
         <div>

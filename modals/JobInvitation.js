@@ -1,4 +1,4 @@
-import { JOB_INVITATION_STATUS_VALUES } from "@/constants/constant";
+import { JOB_APPLICATION_STATUS, JOB_INVITATION_STATUS_VALUES } from "@/constants/constant";
 import mongoose from "mongoose";
 
 const JobInvitationSchema = new mongoose.Schema({
@@ -24,8 +24,8 @@ const JobInvitationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: JOB_INVITATION_STATUS_VALUES,
-    default: "sent",
+    enum: Object.values(JOB_APPLICATION_STATUS),
+    default: JOB_APPLICATION_STATUS.APPLIED,
   },
 });
 

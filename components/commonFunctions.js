@@ -1,55 +1,23 @@
-
-
 import {
   JOINING_TYPES,
   SALARY_CREDIT_TYPES,
+  SHIFT_TYPE_LABELS,
   SHIFT_TYPES,
 } from "@/constants/constant";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 
-export const getShiftLabel = (shiftValue) => {
-  return (
-    SHIFT_TYPES.find((shift) => shift.value === shiftValue)?.label ?? shiftValue
-  );
-};
+// export const getShiftLabel = (shiftValue) => {
+//   return (
+//     SHIFT_TYPES.find((shift) => shift.value === shiftValue)?.label ?? shiftValue
+//   );
+// };
 
-export const getJoingDate = (joingTime) => {
-  return (
-    JOINING_TYPES.find((joining) => joining.value === joingTime)?.label ??
-    joingTime
-  );
-};
-
-export const fetchAvailableJobs = async (role, page) => {
-  const token = await fetchUserToken();
-
-  if (!token) {
-    throw new Error("User is not authenticated.");
-  }
-
-  const url =
-    role === "worker"
-      ? `/api/worker/jobs?status=Active&page=${page}&limit=12`
-      : `/api/employer/job?page=${page}&limit=12`;
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    throw new Error(result.message || "Failed to fetch jobs.");
-  }
-
-  return {
-    data: result.data,
-    counts: result.counts,
-    totalCount: result.totalCount,
-  };
-};
+// export const getJoingDate = (joingTime) => {
+//   return (
+//     JOINING_TYPES.find((joining) => joining.value === joingTime)?.label ??
+//     joingTime
+//   );
+// };
 
 export const getPostedText = ({ createdAt, jobType }) => {
   console.log(createdAt, jobType, "CHECK BOTH");
@@ -179,50 +147,13 @@ export function calculateAge(dob) {
   return age;
 }
 
-export function getJoiningType(joinType) {
-  return JOINING_TYPES.find((type) => type.value === joinType)?.label;
-}
+// export function getJoiningType(joinType) {
+//   return JOINING_TYPES.find((type) => type.value === joinType)?.label;
+// }
 
-export function getShiftTypes(shiftType) {
-  return SHIFT_TYPES.find((shift) => shift.value === shiftType)?.label;
-}
-
-export function salaryCreditTypes(salaryType) {
-  return SALARY_CREDIT_TYPES.find((salary) => salary.value === salaryType)
-    ?.label;
-}
-
-export const fetchUserJobDetails = async ({
-  workerId,
-  status,
-  jobId,
-  type,
-}) => {
-  const token = await fetchUserToken();
-  const response = await fetch(
-    `/api/employer/viewjobapplications/${workerId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        status,
-        jobId,
-        type,
-      }),
-    },
-  );
-
-  if (!response.ok) {
-    console.log("Failed to update the status");
-    return;
-  }
-
-  const { data } = await response.json();
-  return data;
-};
+// export function getShiftTypes(shiftType) {
+//   return SHIFT_TYPES.find((shift) => shift.value === shiftType)?.label;
+// }
 
 export const timeAgo = (createdAt) => {
   const seconds = Math.floor(
@@ -266,4 +197,113 @@ export const validateFile = (selectedFile) => {
     return `Image must be under ${MAX_FILE_SIZE_MB}MB`;
   }
   return null;
+};
+
+export const getMatchStyle = (rate) => {
+  console.log(rate, "CHECK THIS matchPercentage RATES");
+  if (rate >= 80) {
+    return {
+      text: "Excellent Match",
+      className: "bg-green-50 text-green-700 border-green-200",
+    };
+  }
+
+  if (rate >= 60) {
+    return {
+      text: "Good Match",
+      className: "bg-green-50 text-green-600 border-green-200",
+    };
+  }
+
+  if (rate >= 30) {
+    return {
+      text: "Moderate Match",
+      className: "bg-yellow-50 text-yellow-700 border-yellow-200",
+    };
+  }
+
+  return {
+    text: "Low Match",
+    className: "bg-red-50 text-red-600 border-red-200",
+  };
+};
+
+// Get the joining period
+export const getJoiningPeriodType = (jValue) => {
+  Object.values(JOINING_TYPES).includes(jValue) ? jValue : "";
+};
+
+//GET the shift type
+export const getShiftTypes = (sValue) => {
+  return SHIFT_TYPE_LABELS[sValue] ?? "";
+};
+
+// Get the salary credit type
+export function salaryCreditTypes(salaryType) {
+  return Object.values(SALARY_CREDIT_TYPES).includes(salaryType)
+    ? salaryType
+    : "";
+}
+// used in 2 pages (viewProfile and showCandidate details)
+export const fetchUserJobDetails = async ({
+  workerId,
+  status,
+  jobId,
+  type,
+}) => {
+  const token = await fetchUserToken();
+  const response = await fetch(
+    `/api/employer/viewjobapplications/${workerId}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        status,
+        jobId,
+        type,
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    console.log("Failed to update the status");
+    return;
+  }
+
+  const { data } = await response.json();
+  return data;
+};
+
+export const fetchAvailableJobs = async (role, page) => {
+  const token = await fetchUserToken();
+
+  if (!token) {
+    throw new Error("User is not authenticated.");
+  }
+
+  const url =
+    role === "worker"
+      ? `/api/worker/jobs?status=Active&page=${page}&limit=12`
+      : `/api/employer/job?page=${page}&limit=12`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to fetch jobs.");
+  }
+
+  return {
+    data: result.data,
+    counts: result.counts,
+    totalCount: result.totalCount,
+  };
 };

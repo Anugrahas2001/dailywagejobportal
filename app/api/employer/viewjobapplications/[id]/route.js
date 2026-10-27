@@ -50,10 +50,10 @@ export async function GET(request, { params }) {
       .lean();
 
     const workerPics = workerSession.flatMap((s) => s.workPics ?? []);
-    console.log(workerPics, "AAAAAAAAAAAAAAAAAAAA");
+    console.log(workerSession, workerPics, "AAAAAAAAAAAAAAAAAAAA");
 
-    const jobWorkingStatus = workerSession[0].jobCompletionStatus;
-    const workerCurrentStatus = workerSession[0].workingStatus;
+    const jobWorkingStatus = workerSession[0]?.jobCompletionStatus;
+    const workerCurrentStatus = workerSession[0]?.workingStatus;
     console.log(workerPics, jobInvite?.status, jobApp?.status, "WORKER PICS");
     console.log(jobWorkingStatus, workerCurrentStatus, "CHECK BOTH STATUS");
     return NextResponse.json(

@@ -1,8 +1,9 @@
 import {
-  GENDER_TYPES_VALUES,
+  GENDER_TYPES,
   JOB_STATUS_VALUES,
-  JOINING_TYPE_VALUES,
-  SALARY_CREDIT_TYPES_VALUES,
+  JOINING_TYPES,
+  SALARY_CREDIT_TYPES,
+  SHIFT_TYPE,
   SHIFT_TYPE_VALUES,
 } from "../constants/constant";
 import mongoose from "mongoose";
@@ -35,8 +36,8 @@ const JobSchema = new mongoose.Schema(
     },
     genderPreference: {
       type: String,
-      enum: GENDER_TYPES_VALUES,
-      // default: "",
+      enum: Object.values(GENDER_TYPES),
+      default: GENDER_TYPES.ANY_GENDER,
     },
     jobDescription: {
       type: String,
@@ -44,12 +45,10 @@ const JobSchema = new mongoose.Schema(
       minlength: [30, "Description should be at least 30 characters"],
       maxlength: [5000, "Description is too long"],
     },
-
     jobShift: {
       type: String,
-      required: true,
       enum: SHIFT_TYPE_VALUES,
-      // default: "",
+      default: SHIFT_TYPE.FULL_DAY,
     },
     loc: {
       type: { type: String, default: "Point" },
@@ -61,8 +60,8 @@ const JobSchema = new mongoose.Schema(
 
     availability: {
       type: String,
-      enum: JOINING_TYPE_VALUES,
-      // default: "",
+      enum: Object.values(JOINING_TYPES),
+      default: JOINING_TYPES.SAME_DAY,
     },
 
     skillsRequired: {
@@ -105,12 +104,12 @@ const JobSchema = new mongoose.Schema(
     },
     salaryType: {
       type: String,
-      enum: SALARY_CREDIT_TYPES_VALUES,
-      // default: "",
+      enum: Object.values(SALARY_CREDIT_TYPES),
+      default: SALARY_CREDIT_TYPES.HOURLY,
     },
     status: {
       type: String,
-      enum: JOB_STATUS_VALUES,
+      enum: Object.values(JOB_STATUS_VALUES),
       default: JOB_STATUS_VALUES.ACTIVE,
     },
     applicantsCount: {

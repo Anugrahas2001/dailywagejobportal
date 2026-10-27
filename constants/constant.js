@@ -1,18 +1,18 @@
 export const ONBOARD_PAGES = [1, 2, 3, 4, 5, 6];
 
-export const JOB_APPLICATION_STATUS = [
-  "Applied",
-  "Viewed",
-  "Shortlisted",
-  "Accepted",
-  "Rejected",
-];
+export const JOB_APPLICATION_STATUS = Object.freeze({
+  APPLIED: "Applied",
+  VIEWED: "Viewed",
+  SHORTLISTED: "Shortlisted",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+});
 
-export const JOB_INVITATION_STATUS = [
-  { label: "Sent", value: "sent" },
-  { label: "Accepted", value: "accepted" },
-  { label: "Rejected", value: "rejected" },
-];
+export const JOB_INVITATION_STATUS = Object.freeze({
+  SENT: "sent",
+  ACCEPTED: "Accepted",
+  REJECTED: "Rejected",
+});
 
 export const filterOptions = {
   Nearby: [
@@ -69,13 +69,13 @@ export const filterOptions = {
   ],
 };
 
-export const appliedjobStatus = [
-  { value: "applied", label: "Applied" },
-  { value: "viewed", label: "Viewed" },
-  { value: "accepted", label: "Accepted" },
-  { value: "shortlisted", label: "Shortlisted" },
-  { value: "rejected", label: "Rejected" },
-];
+export const APPLIED_JOB_STATUS = Object.freeze({
+  APPLIED: "Applied",
+  VIEWED: "Viewed",
+  ACCEPTED: "Accepted",
+  SHORTLISTED: "Shortlisted",
+  REJECTED: "Rejected",
+});
 
 export const savedSortingOptions = [
   { value: "newest", label: "Newest Saved" },
@@ -89,88 +89,66 @@ export const appliedSortingOptions = [
   { value: "oldest", label: "Oldest Applied" },
 ];
 
-export const ALLOWED_ROLES = ["admin", "employer", "worker"];
+export const ALLOWED_ROLES = Object.freeze({
+  // ["admin", "employer", "worker"];
+  ADMIN: "admin",
+  EMPLOYER: "employer",
+  WORKER: "worker",
+});
 
-export const SALARY_CREDIT_TYPES = [
-  { value: "", label: "Select a salary type" },
-  { value: "daily", label: "Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "monthly", label: "Monthly" },
-];
+export const SALARY_CREDIT_TYPES = Object.freeze({
+  HOURLY: "Hourly",
+  DAILY: "Daily",
+});
 
-export const SHIFT_TYPES = [
-  {
-    value: "",
-    label: "Select shift type",
-  },
-  {
-    value: "full_day",
-    label: "Full Day (8:00 AM - 5:00 PM)",
-  },
-  {
-    value: "half_day_morning",
-    label: "Half Day - Morning (8:00 AM - 12:00 PM)",
-  },
-  {
-    value: "half_day_afternoon",
-    label: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
-  },
-  {
-    value: "night_shift",
-    label: "Night Shift (10:00 PM - 6:00 AM)",
-  },
-  {
-    value: "flexible",
-    label: "Flexible Hours",
-  },
-];
+export const SHIFT_TYPE = Object.freeze({
+  FULL_DAY: "full_day",
+  HALF_DAY_MORNING: "half_day_morning",
+  HALF_DAY_AFTERNOON: "half_day_afternoon",
+  NIGHT_SHIFT: "night_shift",
+  FLEXIBLE: "flexible",
+});
 
-export const JOINING_TYPES = [
-  { value: "", label: "Select Joining Period" },
-  { value: "same_day", label: "Same Day" },
-  { value: "next_day", label: "Next Day" },
-  { value: "within-1-weeks", label: "within 1 weeks" },
-  { value: "within-2-weeks", label: "within 2 weeks" },
-  { value: "This_month", label: "This Month" },
-];
+// Array of values, for Mongoose and Zod
+export const SHIFT_TYPE_VALUES = Object.freeze(Object.values(SHIFT_TYPE));
 
-export const GENDER_TYPES = [
-  { value: "", label: "Select Gender" },
-  { value: "Male", label: "Male" },
-  { value: "Female", label: "Female" },
-  { value: "Other", label: "Other" },
-  { value: "Any", label: "Any Gender" },
-];
+// Display text, keyed by value
+export const SHIFT_TYPE_LABELS = Object.freeze({
+  [SHIFT_TYPE.FULL_DAY]: "Full Day (8:00 AM - 5:00 PM)",
+  [SHIFT_TYPE.HALF_DAY_MORNING]: "Half Day - Morning (8:00 AM - 12:00 PM)",
+  [SHIFT_TYPE.HALF_DAY_AFTERNOON]: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
+  [SHIFT_TYPE.NIGHT_SHIFT]: "Night Shift (10:00 PM - 6:00 AM)",
+  [SHIFT_TYPE.FLEXIBLE]: "Flexible Hours",
+});
 
-export const appliedjobStatus_values = appliedjobStatus.map(
-  (item) => item.value,
+// Options for <select> dropdowns
+export const SHIFT_TYPE_OPTIONS = Object.freeze(
+  SHIFT_TYPE_VALUES.map((value) => ({
+    value,
+    label: SHIFT_TYPE_LABELS[value],
+  })),
 );
 
-export const SALARY_CREDIT_TYPES_VALUES = SALARY_CREDIT_TYPES.map(
-  (item) => item.value,
-);
+export const JOINING_TYPES = Object.freeze({
+  SAME_DAY: "Same Day",
+  NEXT_DAY: "Next Day",
+  WITHIN_ONE_WEEK: "within 1 weeks",
+  WITHIN_TWO_WEEK: "within 2 weeks",
+});
 
-export const SHIFT_TYPE_VALUES = SHIFT_TYPES.map((item) => item.value);
+export const GENDER_TYPES = Object.freeze({
+  MALE: "Male",
+  FEMALE: "Female",
+  OTHER: "Other",
+  ANY_GENDER: "Any Gender",
+});
 
-export const JOINING_TYPE_VALUES = JOINING_TYPES.map((item) => item.value);
-
-export const GENDER_TYPES_VALUES = GENDER_TYPES.map((item) => item.value);
-
-export const JOB_INVITATION_STATUS_VALUES = JOB_INVITATION_STATUS.map(
-  (item) => item.value,
-);
-
-export const EXPERIENCE_LEVELS = [
-  "Beginner",
-  "Basic",
-  "Good",
-  "Experienced",
-  "Expert",
-];
-
-export const EXPERIENCE_LEVELS_VALUES = EXPERIENCE_LEVELS.map(
-  (item) => item.value,
-);
+export const EXPERIENCE_LEVELS = Object.freeze({
+  BEGINNER: "Beginner",
+  BASIC: "Basic",
+  GOOD: "Good",
+  EXPERIENCED: "Experienced",
+});
 
 export const JOB_SKILLS = {
   Construction: [
@@ -457,61 +435,6 @@ export const JOB_STATUS = [
   },
 ];
 
-export const getMatchStyle = (rate) => {
-  console.log(rate, "CHECK THIS matchPercentage RATES");
-  if (rate >= 80) {
-    return {
-      text: "Excellent Match",
-      className: "bg-green-50 text-green-700 border-green-200",
-    };
-  }
-
-  if (rate >= 60) {
-    return {
-      text: "Good Match",
-      className: "bg-green-50 text-green-600 border-green-200",
-    };
-  }
-
-  if (rate >= 30) {
-    return {
-      text: "Moderate Match",
-      className: "bg-yellow-50 text-yellow-700 border-yellow-200",
-    };
-  }
-
-  return {
-    text: "Low Match",
-    className: "bg-red-50 text-red-600 border-red-200",
-  };
-};
-
-export const getJoiningPeriodType = (jValue) => {
-  return JOINING_TYPES?.find((j) => j.value === jValue)?.label || "_";
-};
-
-export const getShiftTypes = (sValue) => {
-  return SHIFT_TYPES?.find((s) => s.value === sValue)?.label || "-";
-};
-
-// export const JOB_COMPLETION_STATUS = [
-//   "Assigned",
-//   "Started",
-//   "InProgress",
-//   "Completed",
-//   "Approved",
-//   "Paid",
-//   "Disputed",
-// ];
-
-// export const WORKER_WORKING_STATUS = [
-//   "Not_Available", // off today (leave, sick, etc.)
-//   "Available", // free today, open to job offers
-//   "Working", // currently on a job
-//   "On_break", // short break during the workday
-//   "Start_Tomorrow", // not working today, will start tomorrow
-// ];
-
 export const JOB_COMPLETION_STATUS = Object.freeze({
   ASSIGNED: "Assigned", // job level: worker hired, no session yet
   STARTED: "Started", // session: worker started work today
@@ -531,8 +454,8 @@ export const WORKER_WORKING_STATUS = Object.freeze({
   START_TOMORROW: "Start Tomorrow", // not working today, will start tomorrow
 });
 
-export const JOB_STATUS_VALUES=Object.freeze({
-  ACTIVE:"Active",
-  PAUSED:"Paused",
-  DELETED:"Deleted"
-})
+export const JOB_STATUS_VALUES = Object.freeze({
+  ACTIVE: "Active",
+  PAUSED: "Paused",
+  DELETED: "Deleted",
+});

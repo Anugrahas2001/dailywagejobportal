@@ -1,9 +1,9 @@
 //Dashbord.jsx
 "use client";
 import {
-  getJoingDate,
+  getJoiningPeriodType,
   getPostedText,
-  getShiftLabel,
+  getShiftTypes,
   getStatusColor,
   goToPage,
 } from "@/components/commonFunctions";
@@ -151,7 +151,8 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleDeleteJob = (jobId) => {
-    runWithPending(`deletejob-${jobId}`, async (jobId) => {
+    console.log(jobId, "INITIAL JOBID");
+    runWithPending(`deletejob-${jobId}`, async () => {
       try {
         await dispatch(deleteJob({ id: jobId })).unwrap();
 
@@ -162,14 +163,15 @@ const DashboardPage = ({ role }) => {
     });
   };
 
-  const handleJobPause=(jobId)=>{
-    runWithPending(`pausejob-${jobId}`,async()=>{
-      const body={
-        status:"Paused"
-      }
-      await dispatch(updateJob({id:jobId,body})).unwrap();
-    })
-  }
+  const handleJobPause = (jobId) => {
+    runWithPending(`pausejob-${jobId}`, async () => {
+      const body = {
+        status: "Paused",
+      };
+      await dispatch(updateJob({ id: jobId, body })).unwrap();
+      await dispatch(fetchAvilableJobs({ page: 1 })).unwrap();
+    });
+  };
 
   return (
     <main className="bg-gray-100 p-4 md:py-6 md:px-16">
@@ -238,8 +240,8 @@ const DashboardPage = ({ role }) => {
                   <p>
                     📍 {job.city}, {job.state}
                   </p>
-                  <p>🕘 {getShiftLabel(job.jobShift)}</p>
-                  <p>📅 {getJoingDate(job.availability)}</p>
+                  <p>🕘 {getShiftTypes(job.jobShift)}</p>
+                  <p>📅 {getJoiningPeriodType(job.availability)}</p>
                   <p>
                     💰 ₹{job.minSalary} - ₹{job.maxSalary}
                   </p>
@@ -399,10 +401,12 @@ const DashboardPage = ({ role }) => {
                               </div>
 
                               <div className="group relative inline-block">
-                                <button className="flex items-center gap-1 py-2"
-                                disabled={isPending(`pausejob-${job._id}`)}
+                                <button
+                                  className="flex items-center gap-1 py-2"
+                                  disabled={isPending(`pausejob-${job._id}`)}
                                   aria-busy={isPending(`pausejob-${job._id}`)}
-                                 onClick={()=>handleJobPause(job._id)}>
+                                  onClick={() => handleJobPause(job._id)}
+                                >
                                   <Pause className="h-5 w-5 cursor-pointer" />
                                 </button>
 

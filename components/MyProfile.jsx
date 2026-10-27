@@ -9,7 +9,6 @@ import {
   MapPin,
   Pencil,
   Phone,
-  RefreshCw,
   Star,
   Sun,
   Tag,
@@ -19,17 +18,22 @@ import {
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import {
   EXPERIENCE_LEVELS,
-  getJoiningPeriodType,
   JOB_SKILLS,
-  JOINING_TYPE_VALUES,
+  JOINING_TYPES,
   SALARY_CREDIT_TYPES,
   SHIFT_TYPE_VALUES,
   WORKER_WORKING_STATUS,
 } from "@/constants/constant";
-import { getShiftTypes, validateFile } from "./commonFunctions";
+import {
+  getJoiningPeriodType,
+  getShiftTypes,
+  validateFile,
+} from "./commonFunctions";
 import useLoading from "./hooks/useLoading";
 import Loading from "./Loading";
 import { supabase } from "@/lib/supabase";
+import useControls from "./hooks/useControls";
+import { MyProfileSkeleton } from "./skeltons/MyProfileSkeleton";
 
 /* ---------- helpers ---------- */
 
@@ -94,7 +98,7 @@ const PREFERENCE_FIELDS = [
     label: "Joining period",
     type: "select",
     key: "joiningPeriod",
-    options: toOptions(JOINING_TYPE_VALUES),
+    options: toOptions(Object.values(JOINING_TYPES)),
     format: (v) => getJoiningPeriodType(v), // shows the label in view mode
   },
   {
@@ -116,7 +120,7 @@ const PREFERENCE_FIELDS = [
     label: "Salary credit type",
     type: "select",
     key: "salaryCreditType",
-    options: toOptions(SALARY_CREDIT_TYPES),
+    options: toOptions(Object.values(SALARY_CREDIT_TYPES)),
   },
 ];
 
@@ -256,21 +260,6 @@ const Stat = ({ value, label }) => (
   </div>
 );
 
-const Skeleton = () => (
-  <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
-    <div className="mx-auto max-w-5xl animate-pulse space-y-5">
-      <div className="h-64 rounded-2xl bg-gray-200" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-20 rounded-xl bg-gray-200" />
-        ))}
-      </div>
-      <div className="h-24 rounded-2xl bg-gray-200" />
-      <div className="h-40 rounded-2xl bg-gray-200" />
-    </div>
-  </main>
-);
-
 const ContactRow = ({
   icon: Icon,
   label,
@@ -330,7 +319,16 @@ const MyProfile = () => {
   const [workingStatus, setWorkingStatus] = useState("");
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
-
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
 
   const loadProfile = useCallback(async () => {
     setLoading(true);
@@ -349,6 +347,8 @@ const MyProfile = () => {
     } catch (err) {
       console.error("Profile load failed:", err);
       setLoading(false);
+    } finally {
+      setInitialLoading(false);
     }
   }, []);
 
@@ -383,7 +383,7 @@ const MyProfile = () => {
     loadProfile();
   }, []);
 
-  if (loading && !profile) return <Skeleton />;
+  if (loading || !profile || initialLoading) return <MyProfileSkeleton />;
 
   // if (status === "error" && !profile) {
   //   return (
@@ -637,44 +637,8 @@ const MyProfile = () => {
   const handleWorkingStatusUpdate = async (e) => {
     console.log(e.target.value, "CHCEK THE WORKING STATUS OF THE USER");
     const status = e.target.value;
-    // if (status === "On Break") {
-    //   setIsOnBreak(!isOnBreak);
-    // }
     setWorkingStatus(status);
     const jobId = localStorage.getItem("currentJobId");
-    // const action =
-    //   status === "On Break"
-    //     ? isOnBreak
-    //       ? "BREAK_START"
-    //       : "BREAK_END"
-    //     : "DEFAULT";
-
-    // const action =
-    //   status === "Break Start"
-    //     ? "BREAK_START"
-    //     : status === "Break End"
-    //       ? "BREAK_END"
-    //       : "DEFAULT";
-
-    // try {
-    //   const token = await fetchUserToken();
-    //   const response = await fetch("/api/worker/jobs", {
-    //     method: "PUT",
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //     },
-    //     body: JSON.stringify({
-    //       jobId,
-    //       workerStatus: status,
-    //       action,
-    //     }),
-    //   });
-
-    //   const result = await response.json();
-    //   console.log(result, "RESULT DATA");
-    // } catch (error) {
-    //   console.log(error, "ERROR DATA");
-    // }
 
     const action =
       status === "Break Start"
@@ -684,7 +648,7 @@ const MyProfile = () => {
           : "DEFAULT";
 
     try {
-setLoading(true);
+      setLoading(true);
       const token = await fetchUserToken();
 
       const response = await fetch("/api/worker/jobs", {
@@ -759,33 +723,6 @@ setLoading(true);
                     <Camera className="h-5 w-5" />
                   </button>
                 </div>
-
-                {/* <div className="relative h-40 w-40">
-                  <div className="fle items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-4xl font-bold text-white ring-4 ring-indigo-50">
-                    {previewUrl || user?.profileImage ? (
-                      <img
-                        src={previewUrl || user.profileImage}
-                        alt="Profile photo"
-                        className="h-full w-full "
-                      />
-                    ) : (
-                      <span aria-hidden="true">
-                        {user?.name?.charAt(0).toUpperCase() || "?"}
-                      </span>
-                    )}
-                  </div>
-
-                
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    aria-label="Change profile photo"
-                    className="absolute bottom-1 right-1 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
-                  >
-                    <Camera className="h-5 w-5" />
-                  </button>
-                </div> */}
 
                 {/* Hidden file input */}
                 <input

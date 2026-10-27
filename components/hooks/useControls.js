@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 
 const useControls = () => {
   const [page, setPage] = useState(1);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [pendingIds, setPendingIds] = useState({});
   const router = useRouter();
   const pendingRef = useRef({});
@@ -30,7 +31,7 @@ const useControls = () => {
 
   const isPending = (key) => Boolean(pendingIds[key]);
 
-  return { page, setPage, router, dispatch, runWithPending, isPending };
+  return { page, setPage, router, dispatch, runWithPending, isPending,initialLoading, setInitialLoading };
 };
 
 export default useControls;

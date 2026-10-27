@@ -18,7 +18,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ALLOWED_ROLES,
+      enum: Object.values(ALLOWED_ROLES),
     },
     email: {
       type: String,
@@ -29,7 +29,8 @@ const UserSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: GENDER_TYPES,
+      enum: Object.values(GENDER_TYPES),
+      default: GENDER_TYPES.ANY_GENDER,
     },
     mobileNumber: {
       code: { required: false, type: String },
@@ -54,12 +55,9 @@ const UserSchema = new mongoose.Schema(
     state: { type: String },
     country: { type: String },
     yearsOfExperience: { type: Number },
-    currentJobStatus: {
-      type: "String",
-    },
-    currentJobStatus: {
-      type: String,
-    },
+    // currentJobStatus: {
+    //   type: "String",
+    // },
     completedJobs: {
       type: Number,
       default: 0,
@@ -77,8 +75,8 @@ const UserSchema = new mongoose.Schema(
         },
         experience: {
           type: String,
-          enum: EXPERIENCE_LEVELS,
-          default: "Beginner",
+          enum: Object.values(EXPERIENCE_LEVELS),
+          default: EXPERIENCE_LEVELS.BEGINNER,
         },
       },
     ],
