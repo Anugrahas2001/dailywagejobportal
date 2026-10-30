@@ -44,13 +44,22 @@ import Slider from "./Slider";
 import FcmTokenRegistrar from "./FcmTokenRegistrar";
 import JobCardSkeleton from "./skeltons/JobCardSkeleton";
 import useControls from "./hooks/useControls";
+import Button from "./Button";
 
 const DashboardPage = ({ role }) => {
   const [status, setStatus] = useState("");
   const [activeSearch, setSearchActive] = useState(false);
   const [val, setVal] = useState(20);
-  const { page, setPage, router, dispatch, runWithPending, isPending } =
-    useControls();
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
   const loadingStatus = useSelector((state) => state.jobs.status);
 
   const pageSize = 12;
@@ -83,6 +92,7 @@ const DashboardPage = ({ role }) => {
   const savedJobs = useSelector((state) => state.saved.savedJobs);
 
   useEffect(() => {
+    setInitialLoading(false);
     if (role === "employer") {
       if (status) {
         // Employer selected a specific status
@@ -113,7 +123,7 @@ const DashboardPage = ({ role }) => {
     }
   }, [page, status, role, val, dispatch]);
 
-  if (!jobs || loadingStatus === "pending")
+  if (!jobs || initialLoading || loadingStatus === "pending")
     return <JobCardSkeleton role={role} />;
 
   const handleToggleSavedJob = (jobId) => {
@@ -175,64 +185,63 @@ const DashboardPage = ({ role }) => {
 
   return (
     <main className="bg-gray-100 p-4 md:py-6 md:px-16">
-      {jobs.length > 0 && (
-        <>
-          <FcmTokenRegistrar />
+      <FcmTokenRegistrar />
 
-          {role === "worker" && (
-            <section className="w-full m-3">
-              <SearchAndFilter
-                page={page}
-                onClick={() => setSearchActive((prev) => !prev)}
+      {role === "worker" && (
+        <section className="w-full m-3">
+          <SearchAndFilter
+            page={page}
+            onClick={() => setSearchActive((prev) => !prev)}
+          />
+        </section>
+      )}
+
+      {role === "employer" && (
+        <section className="rounded-lg bg-white p-3 md:p-6 shadow">
+          <div className="flex justify-between items-center">
+            <h1 className="mb-4 text-2xl font-bold">Analytics</h1>
+            <Link
+              href="/employerDashboard/dashboard"
+              className="flex items-center gap-2 rounded-md bg-blue-600 px-2 py-2 md:px-3 md:py-3 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              <Plus className="h-5 w-5" />
+              Create New Job
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 mt-3 sm:grid-cols-4">
+            {[
+              { key: "All", title: "All jobs" },
+              { key: "Active", title: "Active Jobs" },
+              { key: "Paused", title: "Paused Jobs" },
+              { key: "Completed", title: "Completed Jobs" },
+            ].map(({ key, title }) => (
+              <AnalyticsCard
+                key={key}
+                dot={getStatusColor(key).dot}
+                text={getStatusColor(key).text}
+                title={title}
+                count={count?.[key]}
+                onClick={() => {
+                  setStatus(key);
+                  setPage(1);
+                }}
               />
-            </section>
-          )}
+            ))}
+          </div>
+        </section>
+      )}
 
-          {role === "employer" && (
-            <section className="rounded-lg bg-white p-3 md:p-6 shadow">
-              <div className="flex justify-between items-center">
-                <h1 className="mb-4 text-2xl font-bold">Analytics</h1>
-                <Link
-                  href="/employerDashboard/dashboard"
-                  className="flex items-center gap-2 rounded-md bg-blue-600 px-2 py-2 md:px-3 md:py-3 text-sm font-semibold text-white hover:bg-blue-700"
-                >
-                  <Plus className="h-5 w-5" />
-                  Create New Job
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 mt-3 sm:grid-cols-4">
-                {[
-                  { key: "All", title: "All jobs" },
-                  { key: "Active", title: "Active Jobs" },
-                  { key: "Paused", title: "Paused Jobs" },
-                  { key: "Completed", title: "Completed Jobs" },
-                ].map(({ key, title }) => (
-                  <AnalyticsCard
-                    key={key}
-                    dot={getStatusColor(key).dot}
-                    text={getStatusColor(key).text}
-                    title={title}
-                    count={count?.[key]}
-                    onClick={() => {
-                      setStatus(key);
-                      setPage(1);
-                    }}
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {role === "worker" && (
-            <>
-              <h2 className="mt-8 text-2xl font-bold">Available Jobs</h2>
-              <div className="mt-4">
-                <Slider value={val} onChange={setVal} />
-              </div>
-            </>
-          )}
-
+      {role === "worker" && (
+        <>
+          <h2 className="mt-8 text-2xl font-bold">Available Jobs</h2>
+          <div className="mt-4">
+            <Slider value={val} onChange={setVal} />
+          </div>
+        </>
+      )}
+      {jobs.length > 0 ? (
+        <>
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
             {jobs.map((job) => {
               const details = (
@@ -418,16 +427,14 @@ const DashboardPage = ({ role }) => {
                           </div>
                         </>
                       ) : (
-                        <button
-                          className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                        <Button
                           loading={isPending(`applyjob-${job._id}`)}
-                          aria-busy={isPending(`applyjob-${job._id}`)}
-                          onClick={() => {
-                            handleAppliedJob(job._id);
-                          }}
+                          loadingText="Applying..."
+                          onClick={() => handleAppliedJob(job._id)}
+                          className="px-1 py-1 md:px-3 md:py-2"
                         >
                           Apply Now
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -454,9 +461,36 @@ const DashboardPage = ({ role }) => {
             />
           )}
         </>
+      ) : (
+        <div className="mt-10 flex flex-col items-center justify-center rounded-lg bg-white p-10 text-center shadow">
+          <h3 className="text-xl font-semibold text-gray-800">
+            No jobs available
+          </h3>
+          <p className="mt-2 text-sm text-gray-500">
+            {role === "employer"
+              ? "You haven't posted any jobs for this status yet."
+              : "No jobs match your search right now. Try changing your filters or check back later."}
+          </p>
+
+          {role === "employer" && (
+            <Link
+              href="/employerDashboard/dashboard"
+              className="mt-5 flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              <Plus className="h-5 w-5" />
+              Create New Job
+            </Link>
+          )}
+        </div>
       )}
     </main>
   );
 };
 
 export default DashboardPage;
+
+// DashboardPage.jsx:429 Received `false` for a non-boolean attribute `loading`.
+
+// If you want to write it to the DOM, pass a string instead: loading="false" or loading={value.toString()}.
+
+// If you used to conditionally omit it with loading={condition && value}, pass loading={condition ? value : undefined} instead.

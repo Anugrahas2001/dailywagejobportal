@@ -11,8 +11,6 @@ const SelectField = ({
 }) => {
   const selectId = id || label?.toLowerCase().replace(/\s+/g, "-");
 
-  console.log(error, "INSIDE OF THE SELECT FIELD");
-
   return (
     <div className="mb-4">
       {label && (

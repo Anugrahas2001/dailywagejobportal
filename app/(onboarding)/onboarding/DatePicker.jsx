@@ -17,7 +17,7 @@ export default function DatePicker({ value, onChange }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start text-left">
+        <Button variant="outline" className="w-full justify-start text-left px-3 py-2">
           <CalendarIcon className="mr-2 h-4 w-4" />
 
           {value ? format(value, "PPP") : "Select Date of Birth"}

@@ -1,14 +1,14 @@
-
 "use client";
+import Button from "@/components/Button";
 import Error from "@/components/Error";
 import InputField from "@/components/form/InputField";
 import SelectField from "@/components/form/SelectField";
-import Loading from "@/components/Loading";
+import Step2Skeleton from "@/components/skeltons/Step2Skeleton";
 import {
   JOB_SKILLS,
   JOINING_TYPES,
   SALARY_CREDIT_TYPES,
-  SHIFT_TYPES,
+  SHIFT_TYPE_OPTIONS,
 } from "@/constants/constant";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step2Onboarding } from "@/lib/features/profiles/userThunk";
@@ -32,7 +32,7 @@ const Step2 = () => {
       salaryCreditType: "",
       joiningPeriod: "",
       shiftType: "",
-      locRange: 10,
+      locRange: 100,
     },
   });
   const router = useRouter();
@@ -56,8 +56,12 @@ const Step2 = () => {
     }
   };
 
+  if (status === "pending") {
+    return <Step2Skeleton />;
+  }
+
   return (
-    <div className="mx-5 md:mx-16">
+    <div className="max-w-2xl mx-auto space-y-8">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Complete Your Job Preferences
@@ -119,7 +123,7 @@ const Step2 = () => {
         />
 
         <InputField
-          label="Location Range in KM"
+          label="Location Range in Meters"
           type="number"
           placeholder="Location Range"
           min={10}
@@ -133,7 +137,10 @@ const Step2 = () => {
 
         <SelectField
           label="Shift Type"
-          options={SHIFT_TYPES}
+          options={Object.entries(SHIFT_TYPE_OPTIONS).map(([key, value]) => ({
+            value: value.value,
+            label: value.label,
+          }))}
           {...register("shiftType", {
             required: "Please select a shift type",
           })}
@@ -146,7 +153,10 @@ const Step2 = () => {
 
         <SelectField
           label="Salary Credit Type"
-          options={SALARY_CREDIT_TYPES}
+          options={Object.entries(SALARY_CREDIT_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
           {...register("salaryCreditType", {
             required: "Please select a salary credit type",
           })}
@@ -159,7 +169,10 @@ const Step2 = () => {
 
         <SelectField
           label="Joining Period"
-          options={JOINING_TYPES}
+          options={Object.entries(JOINING_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
           {...register("joiningPeriod", {
             required: "Please select a joining period",
           })}
@@ -167,17 +180,19 @@ const Step2 = () => {
         />
 
         <div className="flex justify-center w-full">
-          <button
+          {/* <button
             disabled={status === "pending"}
             type="submit"
             className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {status === "pending" ? "Submitting..." : "Submit"}
-          </button>
+          </button> */}
+
+          <Button loadingText="Submitting..." loading={status === "pending"}>
+            Submit
+          </Button>
         </div>
       </form>
-
-      {status === "pending" && <Loading />}
       {error && (
         <Error error={error} onClick={dispatch(clearOnboardingError())} />
       )}

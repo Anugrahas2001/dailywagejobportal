@@ -228,9 +228,16 @@ export async function PUT(request, { params }) {
 
     if (needsMatching) {
       try {
+        // await matchQueue.add(
+        //   "compute-matches",
+        //   { jobId: updatedJob._id, employerId: uid },
+        //   { jobId: `job-${updatedJob._id}`, removeOnComplete: true },
+        // );
+        
+        // when a job is EDITED
         await matchQueue.add(
           "compute-matches",
-          { jobId: updatedJob._id, employerId: uid },
+          { jobId: updatedJob._id.toString(), employerId: uid, notify: false },
           { jobId: `job-${updatedJob._id}`, removeOnComplete: true },
         );
       } catch (queueError) {

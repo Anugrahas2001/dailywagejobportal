@@ -2,7 +2,6 @@
 import React from "react";
 import DatePicker from "../DatePicker";
 import { useRouter } from "next/navigation";
-import Loading from "@/components/Loading";
 import { Controller, useForm } from "react-hook-form";
 import InputField from "@/components/form/InputField";
 import SelectField from "@/components/form/SelectField";
@@ -13,6 +12,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { step1Onboarding } from "@/lib/features/profiles/userThunk";
 import Error from "@/components/Error";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
+import Button from "@/components/Button";
+import Step1Skeleton from "@/components/skeltons/Step1Skeleton";
+import Loading from "@/components/Loading";
 
 const Step1 = () => {
   const {
@@ -34,6 +36,7 @@ const Step1 = () => {
       code: "+91",
       number: "",
     },
+    yearsOfExperience: 0,
     useCurrentLocation: false,
     location: {
       type: "Point",
@@ -83,7 +86,7 @@ const Step1 = () => {
     try {
       setLoading(true);
       const location = await getLocation();
-
+      console.log(location, "BODY LOCATION DATA");
       setValue(
         "location",
         {
@@ -140,7 +143,10 @@ const Step1 = () => {
       country: data.country,
       loc: data.location,
       mobileNumber: data.mobileNumber,
+      yearsOfExperience: data.yearsOfExperience,
     };
+
+    console.log(body, "BODY BODY DATA");
 
     const { result } = await dispatch(step1Onboarding({ data: body })).unwrap();
     const { role, onboardPage } = result;
@@ -148,27 +154,39 @@ const Step1 = () => {
     router.push(`/onboarding/${onboardPage}`);
   };
 
+  const fieldWrapper = "flex flex-col gap-1.5 w-full";
+  const fieldLabel = "text-sm font-medium text-gray-700";
+  const fieldInput =
+    "w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const fieldError = "text-red-500 text-sm";
+  const borderFor = (hasError) =>
+    hasError ? "border-red-500" : "border-gray-300";
+
+ if (status === "pending") {
+  return <Step1Skeleton />;
+}
+
   return (
-    <div className="mx-5 md:mx-16">
+    <div className="max-w-2xl mx-auto space-y-8">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Complete Your Profile
         </h1>
         <p className="mt-2 text-sm md:text-base text-gray-500">
-          {/* Tell us a bit about yourself so we can personalize your experience. */}
           Please provide your personal details to set up your account.
         </p>
       </div>
-      <form onSubmit={handleSubmit(handleStep1Onboarding)}>
+
+      <form
+        onSubmit={handleSubmit(handleStep1Onboarding)}
+        className="flex flex-col gap-5"
+      >
+        {/* Name */}
         <InputField
           label="Name"
           placeholder="Enter Your Name"
           {...register("name", {
             required: "Name is required",
-            minLength: {
-              value: 3,
-              message: "Name must be at least 3 characters",
-            },
             maxLength: {
               value: 50,
               message: "Name cannot exceed 50 characters",
@@ -178,25 +196,26 @@ const Step1 = () => {
               message: "Only alphabets are allowed",
             },
             validate: (value) =>
-              value.trim().length > 0 || "Name cannot be empty",
+              value.trim().length >= 3 || "Name must be at least 3 characters",
           })}
           error={errors.name?.message}
         />
 
+        {/* Gender */}
         <SelectField
           label="Gender"
-          options={GENDER_TYPES}
-          placeholder={"Select a gender"}
-          {...register("gender", {
-            required: "Please select a gender",
-          })}
+          options={Object.entries(GENDER_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
+          placeholder="Select a gender"
+          {...register("gender", { required: "Please select a gender" })}
           error={errors.gender?.message}
         />
 
-        {/* {errors.gender && <p></p>} */}
-
-        <div className="flex flex-col gap-1 w-full max-w-xs">
-          <label htmlFor="dob" className="text-sm font-medium">
+        {/* Date of Birth */}
+        <div className={fieldWrapper}>
+          <label htmlFor="dob" className={fieldLabel}>
             Date of Birth
           </label>
 
@@ -213,16 +232,9 @@ const Step1 = () => {
                 const monthDiff = today.getMonth() - value.getMonth();
                 const dayDiff = today.getDate() - value.getDate();
 
-                // Adjust age if birthday hasn't occurred yet this year
-                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-                  age--;
-                }
+                if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) age--;
 
-                if (age < 18) {
-                  return "You must be at least 18 years old";
-                }
-
-                return true;
+                return age >= 18 || "You must be at least 18 years old";
               },
             }}
             render={({ field }) => (
@@ -230,69 +242,84 @@ const Step1 = () => {
                 id="dob"
                 value={field.value}
                 onChange={field.onChange}
-                className={`border rounded-md px-3 py-2 text-sm ${
-                  errors.dob ? "border-red-500" : "border-gray-300"
-                }`}
+                className={`${fieldInput} ${borderFor(errors.dob)}`}
               />
             )}
           />
 
-          {errors.dob && (
-            <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>
-          )}
+          {errors.dob && <p className={fieldError}>{errors.dob.message}</p>}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 mt-4">
+        {/* Mobile Number */}
+        <div className={fieldWrapper}>
+          <label htmlFor="mobile" className={fieldLabel}>
             Mobile Number
             <span className="text-gray-400 font-normal"> (optional)</span>
           </label>
 
           <div className="flex gap-2">
-            {/* Fixed country code display */}
-            <div className="flex items-center justify-center rounded-lg border bg-gray-50 px-3 text-sm font-medium text-gray-700 select-none">
+            <div className="flex items-center justify-center rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 select-none">
               +91
             </div>
 
-            {/* Hidden field to send code along with the form data */}
-            <InputField
+            {/* Sends the country code along with the form data */}
+            <input
               type="hidden"
               value="+91"
               {...register("mobileNumber.code")}
             />
 
-            <InputField
+            <input
+              id="mobile"
               type="tel"
               placeholder="Enter 10-digit mobile number"
               maxLength={10}
-              className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.mobileNumber?.number
-                  ? "border-red-500"
-                  : "border-gray-300"
-              }`}
+              className={`${fieldInput} ${borderFor(errors.mobileNumber?.number)} flex-1`}
               {...register("mobileNumber.number", {
                 validate: (value) => {
-                  if (!value) return true; // optional — empty is fine
-                  if (!/^[6-9]\d{9}$/.test(value)) {
-                    return "Enter a valid 10-digit mobile number";
-                  }
-                  return true;
+                  if (!value) return true; // optional
+                  return (
+                    /^[6-9]\d{9}$/.test(value) ||
+                    "Enter a valid 10-digit mobile number"
+                  );
                 },
               })}
             />
           </div>
 
           {errors.mobileNumber?.number && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.mobileNumber.number.message}
-            </p>
+            <p className={fieldError}>{errors.mobileNumber.number.message}</p>
           )}
         </div>
 
-        <div className="flex items-center justify-between rounded-lg border p-2 mt-3 mb-3">
+        {/* Years of Experience */}
+        <InputField
+          label="Years Of Experience"
+          type="number"
+          // className="my-3"
+          placeholder="Enter your total work experience"
+          min={0}
+          max={80}
+          step={1}
+          {...register("yearsOfExperience", {
+            required: "Years of experience is required",
+            valueAsNumber: true,
+            min: {
+              value: 0,
+              message: "Years of experience cannot be negative",
+            },
+            max: { value: 80, message: "Years of experience cannot exceed 80" },
+            validate: (value) =>
+              Number.isInteger(value) || "Please enter a whole number",
+          })}
+          error={errors.yearsOfExperience?.message}
+        />
+
+        {/* Use current location */}
+        <div className="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2">
           <label
             htmlFor="use-current-location"
-            className="text-sm font-medium mb-1.5 cursor-pointer"
+            className="text-sm font-medium text-gray-700 cursor-pointer"
           >
             Use Current Location
           </label>
@@ -318,6 +345,7 @@ const Step1 = () => {
           </button>
         </div>
 
+        {/* City */}
         <InputField
           label="City"
           placeholder="Enter Your City"
@@ -333,14 +361,15 @@ const Step1 = () => {
             },
             pattern: {
               value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
-              message: "State can only contain letters and single spaces",
+              message: "City can only contain letters and single spaces",
             },
             validate: (value) =>
-              value.trim().length > 0 || "State cannot be empty",
+              value.trim().length > 0 || "City cannot be empty",
           })}
           error={errors.city?.message}
         />
 
+        {/* State */}
         <InputField
           label="State"
           placeholder="Enter Your State"
@@ -364,42 +393,39 @@ const Step1 = () => {
           error={errors.state?.message}
         />
 
-        <div>
-          <InputField
-            label="Country"
-            placeholder="Enter Your Country"
-            {...register("country", {
-              required: "Country is required",
-              minLength: {
-                value: 2,
-                message: "Country name must be at least 2 characters long",
-              },
-              maxLength: {
-                value: 50,
-                message: "Country name cannot exceed 50 characters",
-              },
-              pattern: {
-                value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
-                message: "Country can only contain letters and single spaces",
-              },
-              validate: (value) =>
-                value.trim().length > 0 || "Country cannot be empty",
-            })}
-            error={errors.country?.message}
-          />
-        </div>
+        {/* Country */}
+        <InputField
+          label="Country"
+          placeholder="Enter Your Country"
+          {...register("country", {
+            required: "Country is required",
+            minLength: {
+              value: 2,
+              message: "Country name must be at least 2 characters long",
+            },
+            maxLength: {
+              value: 50,
+              message: "Country name cannot exceed 50 characters",
+            },
+            pattern: {
+              value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
+              message: "Country can only contain letters and single spaces",
+            },
+            validate: (value) =>
+              value.trim().length > 0 || "Country cannot be empty",
+          })}
+          error={errors.country?.message}
+        />
 
-        <div className="flex justify-center w-full">
-          <button
-            disabled={status === "pending"}
-            type="submit"
-            className="w-72 rounded-lg cursor-pointer bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            {status === "pending" ? "Submitting..." : "Submit"}
-          </button>
+        {/* Submit */}
+        <div className="flex justify-center w-full pt-2 pb-6">
+          <Button loadingText="Submitting..." loading={status === "pending"}>
+            Submit
+          </Button>
         </div>
       </form>
-      {(status === "pending" || loading) && <Loading />}
+
+      {loading && <Loading />}
       {error && (
         <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
       )}
@@ -408,3 +434,288 @@ const Step1 = () => {
 };
 
 export default Step1;
+
+// return (
+//   <div className="mx-5 md:mx-16">
+//     <div className="mb-8 mt-6">
+//       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+//         Complete Your Profile
+//       </h1>
+//       <p className="mt-2 text-sm md:text-base text-gray-500">
+//         {/* Tell us a bit about yourself so we can personalize your experience. */}
+//         Please provide your personal details to set up your account.
+//       </p>
+//     </div>
+//     <form onSubmit={handleSubmit(handleStep1Onboarding)}>
+//       <InputField
+//         label="Name"
+//         placeholder="Enter Your Name"
+//         {...register("name", {
+//           required: "Name is required",
+//           minLength: {
+//             value: 3,
+//             message: "Name must be at least 3 characters",
+//           },
+//           maxLength: {
+//             value: 50,
+//             message: "Name cannot exceed 50 characters",
+//           },
+//           pattern: {
+//             value: /^[A-Za-z ]+$/,
+//             message: "Only alphabets are allowed",
+//           },
+//           validate: (value) =>
+//             value.trim().length > 0 || "Name cannot be empty",
+//         })}
+//         error={errors.name?.message}
+//       />
+
+//       <SelectField
+//         label="Gender"
+//         options={Object.entries(GENDER_TYPES).map(([key, value]) => ({
+//           label: key,
+//           value: value,
+//         }))}
+//         placeholder={"Select a gender"}
+//         {...register("gender", {
+//           required: "Please select a gender",
+//         })}
+//         error={errors.gender?.message}
+//       />
+
+//       {/* {errors.gender && <p></p>} */}
+
+//       <div className="flex flex-col gap-1.5 w-full">
+//         <label htmlFor="dob" className="text-sm font-medium">
+//           Date of Birth
+//         </label>
+
+//         <Controller
+//           name="dob"
+//           control={control}
+//           rules={{
+//             required: "Date of birth is required",
+//             validate: (value) => {
+//               if (!value) return "Date of birth is required";
+
+//               const today = new Date();
+//               let age = today.getFullYear() - value.getFullYear();
+//               const monthDiff = today.getMonth() - value.getMonth();
+//               const dayDiff = today.getDate() - value.getDate();
+
+//               // Adjust age if birthday hasn't occurred yet this year
+//               if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+//                 age--;
+//               }
+
+//               if (age < 18) {
+//                 return "You must be at least 18 years old";
+//               }
+
+//               return true;
+//             },
+//           }}
+//           render={({ field }) => (
+//             <DatePicker
+//               id="dob"
+//               value={field.value}
+//               onChange={field.onChange}
+//               className={`border rounded-md px-3 py-2 text-sm ${
+//                 errors.dob ? "border-red-500" : "border-gray-300"
+//               }`}
+//             />
+//           )}
+//         />
+
+//         {errors.dob && (
+//           <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>
+//         )}
+//       </div>
+
+//       <div>
+//         <label className="block text-sm font-medium text-gray-700 mb-1.5">
+//           Mobile Number
+//           <span className="text-gray-400 font-normal"> (optional)</span>
+//         </label>
+
+//         <div className="flex gap-2">
+//           {/* Fixed country code display */}
+//           <div className="flex items-center justify-center rounded-lg border bg-gray-50 px-3 text-sm font-medium text-gray-700 select-none">
+//             +91
+//           </div>
+
+//           {/* Hidden field to send code along with the form data */}
+//           <InputField
+//             type="hidden"
+//             value="+91"
+//             {...register("mobileNumber.code")}
+//           />
+
+//           <InputField
+//             type="tel"
+//             placeholder="Enter 10-digit mobile number"
+//             maxLength={10}
+//             className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+//               errors.mobileNumber?.number
+//                 ? "border-red-500"
+//                 : "border-gray-300"
+//             }`}
+//             {...register("mobileNumber.number", {
+//               validate: (value) => {
+//                 if (!value) return true; // optional — empty is fine
+//                 if (!/^[6-9]\d{9}$/.test(value)) {
+//                   return "Enter a valid 10-digit mobile number";
+//                 }
+//                 return true;
+//               },
+//             })}
+//           />
+//         </div>
+
+//         {errors.mobileNumber?.number && (
+//           <p className="text-red-500 text-sm mt-1">
+//             {errors.mobileNumber.number.message}
+//           </p>
+//         )}
+//       </div>
+//       <InputField
+//         label="Years Of Experience"
+//         type="number"
+//         placeholder="Enter your total work experience"
+//         min={0}
+//         max={80}
+//         step={1}
+//         {...register("yearsOfExperience", {
+//           required: "Years of experience is required",
+//           valueAsNumber: true,
+//           min: {
+//             value: 0,
+//             message: "Years of experience cannot be negative",
+//           },
+//           max: { value: 80, message: "Years of experience cannot exceed 80" },
+//           validate: (value) =>
+//             Number.isInteger(value) || "Please enter a whole number",
+//         })}
+//         error={errors.yearsOfExperience?.message}
+//       />
+
+//       <div className="flex items-center justify-between rounded-lg border p-2 mb-4">
+//         <label
+//           htmlFor="use-current-location"
+//           className="text-sm font-medium cursor-pointer"
+//         >
+//           Use Current Location
+//         </label>
+
+//         <button
+//           type="button"
+//           id="use-current-location"
+//           role="switch"
+//           aria-checked={useCurrentLocation}
+//           onClick={handleToggle}
+//           className={`relative h-6 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500 cursor-pointer ${
+//             useCurrentLocation ? "bg-green-500" : "bg-gray-300"
+//           }`}
+//         >
+//           <span className="sr-only">
+//             {useCurrentLocation ? "Disable" : "Enable"} current location
+//           </span>
+//           <span
+//             className={`pointer-events-none absolute top-1 left-0 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
+//               useCurrentLocation ? "translate-x-7" : "translate-x-1"
+//             }`}
+//           />
+//         </button>
+//       </div>
+
+//       <InputField
+//         label="City"
+//         placeholder="Enter Your City"
+//         {...register("city", {
+//           required: "City is required",
+//           minLength: {
+//             value: 2,
+//             message: "City name must be at least 2 characters",
+//           },
+//           maxLength: {
+//             value: 50,
+//             message: "City name cannot exceed 50 characters",
+//           },
+//           pattern: {
+//             value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
+//             message: "State can only contain letters and single spaces",
+//           },
+//           validate: (value) =>
+//             value.trim().length > 0 || "State cannot be empty",
+//         })}
+//         error={errors.city?.message}
+//       />
+
+//       <InputField
+//         label="State"
+//         placeholder="Enter Your State"
+//         {...register("state", {
+//           required: "State is required",
+//           minLength: {
+//             value: 2,
+//             message: "State must be at least 2 characters long",
+//           },
+//           maxLength: {
+//             value: 50,
+//             message: "State cannot exceed 50 characters",
+//           },
+//           pattern: {
+//             value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
+//             message: "State can only contain letters and single spaces",
+//           },
+//           validate: (value) =>
+//             value.trim().length > 0 || "State cannot be empty",
+//         })}
+//         error={errors.state?.message}
+//       />
+
+//       <div>
+//         <InputField
+//           label="Country"
+//           placeholder="Enter Your Country"
+//           {...register("country", {
+//             required: "Country is required",
+//             minLength: {
+//               value: 2,
+//               message: "Country name must be at least 2 characters long",
+//             },
+//             maxLength: {
+//               value: 50,
+//               message: "Country name cannot exceed 50 characters",
+//             },
+//             pattern: {
+//               value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
+//               message: "Country can only contain letters and single spaces",
+//             },
+//             validate: (value) =>
+//               value.trim().length > 0 || "Country cannot be empty",
+//           })}
+//           error={errors.country?.message}
+//         />
+//       </div>
+
+//       <div className="flex justify-center w-full">
+//         {/* <button
+//           disabled={status === "pending"}
+//           type="submit"
+//           className="w-72 rounded-lg cursor-pointer bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
+//         >
+//           {status === "pending" ? "Submitting..." : "Submit"}
+//         </button> */}
+
+//         <Button loadingText="Submitting..." loading={status === "pending"}>
+//           Submit
+//         </Button>
+//       </div>
+//     </form>
+//     {(status === "pending" || loading) && <Loading />}
+//     {error && (
+//       <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
+//     )}
+//   </div>
+// );

@@ -5,6 +5,7 @@ import JobPreferences from "@/modals/JobPreferences";
 import User from "@/modals/User";
 import { NextResponse } from "next/server";
 import JobInvitation from "@/modals/JobInvitation";
+import JobDetails from "@/modals/JobDetails";
 
 export async function GET(request) {
   console.log("app/api/employer/recommendedprofiles/route.js - GET");
@@ -39,7 +40,7 @@ export async function GET(request) {
 
     console.log(allTheUserIds, "ALL THE USER IDS");
 
-    const [users, userPref, jobInvitations] = await Promise.all([
+    const [users, userPref, jobInvitations,job] = await Promise.all([
       User.find({ _id: { $in: allTheUserIds } })
         .select(
           "name email gender mobileNumber city state isVerified profileImage skills",
@@ -51,7 +52,8 @@ export async function GET(request) {
         employerId: uid,
         jobId,
         status: "sent",
-      }),
+      }).lean(),
+      JobDetails.findById(jobId).select("jobName -_id").lean()
     ]);
 
     console.log(jobInvitations, "ALL JOB INVIATAIONS");
@@ -84,6 +86,7 @@ export async function GET(request) {
         ...pref,
         matchPercentage: matchingScoreMap.get(String(us._id)),
         applicationAvailable: usermatch ? true : false,
+        jobTitle:job?.jobName
       };
     });
 

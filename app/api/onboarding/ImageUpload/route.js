@@ -43,10 +43,16 @@ export async function POST(request) {
 
     await matchQueue.add(
       "compute-matchedJobs",
-      { userId: uid, status: "Active" },
-
-      { userId: `user-${uid}` }, // dedupe key
+      { userId: uid.toString(), status: "Active", notify: true },
+      // { userId: `user-${uid}` }, // dedupe key
+      { userId: `user-${uid}`, removeOnComplete: true },
     );
+
+    // await matchQueue.add(
+    //   "compute-matchedJobs",
+    //   { userId: uid, status: "Active", },
+    //   { jobId: `reconcile-user-${uid}-${job.timestamp}` },
+    // );
 
     console.log("EVENT EMITTED TO THE QUEUE SUCCESSFULLY");
 

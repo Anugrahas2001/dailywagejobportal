@@ -1,17 +1,18 @@
 //Myjobs.jsx
 "use client";
 import {
-  getJoingDate,
+  getJoiningPeriodType,
   getPostedText,
-  getShiftLabel,
+  getShiftTypes,
   getStatusColor,
 } from "@/components/commonFunctions";
 import Error from "@/components/Error";
 import FilterButtons from "@/components/FilterButtons";
-import Loading from "@/components/Loading";
+import useControls from "@/components/hooks/useControls";
 import Pagination from "@/components/Pagination";
+import MyJobsSkeleton from "@/components/skeltons/MyJobsSkeleton";
 import {
-  appliedjobStatus,
+  APPLIED_JOB_STATUS,
   appliedSortingOptions,
   savedSortingOptions,
 } from "@/constants/constant";
@@ -33,7 +34,7 @@ import {
 import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 const page = () => {
   const [jobType, setJobType] = useState("");
@@ -41,13 +42,23 @@ const page = () => {
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   const [status, setStatus] = useState("applied");
   const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
   const [role, setRole] = useState("");
-  const dispatch = useDispatch();
+
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
 
   const pageSize = 12;
   useEffect(() => {
     setRole(localStorage.getItem("role"));
+    setInitialLoading(false);
   }, []);
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
@@ -100,10 +111,10 @@ const page = () => {
   const sortOptions =
     jobType === "saved" ? savedSortingOptions : appliedSortingOptions;
 
-  const savedStatus = useSelector((state) => state.saved.status);
-  const appliedStatus = useSelector((state) => state.applied.status);
+  // const savedStatus = useSelector((state) => state.saved.status);
+  // const appliedStatus = useSelector((state) => state.applied.status);
 
-  const statusLoading = jobType === "saved" ? savedStatus : appliedStatus;
+  // const statusLoading = jobType === "saved" ? savedStatus : appliedStatus;
 
   const handleJobStatus = (jobStatus) => {
     console.log("CLICKED", jobStatus);
@@ -119,17 +130,6 @@ const page = () => {
   };
 
   console.log(jobType, "JOB TYPE DATA");
-
-  const goToPage = (p) => {
-    if (p >= 1 && p <= totalPages) setPage(p);
-    dispatch(
-      fetchAppliedJobs({
-        sort,
-        status,
-        page: p,
-      }),
-    );
-  };
 
   const handleToggleSavedJob = (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
@@ -195,301 +195,269 @@ const page = () => {
 
   // console.log(uniqueJobs, "UNIQUE UNIQUE");
   return (
-    <div className="p-6 m-6">
-      <div className="flex">
-        <button
-          onClick={() => {
-            handleJobStatus("saved");
-          }}
-          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "saved" ? "bg-blue-500" : "bg-gray-400"}`}
-        >
-          Saved
-        </button>
-        <button
-          onClick={() => {
-            handleJobStatus("applied");
-          }}
-          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
-        >
-          Applied
-        </button>
-
-        <button
-          // onClick={handleJobInvitations}
-          onClick={() => {
-            handleJobStatus("jobInvitation");
-          }}
-          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
-        >
-          Invitations
-        </button>
-        <button
-          // onClick={handleJobInvitations}
-          onClick={() => {
-            handleJobStatus("accepted");
-          }}
-          className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
-        >
-          Accepted
-        </button>
-      </div>
-      {/* <div className="relative w-full">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-      </div> */}
-
-      {jobType !== "jobInvitation" && (
-        <div className="relative inline-block">
-          <div className="flex items-center gap-2 mt-3">
-            {jobType === "applied" && (
-              <FilterButtons
-                title="Status"
-                setDropdownStatus={setShowStatusDropdown}
-                dropDown={showStatusDropdown}
-                setValue={setStatus}
-                defaultLabel="Applied"
-                value={status}
-                options={appliedjobStatus}
-                onClick={() => {
-                  console.log("ANUGRAHA 7", jobType);
-                  dispatch(fetchAppliedJobs({ sort, status, page }));
-                }}
-              />
-            )}
-
-            <FilterButtons
-              title="Sort"
-              setDropdownStatus={setShowSortDropdown}
-              dropDown={showSortDropdown}
-              setValue={setSort}
-              value={sort}
-              defaultLabel={defaultLabel}
+    <div className="p-6 m-6 bg-gray-100">
+      {loadingStatus === "pending" || initialLoading ? (
+        <MyJobsSkeleton />
+      ) : (
+        <>
+          <div className="flex">
+            <button
               onClick={() => {
-                if (jobType === "applied") {
-                  console.log("ANUGRAHA 8", jobType);
-                  dispatch(fetchAppliedJobs({ sort, status, page }));
-                } else {
-                  console.log("ANUGRAHA 3", jobType);
-                  dispatch(fetchSavedJobs({ sort, page }));
-                }
+                handleJobStatus("saved");
               }}
-              options={sortOptions}
-            />
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "saved" ? "bg-blue-500" : "bg-gray-400"}`}
+            >
+              Saved
+            </button>
+            <button
+              onClick={() => {
+                handleJobStatus("applied");
+              }}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+            >
+              Applied
+            </button>
+
+            <button
+              // onClick={handleJobInvitations}
+              onClick={() => {
+                handleJobStatus("jobInvitation");
+              }}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+            >
+              Invitations
+            </button>
+            <button
+              // onClick={handleJobInvitations}
+              onClick={() => {
+                handleJobStatus("accepted");
+              }}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+            >
+              Accepted
+            </button>
           </div>
-        </div>
-      )}
+          {jobType !== "jobInvitation" && (
+            <div className="relative inline-block">
+              <div className="flex items-center gap-2 mt-3">
+                {jobType === "applied" && (
+                  <FilterButtons
+                    title="Status"
+                    setDropdownStatus={setShowStatusDropdown}
+                    dropDown={showStatusDropdown}
+                    setValue={setStatus}
+                    defaultLabel="Applied"
+                    value={status}
+                    options={APPLIED_JOB_STATUS}
+                    onClick={() => {
+                      console.log("ANUGRAHA 7", jobType);
+                      dispatch(fetchAppliedJobs({ sort, status, page }));
+                    }}
+                  />
+                )}
 
-      {/* {jobType === "jobInvitation" && (
-        <div className="flex gap-2 mt-4">
-          <button
-            className="bg-blue-600 p-2 text-white rounded-md"
-            onClick={() => {
-              (handleJobInvitationFetches("sent"), setJobInviteType("sent"));
-            }}
-          >
-            All Invitations
-          </button>
-          <button
-            className="bg-blue-600 p-2 text-white rounded-md"
-            onClick={() => {
-              (handleJobInvitationFetches("accepted"),
-                setJobInviteType("accepted"));
-            }}
-          >
-            Accepted Jobs
-          </button>
-        </div>
-      )} */}
+                <FilterButtons
+                  title="Sort"
+                  setDropdownStatus={setShowSortDropdown}
+                  dropDown={showSortDropdown}
+                  setValue={setSort}
+                  value={sort}
+                  defaultLabel={defaultLabel}
+                  onClick={() => {
+                    if (jobType === "applied") {
+                      console.log("ANUGRAHA 8", jobType);
+                      dispatch(fetchAppliedJobs({ sort, status, page }));
+                    } else {
+                      console.log("ANUGRAHA 3", jobType);
+                      dispatch(fetchSavedJobs({ sort, page }));
+                    }
+                  }}
+                  options={sortOptions}
+                />
+              </div>
+            </div>
+          )}
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
-        {loadingStatus === "pending" ? (
-          <div className="flex justify-center py-10">
-            <Loading />
-          </div>
-        ) : uniqueJobs.length > 0 ? (
-          uniqueJobs.map((job) => {
-            console.log(job?.applicationStatus, "APPLICATION STATUS");
-            return (
-              <article
-                className="rounded-lg bg-white p-4 shadow mt-7"
-                key={job._id}
-              >
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-row w-full items-center justify-between">
-                    <div className="flex flex-col">
-                      <h3 className="text-lg md:text-xl font-semibold">
-                        {job.jobName}
-                      </h3>
-                      <h4 className=" text-gray-600">{job.jobCategory}</h4>
-                    </div>
-
-                    {jobType === "saved" && (
-                      <button
-                        className="p-2 rounded-full hover:bg-gray-100"
-                        onClick={() => {
-                          handleToggleSavedJob(job._id);
-                        }}
-                      >
-                        <Bookmark
-                          fill={
-                            jobs.some((savedJob) => savedJob._id === job._id)
-                              ? "gray"
-                              : "none"
-                          }
-                          className="h-6 w-6 cursor-pointer text-gray-700 stroke-[2]"
-                        />
-                      </button>
-                    )}
-                  </div>
-
-                  <Link href={`/${role}Dashboard/jobs/${job._id}?type=${jobType}`}>
-                    <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
-                      <p>
-                        📍 {job.city}, {job.state}
-                      </p>
-                      <p>🕘 {getShiftLabel(job.jobShift)}</p>
-                      <p>📅 {getJoingDate(job.availability)}</p>
-                      <p>
-                        💰 ₹{job.minSalary} - ₹{job.maxSalary}
-                      </p>
-                      <p>👥 Openings: {job.numberOfOpenings}</p>
-                    </div>
-
-                    {jobType !== "jobInvitation" && (
-                      <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
-                        <div className="flex items-center gap-2 md:justify-end">
-                          {jobType === ("saved" || "applied") && (
-                            <>
-                              <span
-                                className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
-                              ></span>
-                              <p
-                                className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
-                              >
-                                {jobType === "saved"
-                                  ? job.status
-                                  : job.applicationStatus}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </Link>
-                </div>
-                {/* Footer */}
-                {jobType !== "jobInvitation" ? (
-                  <div
-                    className={`flex justify-between border-t pt-4 flex-row items-center`}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
+            {uniqueJobs.length > 0 ? (
+              uniqueJobs.map((job) => {
+                console.log(job?.applicationStatus, "APPLICATION STATUS");
+                return (
+                  <article
+                    className="rounded-lg bg-white p-4 shadow mt-7"
+                    key={job._id}
                   >
-                    {/* md:flex-row */}
-                    {jobType === ("saved" || "applied") && (
-                      <p className="text-sm text-gray-500">
-                        {" "}
-                        {getPostedText({
-                          createdAt:
-                            jobType === "saved" ? job.createdAt : job.appliedAt,
-                          jobType,
-                        })}
-                      </p>
-                    )}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-row w-full items-center justify-between">
+                        <div className="flex flex-col">
+                          <h3 className="text-lg md:text-xl font-semibold">
+                            {job.jobName}
+                          </h3>
+                          <h4 className=" text-gray-600">{job.jobCategory}</h4>
+                        </div>
 
-                    {(jobType === "saved" || "applied") && (
-                      <div className="flex gap-2 md:gap-3 md:mt-0">
-                        {jobType === "saved" ? (
+                        {jobType === "saved" && (
                           <button
-                            className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                            className="p-2 rounded-full hover:bg-gray-100"
                             onClick={() => {
-                              handleAppliedJobs({ jobId: job._id });
+                              handleToggleSavedJob(job._id);
                             }}
                           >
-                            Apply Now
-                          </button>
-                        ) : (
-                          <button
-                            className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
-                            onClick={() =>
-                              handleCancelAppliedJob({ jobId: job._id })
-                            }
-                          >
-                            Cancel
+                            <Bookmark
+                              fill={
+                                jobs.some(
+                                  (savedJob) => savedJob._id === job._id,
+                                )
+                                  ? "gray"
+                                  : "none"
+                              }
+                              className="h-6 w-6 cursor-pointer text-gray-700 stroke-[2]"
+                            />
                           </button>
                         )}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  // jobInviteType === "sent" && (
-                    <div className="flex justify-between mt-3">
-                      <button
-                        className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
-                        onClick={() => {
-                          handleJobInvitationStatus({
-                            status: "rejected",
-                            jobId: job._id,
-                            employerId: job.employerId,
-                          });
-                        }}
-                      >
-                        Reject
-                      </button>
 
-                      <button
-                        className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
-                        onClick={() => {
-                          handleJobInvitationStatus({
-                            status: "accepted",
-                            jobId: job._id,
-                            employerId: job.employerId,
-                          });
-                        }}
+                      <Link
+                        href={`/${role}Dashboard/jobs/${job._id}?type=${jobType}`}
                       >
-                        Accept
-                      </button>
+                        <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
+                          <p>
+                            📍 {job.city}, {job.state}
+                          </p>
+                          <p>🕘 {getShiftTypes(job.jobShift)}</p>
+                          <p>📅 {getJoiningPeriodType(job.availability)}</p>
+                          <p>
+                            💰 ₹{job.minSalary} - ₹{job.maxSalary}
+                          </p>
+                          <p>👥 Openings: {job.numberOfOpenings}</p>
+                        </div>
+
+                        {jobType !== "jobInvitation" && (
+                          <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
+                            <div className="flex items-center gap-2 md:justify-end">
+                              {jobType === ("saved" || "applied") && (
+                                <>
+                                  <span
+                                    className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
+                                  ></span>
+                                  <p
+                                    className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
+                                  >
+                                    {jobType === "saved"
+                                      ? job.status
+                                      : job.applicationStatus}
+                                  </p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </Link>
                     </div>
-                  
-                )}
-              </article>
-            );
-          })
-        ) : (
-          //=========
 
-          <div className="flex min-h-[70vh] md:col-span-3 w-full items-center justify-center px-4">
-            <div className="max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
-              {/* <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                📋
-              </div> */}
+                    {jobType !== "jobInvitation" ? (
+                      <div
+                        className={`flex justify-between border-t pt-4 flex-row items-center`}
+                      >
+                        {jobType === ("saved" || "applied") && (
+                          <p className="text-sm text-gray-500">
+                            {" "}
+                            {getPostedText({
+                              createdAt:
+                                jobType === "saved"
+                                  ? job.createdAt
+                                  : job.appliedAt,
+                              jobType,
+                            })}
+                          </p>
+                        )}
 
-              <h2 className="text-2xl font-semibold text-gray-900">
-                No Jobs Available
-              </h2>
+                        {(jobType === "saved" || "applied") && (
+                          <div className="flex gap-2 md:gap-3 md:mt-0">
+                            {jobType === "saved" ? (
+                              <button
+                                className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                                onClick={() => {
+                                  handleAppliedJobs({ jobId: job._id });
+                                }}
+                              >
+                                Apply Now
+                              </button>
+                            ) : (
+                              <button
+                                className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+                                onClick={() =>
+                                  handleCancelAppliedJob({ jobId: job._id })
+                                }
+                              >
+                                Cancel
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      // jobInviteType === "sent" && (
+                      <div className="flex justify-between mt-3">
+                        <button
+                          className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                          onClick={() => {
+                            handleJobInvitationStatus({
+                              status: "rejected",
+                              jobId: job._id,
+                              employerId: job.employerId,
+                            });
+                          }}
+                        >
+                          Reject
+                        </button>
 
-              <p className="mt-2 text-sm text-gray-500">
-                You haven't created any jobs yet. Create your first job to start
-                receiving applications from workers.
-              </p>
-              <Link href="/employerDashboard/dashboard">
-                <button className="mt-6 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
-                  Create Job
-                </button>
-              </Link>
-            </div>
-          </div>
-        )}
-      </section>
-      <Pagination
-        onClick={goToPage}
-        totalPages={totalPages}
-        page={page}
-        totalCount={totalCount}
-      />
-      {statusLoading === "pending" && <Loading />}
+                        <button
+                          className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                          onClick={() => {
+                            handleJobInvitationStatus({
+                              status: "accepted",
+                              jobId: job._id,
+                              employerId: job.employerId,
+                            });
+                          }}
+                        >
+                          Accept
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })
+            ) : (
+              <div className="flex min-h-[70vh] md:col-span-3 w-full items-center justify-center px-4">
+                <div className="max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-sm">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    No Jobs Available
+                  </h2>
+
+                  <p className="mt-2 text-sm text-gray-500">
+                    You haven't created any jobs yet. Create your first job to
+                    start receiving applications from workers.
+                  </p>
+                  <Link href="/employerDashboard/dashboard">
+                    <button className="mt-6 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
+                      Create Job
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </section>
+          <Pagination
+            onClick={(p)=>goToPage({p,totalPages,setPage})}
+            totalPages={totalPages}
+            page={page}
+            totalCount={totalCount}
+          />
+        </>
+      )}
+
       {error && (
         <Error
           error={error}

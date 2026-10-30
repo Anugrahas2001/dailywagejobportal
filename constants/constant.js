@@ -102,11 +102,10 @@ export const SALARY_CREDIT_TYPES = Object.freeze({
 });
 
 export const SHIFT_TYPE = Object.freeze({
-  FULL_DAY: "full_day",
-  HALF_DAY_MORNING: "half_day_morning",
-  HALF_DAY_AFTERNOON: "half_day_afternoon",
-  NIGHT_SHIFT: "night_shift",
-  FLEXIBLE: "flexible",
+  FULL_DAY: "Full Day",
+  HALF_DAY_MORNING: "Half Day Morning",
+  HALF_DAY_AFTERNOON: "Half Day Afternoon",
+  NIGHT_SHIFT: "Night Shift",
 });
 
 // Array of values, for Mongoose and Zod
@@ -459,3 +458,8 @@ export const JOB_STATUS_VALUES = Object.freeze({
   PAUSED: "Paused",
   DELETED: "Deleted",
 });
+
+export const MAX_NUM_SKILLS=8;
+export const SIX_HOURS = 12 * 60 * 60 * 1000;
+
+export const APP_ICON_URL="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1793220020718/1793220020718-d610ebff-6afd-4ae6-a090-a6121a76d7c9.png"

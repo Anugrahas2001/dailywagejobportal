@@ -3,16 +3,19 @@
 import { Maximize, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function Modal({ children, jobId, workerId, role, matchingRate, type }) {
+export default function Modal({ children, jobId, workerId, role, matchingRate, type, status }) {
   console.log(jobId, workerId, role, matchingRate, type, "ROLE OF THE USER");
   const router = useRouter();
 
   const handleMaximize = () => {
     role === "employer" &&
-      window.location.assign(
+     (status&&status==="all"? window.location.assign(
+        `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&status=${status}`,
+      ): window.location.assign(
         `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&matching=${matchingRate}`,
-      );
+      ))
   };
+
 
   return (
     <div

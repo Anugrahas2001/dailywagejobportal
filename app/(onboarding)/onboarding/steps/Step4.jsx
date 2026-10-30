@@ -9,9 +9,10 @@ import { step4Onboarding } from "@/lib/features/profiles/userThunk";
 import Error from "@/components/Error";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { validateFile } from "@/components/commonFunctions";
+import Button from "@/components/Button";
+import Step4Skeleton from "@/components/skeltons/Step4Skeleton";
 
 const MAX_FILE_SIZE_MB = 5;
-
 
 const Step4 = () => {
   const [file, setFile] = useState(null);
@@ -30,8 +31,6 @@ const Step4 = () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
-
-
 
   const handleImageChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -87,7 +86,7 @@ const Step4 = () => {
       ).unwrap();
 
       const { onboardPage, profileImage, isOnboardingComplete } = result;
-
+      localStorage.setItem("profileImage", profileImage);
       router.push(`/onboarding/${onboardPage}`);
     } catch (err) {
       console.error("Image upload error:", err);
@@ -97,8 +96,12 @@ const Step4 = () => {
     }
   };
 
+  if (status === "pending") {
+    return <Step4Skeleton />;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 md:px-16 py-10">
+    <div className="max-w-2xl mx-auto space-y-8 min-h-screen flex items-center bg-gray-100 justify-center px-5 md:px-16 py-10">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
@@ -159,7 +162,7 @@ const Step4 = () => {
         )}
 
         <div className="mt-6 flex flex-col gap-2">
-          <button
+          {/* <button
             type="button"
             onClick={handleUpload}
             disabled={uploading || !file}
@@ -188,7 +191,38 @@ const Step4 = () => {
               </svg>
             )}
             {uploading ? "Uploading..." : "Continue"}
-          </button>
+          </button> */}
+
+          <Button
+            loadingText="Uploading..."
+            loading={uploading}
+            disabled={uploading || !file}
+            onClick={handleUpload}
+          >
+            {uploading && (
+              <svg
+                className="h-4 w-4 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                />
+              </svg>
+            )}
+            Continue
+          </Button>
 
           {!uploading && (
             <button
@@ -205,7 +239,7 @@ const Step4 = () => {
           )}
         </div>
       </div>
-      {status === "pending" && <Loading />}
+      {uploading && <Loading />}
       {error && (
         <Error error={error} onClick={dispatch(clearOnboardingError())} />
       )}

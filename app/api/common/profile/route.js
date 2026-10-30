@@ -7,6 +7,7 @@ import JobPreferences from "@/modals/JobPreferences";
 import SavedJobs from "@/modals/SavedJobs";
 import User from "@/modals/User";
 import WorkerSession from "@/modals/WorkerSession";
+import { matchQueue } from "@/lib/queues/matchQueue";
 
 const isFilled = (value) => {
   if (value === null || value === undefined) return false;
@@ -101,7 +102,7 @@ export async function GET(request) {
       profileCompleteness, // e.g. 75
       savedJobs: savedCount,
       jobInvitations: invitationsCount,
-      workingStatus:workerSess?.workingStatus,
+      workingStatus: workerSess?.workingStatus,
     };
     console.log(data, "DATA VALUE");
 
@@ -178,6 +179,13 @@ export async function PUT(request) {
     // 5. Build the response in the required format
     // const result = ;
 
+    await matchQueue.add(
+      "compute-matchedJobs",
+      { userId: userData?._id.toString(), status: "Active", notify: true },
+      // { userId: `user-${uid}` }, // dedupe key
+      { userId: `user-${userData?._id}`, removeOnComplete: true },
+    );
+
     return NextResponse.json(
       {
         message: "Successfully updated the user profile page.",
@@ -187,7 +195,6 @@ export async function PUT(request) {
           profileCompleteness,
           savedJobs: savedCount,
           jobInvitations: invitationsCount,
-          
         },
       },
       { status: 200 },

@@ -1,7 +1,10 @@
 "use client";
 
+import Button from "@/components/Button";
 import Error from "@/components/Error";
+import useLoading from "@/components/hooks/useLoading";
 import Loading from "@/components/Loading";
+import Step5Skeleton from "@/components/skeltons/Step5Skeleton";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step5Onboarding } from "@/lib/features/profiles/userThunk";
 import { useRouter } from "next/navigation";
@@ -14,7 +17,7 @@ const Step5 = () => {
   const streamRef = useRef(null);
   const router = useRouter();
   const [photo, setPhoto] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { loading, setLoading } = useLoading();
   const [verifying, setVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState(null);
   // null | "success" | "failed"
@@ -149,6 +152,10 @@ const Step5 = () => {
     router.push(role === "worker" ? "/workerDashboard" : "/employerDashboard");
   };
 
+  if (status === "pending") {
+    return <Step5Skeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-lg border p-8">
@@ -245,13 +252,22 @@ const Step5 = () => {
                     Retake
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={handleFaceVerification}
                     disabled={verifying}
                     className="rounded-lg bg-green-600 px-6 py-3 cursor-pointer text-white hover:bg-green-700"
                   >
                     {verifying ? "Verifying Face" : "Verify Face"}
-                  </button>
+                  </button> */}
+
+                  <Button
+                    loadingText="Verifying Face..."
+                    loading={verifying}
+                    disabled={verifying}
+                    onClick={handleFaceVerification}
+                  >
+                    Verify Face
+                  </Button>
                 </div>
               </div>
             )}
@@ -259,7 +275,7 @@ const Step5 = () => {
         )}
 
         <canvas ref={canvasRef} className="hidden" />
-        {status === "pending" && <Loading />}
+        {(loading || verifying) && <Loading />}
         {error && (
           <Error error={error} onClick={dispatch(clearOnboardingError())} />
         )}

@@ -10,18 +10,18 @@ import {
   JOB_SKILLS,
   JOB_STATUS,
   JOINING_TYPES,
+  MAX_NUM_SKILLS,
   SALARY_CREDIT_TYPES,
-  SHIFT_TYPES,
+  SHIFT_TYPE_OPTIONS,
 } from "@/constants/constant";
-import { useRouter } from "next/navigation";
 import useLoading from "./hooks/useLoading";
 import useCurrentLocationHook from "./hooks/useCurrentLocation";
 import Loading from "./Loading";
-import { useDispatch, useSelector } from "react-redux";
-// import { createJob, updateJob } from "@/lib/featureFs/jobs/jobThunk";
+import { useSelector } from "react-redux";
 import Error from "./Error";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 import { createJob, updateJob } from "@/lib/features/jobs/jobThunk";
+import useControls from "./hooks/useControls";
 
 const JobForm = ({ mode, initialData }) => {
   const {
@@ -58,7 +58,6 @@ const JobForm = ({ mode, initialData }) => {
     },
   });
   const { loading, setLoading } = useLoading();
-  const router = useRouter();
   const selectedCategory = watch("jobCategory");
   const skillsRequired = JOB_SKILLS[selectedCategory] || [];
   const selectedSkills = watch("skillsRequired");
@@ -67,7 +66,18 @@ const JobForm = ({ mode, initialData }) => {
   const [isAdding, setIsAdding] = useState(false);
   const useCurrentLocation = watch("useCurrentLocation");
   const { getLocation } = useCurrentLocationHook();
-  const dispatch = useDispatch();
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
+
+  console.log(SHIFT_TYPE_OPTIONS, "SHIFT TYPES VALUES");
 
   const error = useSelector((state) => state.jobs.error);
   const status = useSelector((state) => state.jobs.status);
@@ -103,8 +113,8 @@ const JobForm = ({ mode, initialData }) => {
       return;
     }
 
-    if (currentSelectedSkills.length >= 5) {
-      alert("You can select a maximum of 5 skills.");
+    if (currentSelectedSkills.length >= MAX_NUM_SKILLS) {
+      alert(`You can select a maximum of ${MAX_NUM_SKILLS} skills.`);
       return;
     }
 
@@ -128,7 +138,6 @@ const JobForm = ({ mode, initialData }) => {
       return;
     }
 
-    console.log("NOW AVILABLE RESPONSIBILITIES", currentResponsibilities);
     setValue("responsibilities", [
       ...currentResponsibilities,
       trimmedResponsibility,
@@ -160,7 +169,6 @@ const JobForm = ({ mode, initialData }) => {
     try {
       setLoading(true);
       const location = await getLocation();
-      console.log(location, "LOCATION DATA");
       setValue("loc", {
         type: "Point",
         coordinates: location.coordinates,
@@ -208,6 +216,7 @@ const JobForm = ({ mode, initialData }) => {
   const onSubmit = async (data) => {
     try {
       if (mode === "create") {
+        console.log(data, "===================%%%%%%%%%%%%%%%###########");
         await dispatch(createJob({ body: data })).unwrap();
       } else {
         await dispatch(updateJob({ body: data, id: initialData._id })).unwrap();
@@ -400,7 +409,10 @@ const JobForm = ({ mode, initialData }) => {
         {/* Gender */}
         <SelectField
           label="Preferred Gender"
-          options={GENDER_TYPES}
+          options={Object.entries(GENDER_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
           {...register("genderPreference", {
             required: "Please select a gender",
           })}
@@ -410,7 +422,10 @@ const JobForm = ({ mode, initialData }) => {
         {/* Shift */}
         <SelectField
           label="Shift"
-          options={SHIFT_TYPES}
+          options={Object.entries(SHIFT_TYPE_OPTIONS).map(([key, value]) => ({
+            value: value.value,
+            label: value.label,
+          }))}
           {...register("jobShift", {
             required: "Shift is required",
           })}
@@ -420,7 +435,10 @@ const JobForm = ({ mode, initialData }) => {
         {/* Availability */}
         <SelectField
           label="Joining"
-          options={JOINING_TYPES}
+          options={Object.entries(JOINING_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
           {...register("availability", {
             required: "Joining availability is required",
           })}
@@ -430,7 +448,10 @@ const JobForm = ({ mode, initialData }) => {
         {/* Salary Type */}
         <SelectField
           label="Salary Type"
-          options={SALARY_CREDIT_TYPES}
+          options={Object.entries(SALARY_CREDIT_TYPES).map(([key, value]) => ({
+            label: key,
+            value: value,
+          }))}
           {...register("salaryType", {
             required: "Salary type is required",
           })}

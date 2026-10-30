@@ -444,7 +444,7 @@ const ViewProfile = ({
                   </select>
                 ) : (
                   <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                    {workerData?.status} -{status}
+                    {workerData?.status}
                   </span>
                 )}
               </div>

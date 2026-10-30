@@ -1,41 +1,98 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getMessaging, getToken } from "firebase/messaging";
 import app from "@/lib/firebaseClient";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 
-const DISMISS_KEY = "notif-popup-dismissed";
+  function whenDocumentReady() {
+    return new Promise((resolve) => {
+      const check = () => {
+        if (
+          document.readyState === "complete" &&
+          document.visibilityState === "visible"
+        ) {
+          document.removeEventListener("visibilitychange", check);
+          window.removeEventListener("load", check);
+          resolve();
+        }
+      };
+      document.addEventListener("visibilitychange", check);
+      window.addEventListener("load", check);
+      check();
+    });
+  }
 
 export default function FcmTokenRegistrar() {
   const [permission, setPermission] = useState(null);
   const [dismissed, setDismissed] = useState(true); // true until we've checked storage (avoids flash/hydration issues)
+const registeringRef = useRef(false);
+  const DISMISS_KEY = "notif-popup-dismissed";
+  const SW_URL = "/firebase-messaging-sw.js";
+
+
 
   async function registerToken() {
-    await navigator.serviceWorker.register("/firebase-messaging-sw.js");
-    const activeRegistration = await navigator.serviceWorker.ready;
+    if (registeringRef.current) return; // prevents Strict Mode / double calls
+    if (!("serviceWorker" in navigator) || !window.isSecureContext) return;
 
-    const messaging = getMessaging(app);
-    const fcmToken = await getToken(messaging, {
-      vapidKey:
-        process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ||
-        "BBolJpgZrrb67d64RzlPrKDvOcx_55qaLPjSd72k3giXZFEhzdjJBVtMPCh1CcfLMhK9MnyGpT_Gr_Z3DGBbktA",
-      serviceWorkerRegistration: activeRegistration,
-    });
+    registeringRef.current = true;
+    try {
+      await whenDocumentReady();
 
-    if (fcmToken) {
-      const token = await fetchUserToken();
-      await fetch("/api/common/fcm", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ fcm: fcmToken }),
+      const registration =
+        (await navigator.serviceWorker.getRegistration(SW_URL)) ||
+        (await navigator.serviceWorker.register(SW_URL));
+      await navigator.serviceWorker.ready;
+
+      const messaging = getMessaging(app);
+      const fcmToken = await getToken(messaging, {
+        vapidKey:
+          process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ||
+          "BBolJpgZrrb67d64RzlPrKDvOcx_55qaLPjSd72k3giXZFEhzdjJBVtMPCh1CcfLMhK9MnyGpT_Gr_Z3DGBbktA",
+        serviceWorkerRegistration: registration,
       });
+
+      if (fcmToken) {
+        const token = await fetchUserToken();
+        await fetch("/api/common/fcm", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ fcm: fcmToken }),
+        });
+      }
+    } finally {
+      registeringRef.current = false;
     }
   }
+
+  // async function registerToken() {
+  //   await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+  //   const activeRegistration = await navigator.serviceWorker.ready;
+
+  //   const messaging = getMessaging(app);
+  //   const fcmToken = await getToken(messaging, {
+  //     vapidKey:
+  //       process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ||
+  //       "BBolJpgZrrb67d64RzlPrKDvOcx_55qaLPjSd72k3giXZFEhzdjJBVtMPCh1CcfLMhK9MnyGpT_Gr_Z3DGBbktA",
+  //     serviceWorkerRegistration: activeRegistration,
+  //   });
+
+  //   if (fcmToken) {
+  //     const token = await fetchUserToken();
+  //     await fetch("/api/common/fcm", {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({ fcm: fcmToken }),
+  //     });
+  //   }
+  // }
 
   useEffect(() => {
     if (!("Notification" in window)) return;

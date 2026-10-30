@@ -30,12 +30,21 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [status, setStatus] = useState("all");
   const [totalCount, setTotalCount] = useState(0);
   const [expandedSkills, setExpandedSkills] = useState(null);
-  const {loading, setLoading} = useLoading();
+  const { loading, setLoading } = useLoading();
   const [val, setVal] = useState(20);
   const pageSize = 12;
   const totalPages = Math.ceil(totalCount / pageSize) || 0;
 
-  const { page, setPage, router, dispatch, runWithPending, isPending,initialLoading, setInitialLoading }=useControls()
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
 
   console.log(applicants, status, "ALL THE AVALIABLE APPLICANTS");
 
@@ -126,13 +135,17 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
     { value: "accepted", label: "Accepted Applications" },
   ];
 
+  const jobName = applicants[0]?.jobTitle;
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
       {/* {(loading || applicants.length ===0) && <CandidateCardSkeleton />} */}
       <div className="mx-auto max-w-6xl">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">Applicants</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {type === "applications" ? "Applicants":"Recommended Profiles" }
+          </h1>
 
           <p className="mt-1 text-sm text-gray-500">
             {totalCount} applicant{totalCount !== 1 ? "s" : ""}
@@ -190,7 +203,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </div>
         )}
 
-        {(loading||initialLoading) ? (
+        {loading || initialLoading ? (
           <div className="mt-2" role="status" aria-busy="true">
             <span className="sr-only">Loading candidates…</span>
             <div className="motion-safe:animate-pulse" aria-hidden="true">
@@ -199,15 +212,23 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </div>
         ) : applicants.length > 0 ? (
           <div className="mt-2">
+            <div className="flex mb-5">
+              <span className="text-lg font-semibold md:text-xl text-gray-500">
+                Job Name:
+              </span>
+              <h3 className="text-lg font-semibold text-gray-900 md:text-xl">
+                {jobName}
+              </h3>
+            </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {applicants.map((profile) => {
                 const isExpanded = expandedSkills === profile?._id;
-
                 const visibleSkills = isExpanded
                   ? profile?.skills
                   : profile?.skills?.slice(0, 3);
-
                 return (
+                  // <>
+
                   <div
                     key={profile?._id}
                     className="rounded-xl relative bg-white p-5 shadow-sm transition hover:shadow-md"
@@ -437,6 +458,8 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                       </Link>
                     </div>
                   </div>
+
+                  // </>
                 );
               })}
             </div>

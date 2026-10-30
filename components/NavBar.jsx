@@ -10,6 +10,7 @@ import { BellDot, BriefcaseBusiness, CircleUserRound } from "lucide-react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/lib/features/profiles/userSlice";
+import { APP_ICON_URL } from "@/constants/constant";
 
 const NavBar = () => {
   const [show, setShow] = useState(false);
@@ -61,20 +62,20 @@ const NavBar = () => {
     setShow(false);
   };
 
-  const handleNotifications = () => {
-    router.push("/commonDashboard/notifications");
-    setShow(false);
-  };
+  // const handleNotifications = () => {
+  //   router.push("/commonDashboard/notifications");
+  //   setShow(false);
+  // };
 
-  const handleMyJobs = () => {
-    router.push("/workerDashboard/myjobs");
-    setShow(false);
-  };
+  // const handleMyJobs = () => {
+  //   router.push("/workerDashboard/myjobs");
+  //   setShow(false);
+  // };
 
-  const handleViewProfile = () => {
-    router.push("/commonDashboard/profile");
-    setShow(false);
-  };
+  // const handleViewProfile = () => {
+  //   router.push("/commonDashboard/profile");
+  //   setShow(false);
+  // };
 
   const routes = {
     notifications: "/commonDashboard/notifications",
@@ -96,84 +97,171 @@ const NavBar = () => {
     }
   };
 
+  // return (
+  //   <div className="relative mx-4 bg-gray-100">
+  //     <div className="flex justify-between">
+  //       <button onClick={handlePageData}>
+  //         <img
+  //           src="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1783930795229/1783930795229-8ce74683-ba1a-41fc-a08d-bbb20e3b94ba.png"
+  //           alt="logo"
+  //           width={120}
+  //           height={60}
+  //           className="w-32 md:w-44 h-16 rounded-lg mt-1 mx-2"
+  //         />
+  //       </button>
+
+  //       <div className="flex items-center">
+  //         <Link href={"/commonDashboard/notifications"}>
+  //           <BellDot className="m-3 h-9 w-9 [&_circle]:fill-red-500 [&_circle]:stroke-red-500" />
+  //         </Link>
+  //         {/* {onboardPage >= 4 && role === "worker" && (
+  //           <Link href="/workerDashboard/myjobs">
+  //             <div className="flex cursor-pointer m-4">
+  //               <BriefcaseBusiness />
+  //               <button className="px-2 cursor-pointer">My Jobs</button>
+  //             </div>
+  //           </Link>
+  //         )} */}
+
+  //         <button
+  //           onClick={() => {
+  //             setShow(!show);
+  //           }}
+  //           onMouseEnter={() => setShow(true)}
+  //           onMouseLeave={() => setShow(false)}
+  //         >
+  //           {profileimage ? (
+  //             <img
+  //               src={profileimage}
+  //               alt="Profile"
+  //               width={10}
+  //               height={10}
+  //               className="w-14 h-12 rounded-full object-cover"
+  //             />
+  //           ) : (
+  //             <CircleUserRound className="w-5 h-6 m-2 md:w-12 md:h-12 object-none object-center rounded-full hover:scale-105 cursor-pointer" />
+  //           )}
+  //         </button>
+  //       </div>
+  //     </div>
+  //     {show && (
+  //       <div className="absolute top-full right-0 w-24 md:w-32 bg-white shadow-lg rounded-lg border z-50">
+  //         <ul>
+  //           <li
+  //             className="px-4 py-2 hover:bg-red-200"
+  //             onClick={() => handleNavigation("profile")}
+  //           >
+  //             My Profile
+  //           </li>
+  //           {role === "worker" && (
+  //             <li
+  //               className="px-4 py-2 hover:bg-red-200"
+  //               onClick={() => handleNavigation("myjobs")}
+  //             >
+  //               My Jobs
+  //             </li>
+  //           )}
+  //           <li
+  //             className="px-4 py-2 hover:bg-red-200"
+  //             onClick={() => handleNavigation("notifications")}
+  //           >
+  //             Notifications
+  //           </li>
+  //           {/* </Link> */}
+  //           <li className="px-4 py-2 hover:bg-red-300" onClick={handleLogOut}>
+  //             Logout
+  //           </li>
+  //         </ul>
+  //       </div>
+  //     )}
+  //     {loading && <Loading />}
+  //   </div>
+  // );
+
+  const hasValidImage =
+  typeof profileimage === "string" &&
+  profileimage.trim() !== "" &&
+  profileimage !== "null" &&
+  profileimage !== "undefined";
+
+
   return (
-    <div className="relative mx-4">
-      <div className="flex justify-between">
-        <button onClick={handlePageData}>
-          <img
-            src="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1783930795229/1783930795229-8ce74683-ba1a-41fc-a08d-bbb20e3b94ba.png"
-            alt="logo"
-            width={120}
-            height={60}
-            className="w-32 md:w-44 h-16 rounded-lg mt-1 mx-2"
-          />
-        </button>
+  <div className="relative mx-4 bg-gray-100">
+    <div className="flex justify-between items-center">
+      <button onClick={handlePageData}>
+        <img
+          src={APP_ICON_URL}
+          alt="logo"
+          width={60}
+          height={60}
+          className="w-18 md:w-18 h-18 rounded-lg mt-1 mx-2"
+        />
+      </button>
 
-        <div className="flex items-center">
-          <Link href={"/commonDashboard/notifications"}>
-            <BellDot className="m-3 h-8 w-8" />
-          </Link>
-          {onboardPage >= 4 && role === "worker" && (
-            <Link href="/workerDashboard/myjobs">
-              <div className="flex cursor-pointer m-4">
-                <BriefcaseBusiness />
-                <button className="px-2 cursor-pointer">My Jobs</button>
-              </div>
-            </Link>
-          )}
+      <div className="flex items-center">
+        <Link href={"/commonDashboard/notifications"}>
+          <BellDot className="m-3 h-10 w-10 [&_circle]:fill-red-500 [&_circle]:stroke-red-500" />
+        </Link>
 
-          <button
-            onClick={() => {
-              setShow(!show);
-            }}
-          >
-            {profileimage ? (
+        {/* Profile button + dropdown share one hover area */}
+        <div
+          className="relative"
+          onMouseEnter={() => setShow(true)}
+          onMouseLeave={() => setShow(false)}
+        >
+          <button type="button" onClick={() => setShow(true)}>
+            {hasValidImage ? (
               <img
                 src={profileimage}
                 alt="Profile"
                 width={10}
                 height={10}
-                className="w-14 h-12 rounded-full object-cover"
+                className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
               <CircleUserRound className="w-5 h-6 m-2 md:w-12 md:h-12 object-none object-center rounded-full hover:scale-105 cursor-pointer" />
             )}
           </button>
+
+          {show && (
+            <div className="absolute top-full right-0 w-40 bg-white shadow-lg rounded-lg border z-50 overflow-hidden">
+              <ul>
+                <li
+                  className="px-4 py-2 hover:bg-red-200 cursor-pointer"
+                  onClick={() => handleNavigation("profile")}
+                >
+                  My Profile
+                </li>
+                {role === "worker" && (
+                  <li
+                    className="px-4 py-2 hover:bg-red-200 cursor-pointer"
+                    onClick={() => handleNavigation("myjobs")}
+                  >
+                    My Jobs
+                  </li>
+                )}
+                <li
+                  className="px-4 py-2 hover:bg-red-200 cursor-pointer"
+                  onClick={() => handleNavigation("notifications")}
+                >
+                  Notifications
+                </li>
+                <li
+                  className="px-4 py-2 hover:bg-red-300 cursor-pointer"
+                  onClick={handleLogOut}
+                >
+                  Logout
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
-      {show && (
-        <div className="absolute top-full right-0 mt-2 w-24 mr-2 md:w-32 bg-white shadow-lg rounded-lg border z-50">
-          <ul>
-            <li
-              className="px-4 py-2 hover:bg-red-200"
-              onClick={() => handleNavigation("profile")}
-            >
-              My Profile
-            </li>
-            {role === "worker" && (
-              <li
-                className="px-4 py-2 hover:bg-red-200"
-                onClick={() => handleNavigation("myjobs")}
-              >
-                My Jobs
-              </li>
-            )}
-            <li
-              className="px-4 py-2 hover:bg-red-200"
-              onClick={() => handleNavigation("notifications")}
-            >
-              Notifications
-            </li>
-            {/* </Link> */}
-            <li className="px-4 py-2 hover:bg-red-300" onClick={handleLogOut}>
-              Logout
-            </li>
-          </ul>
-        </div>
-      )}
-      {loading && <Loading />}
     </div>
-  );
+
+    {loading && <Loading />}
+  </div>
+);
 };
 
 export default NavBar;

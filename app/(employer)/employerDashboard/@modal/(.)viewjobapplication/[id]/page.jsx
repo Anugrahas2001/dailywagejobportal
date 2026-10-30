@@ -32,6 +32,7 @@ const page = () => {
     <Modal
       workerId={workerId}
       jobId={jobId}
+      status={status}
       type={type}
       matchingRate={matchingRate}
       role={role}

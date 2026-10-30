@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/mongodb";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobApplication from "@/modals/JobApplication";
+import JobDetails from "@/modals/JobDetails";
 import JobInvitation from "@/modals/JobInvitation";
 import JobPreferences from "@/modals/JobPreferences";
 import User from "@/modals/User";
@@ -209,13 +210,14 @@ export async function GET(request) {
     }
 
     // Fetch user + preference data
-    const [users, preferences] = await Promise.all([
+    const [users, preferences, job] = await Promise.all([
       User.find({ _id: { $in: pageWorkerIds } })
         .select(
           "name email mobileNumber city state country isVerified profileImage skills",
         )
         .lean(),
       JobPreferences.find({ userId: { $in: pageWorkerIds } }).lean(),
+      JobDetails.findById(jobId).select("jobName -_id").lean(),
     ]);
 
     const userMap = new Map(users.map((u) => [String(u._id), u]));
@@ -224,7 +226,7 @@ export async function GET(request) {
     );
 
     // Keep the same order as pageWorkerIds
-    const data = pageWorkerIds
+    const res = pageWorkerIds
       .map((id) => {
         const user = userMap.get(id);
         if (!user) return null;
@@ -249,6 +251,12 @@ export async function GET(request) {
         };
       })
       .filter(Boolean);
+
+    const data = {
+      ...res,
+      jobTitle: job?.jobName,
+    };
+    console.log(data, "USER JOB DATA");
 
     return NextResponse.json(
       {

@@ -3,22 +3,36 @@ import { fetchUserToken } from "@/lib/fetchUserToken";
 import React, { useEffect, useState } from "react";
 import { goToPage, timeAgo } from "./commonFunctions";
 import { Bell } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Pagination from "./Pagination";
+import useControls from "./hooks/useControls";
+import { NotificationsListSkeleton } from "./skeltons/NotificationsSkeleton";
+import useLoading from "./hooks/useLoading";
 
 const ShowNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const pageSize = 12;
+  const { loading, setLoading } = useLoading();
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  } = useControls();
 
+  const pageSize = 12;
   const totalPages = Math.ceil(totalCount / pageSize) || 0;
-  const router = useRouter();
+
+  console.log(page, "=====================PAGE PAGE");
 
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const token = await fetchUserToken();
+        setLoading(true);
         const response = await fetch(
           `/api/employer/notifications?page=${page}&limit=12`,
           {
@@ -39,14 +53,18 @@ const ShowNotifications = () => {
         console.log(data, "ALL THE NOTIFICATIONS DATA");
         setNotifications(data);
         setTotalCount(totalCount);
+        setLoading(false);
       } catch (error) {
         console.log(error, "ERROR DATA");
+        setLoading(false);
+      } finally {
+        setLoading(false);
+        setInitialLoading(false);
       }
     };
 
     fetchNotifications();
   }, [page]);
-
 
   const handleNavigation = ({ notifType, jobId }) => {
     switch (notifType) {
@@ -66,73 +84,139 @@ const ShowNotifications = () => {
         break;
       case "JOB_INVITATION_ACCEPTED":
         router.push(
-          "/employerDashboard/appliedworkers?jobId=${jobId}&type=applications",
+          `/employerDashboard/appliedworkers?jobId=${jobId}&type=applications`,
         );
         break;
     }
   };
 
+  // return (
+  //   <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-3">
+  //     {initialLoading ? (
+  //       <NotificationsListSkeleton />
+  //     ) : (
+  //       <>
+  //       notifications.map((notif) => (
+  //         <div
+  //           key={notif?._id}
+  //           className={`group relative flex items-start cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+  //             notif?.isRead
+  //               ? "border-gray-100 bg-white"
+  //               : "border-indigo-100 bg-indigo-50/60"
+  //           }`}
+  //           onClick={() =>
+  //             handleNavigation({
+  //               notifType: notif?.notifType,
+  //               jobId: notif?.data?.jobId,
+  //             })
+  //           }
+  //         >
+  //           {/* Accent bar for unread */}
+  //           {/* {!notif?.isRead && (
+  //           <span className="absolute left-0 top-0 h-full w-1 bg-indigo-500" />
+  //         )} */}
+
+  //           {/* Icon */}
+  //           <div
+  //             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+  //               notif?.isRead
+  //                 ? "bg-gray-100 text-gray-500"
+  //                 : "bg-indigo-100 text-indigo-600"
+  //             }`}
+  //           >
+  //             <Bell size={18} />
+  //           </div>
+
+  //           {/* Content */}
+  //           <div className="flex min-w-0 flex-1 flex-col gap-1">
+  //             <div className="flex items-center justify-between gap-3">
+  //               <h3 className="truncate text-sm font-semibold text-gray-900">
+  //                 {notif?.title}
+  //               </h3>
+  //               <span className="shrink-0 whitespace-nowrap text-xs font-medium text-gray-400">
+  //                 {timeAgo(notif?.createdAt)}
+  //               </span>
+  //             </div>
+  //             <p className="line-clamp-2 text-sm leading-relaxed text-gray-600">
+  //               {notif?.message}
+  //             </p>
+  //           </div>
+  //         </div>
+  //       ))( <Pagination
+  //       onClick={(p) => goToPage({ p, totalPages, setPage })}
+  //       totalPages={totalPages}
+  //       page={page}
+  //       totalCount={totalCount}
+  //     />)
+  //       </>
+  //     )}
+
+  //   </div>
+  // );
+
   return (
     <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-3">
-      {notifications.map((notif) => (
-        <div
-          key={notif?._id}
-          className={`group relative flex items-start cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
-            notif?.isRead
-              ? "border-gray-100 bg-white"
-              : "border-indigo-100 bg-indigo-50/60"
-          }`}
-          onClick={() =>
-            handleNavigation({
-              notifType: notif?.notifType,
-              jobId: notif?.data?.jobId,
-            })
-          }
-        >
-          {/* Accent bar for unread */}
-          {/* {!notif?.isRead && (
-            <span className="absolute left-0 top-0 h-full w-1 bg-indigo-500" />
-          )} */}
-
-          {/* Icon */}
-          <div
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-              notif?.isRead
-                ? "bg-gray-100 text-gray-500"
-                : "bg-indigo-100 text-indigo-600"
-            }`}
-          >
-            <Bell size={18} />
-          </div>
-
-          {/* Content */}
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="truncate text-sm font-semibold text-gray-900">
-                {notif?.title}
-              </h3>
-              <span className="shrink-0 whitespace-nowrap text-xs font-medium text-gray-400">
-                {timeAgo(notif?.createdAt)}
-              </span>
-            </div>
-            <p className="line-clamp-2 text-sm leading-relaxed text-gray-600">
-              {notif?.message}
+      {initialLoading || loading ? (
+        <NotificationsListSkeleton />
+      ) : (
+        <>
+          {notifications.length === 0 ? (
+            <p className="py-10 text-center text-sm text-gray-500">
+              No notifications yet
             </p>
-          </div>
+          ) : (
+            notifications.map((notif) => (
+              <div
+                key={notif?._id}
+                className={`group relative flex items-start cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                  notif?.isRead
+                    ? "border-gray-100 bg-white"
+                    : "border-indigo-100 bg-indigo-50/60"
+                }`}
+                onClick={() =>
+                  handleNavigation({
+                    notifType: notif?.notifType,
+                    jobId: notif?.data?.jobId,
+                  })
+                }
+              >
+                {/* Icon */}
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                    notif?.isRead
+                      ? "bg-gray-100 text-gray-500"
+                      : "bg-indigo-100 text-indigo-600"
+                  }`}
+                >
+                  <Bell size={18} />
+                </div>
 
-          {/* Unread dot */}
-          {/* {!notif?.isRead && (
-          <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
-        )} */}
-        </div>
-      ))}
+                {/* Content */}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="truncate text-sm font-semibold text-gray-900">
+                      {notif?.title}
+                    </h3>
+                    <span className="shrink-0 whitespace-nowrap text-xs font-medium text-gray-400">
+                      {timeAgo(notif?.createdAt)}
+                    </span>
+                  </div>
+                  <p className="line-clamp-2 text-sm leading-relaxed text-gray-600">
+                    {notif?.message}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
 
-      <Pagination
-        onClick={goToPage}
-        totalPages={totalPages}
-        page={page}
-        totalCount={totalCount}
-      />
+          <Pagination
+            onClick={(p) => goToPage({ p, totalPages, setPage })}
+            totalPages={totalPages}
+            page={page}
+            totalCount={totalCount}
+          />
+        </>
+      )}
     </div>
   );
 };

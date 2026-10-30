@@ -54,7 +54,7 @@ const UserSchema = new mongoose.Schema(
     city: { type: String },
     state: { type: String },
     country: { type: String },
-    yearsOfExperience: { type: Number },
+    yearsOfExperience: { type: Number,default:0 },
     // currentJobStatus: {
     //   type: "String",
     // },

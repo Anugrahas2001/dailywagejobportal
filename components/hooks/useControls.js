@@ -11,7 +11,7 @@ const useControls = () => {
   const router = useRouter();
   const pendingRef = useRef({});
   const dispatch = useDispatch();
-
+  console.log(page, "PAGE LOAD DATA PAGE LOAD");
   const runWithPending = async (key, fn) => {
     if (pendingRef.current[key]) return;
     pendingRef.current[key] = true;
@@ -31,7 +31,16 @@ const useControls = () => {
 
   const isPending = (key) => Boolean(pendingIds[key]);
 
-  return { page, setPage, router, dispatch, runWithPending, isPending,initialLoading, setInitialLoading };
+  return {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending,
+    initialLoading,
+    setInitialLoading,
+  };
 };
 
 export default useControls;
