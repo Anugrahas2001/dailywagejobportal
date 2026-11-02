@@ -5,6 +5,7 @@ import {
   getPostedText,
   getShiftTypes,
   getStatusColor,
+  goToPage,
 } from "@/components/commonFunctions";
 import Error from "@/components/Error";
 import FilterButtons from "@/components/FilterButtons";
@@ -13,8 +14,8 @@ import Pagination from "@/components/Pagination";
 import MyJobsSkeleton from "@/components/skeltons/MyJobsSkeleton";
 import {
   APPLIED_JOB_STATUS,
-  appliedSortingOptions,
-  savedSortingOptions,
+  APPLIED_SORT_OPTIONS,
+  SAVED_SORTING_OPTIONS,
 } from "@/constants/constant";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import {
@@ -37,11 +38,11 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 
 const page = () => {
-  const [jobType, setJobType] = useState("");
+  const [jobType, setJobType] = useState("Saved");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showSortDropdown, setShowSortDropdown] = useState(false);
-  const [status, setStatus] = useState("applied");
-  const [sort, setSort] = useState("newest");
+  const [status, setStatus] = useState("Applied");
+  const [sort, setSort] = useState("Newest");
   const [role, setRole] = useState("");
 
   const {
@@ -81,16 +82,16 @@ const page = () => {
 
   // console.log(savedJobs.length, appliedJobs?.length, "ALL SAVED JOBS");
   const jobs =
-    jobType === "saved"
+    jobType === "Saved"
       ? savedJobs
-      : jobType === "applied"
+      : jobType === "Applied"
         ? appliedJobs
         : jobInvitations;
 
   const totalCount =
-    jobType === "saved"
+    jobType === "Saved"
       ? savedTotalCount
-      : jobType === "applied"
+      : jobType === "Applied"
         ? appliedTotalCount
         : jobInvitationTotalCount;
 
@@ -99,33 +100,60 @@ const page = () => {
   const error = savedError || appliedError;
 
   const loadingStatus =
-    jobType === "saved"
+    jobType === "Saved"
       ? savedLoadingStatus
-      : jobType === "applied"
+      : jobType === "Applied"
         ? appliedLoadingStatus
         : jobInvitationLoadingStatus;
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const defaultLabel = jobType === "saved" ? "Newest Saved" : "Newest Applied";
+  const defaultLabel = jobType === "Saved" ? "NEWEST_SAVED" : "NEWEST_APPLIED";
   const sortOptions =
-    jobType === "saved" ? savedSortingOptions : appliedSortingOptions;
+    jobType === "Saved" ? SAVED_SORTING_OPTIONS : APPLIED_SORT_OPTIONS;
 
   // const savedStatus = useSelector((state) => state.saved.status);
   // const appliedStatus = useSelector((state) => state.applied.status);
 
   // const statusLoading = jobType === "saved" ? savedStatus : appliedStatus;
 
+  useEffect(() => {
+    if (jobType === "Saved") {
+      dispatch(fetchSavedJobs({ sort, page }));
+    } else if (jobType === "Applied") {
+      dispatch(fetchAppliedJobs({ sort, status, page }));
+    } else if (jobType === "JobInvitation") {
+      dispatch(fetchJobInvitations({ status: "Sent", page }));
+    } else {
+      dispatch(fetchJobInvitations({ status: "Accepted", page }));
+    }
+  }, [jobType, sort, status, page]);
+
   const handleJobStatus = (jobStatus) => {
     console.log("CLICKED", jobStatus);
-    if (jobStatus === "saved") {
-      setJobType("saved");
-    } else if (jobStatus === "applied") {
-      setJobType("applied");
-    } else if (jobStatus === "jobInvitation") {
-      setJobType("jobInvitation");
+    if (jobStatus === "Saved") {
+      setJobType("Saved");
+    } else if (jobStatus === "Applied") {
+      setJobType("Applied");
+    } else if (jobStatus === "JobInvitation") {
+      setJobType("JobInvitation");
     } else {
-      setJobType("accepted");
+      setJobType("Accepted");
+    }
+  };
+
+  const getMessage = (type) => {
+    switch (type) {
+      case "Saved":
+        return "saved";
+      case "Applied":
+        return "applied to";
+      case "JobInvitation":
+        return "received invitations for";
+      case "Accepted":
+        return "accepted";
+      default:
+        return "received";
     }
   };
 
@@ -145,7 +173,7 @@ const page = () => {
     console.log(jobId, "JOBID DATA");
     await dispatch(applyToJob(jobId)).unwrap();
     setPage(1);
-    if (jobType === "saved") {
+    if (jobType === "Saved") {
       console.log("ANUGRAHA 1", jobType);
       await dispatch(fetchSavedJobs({ sort, page })).unwrap();
     } else {
@@ -170,24 +198,14 @@ const page = () => {
         page: 1,
       }),
     ).unwrap();
+    dispatch(fetchAppliedJobs({ sort, status, page }));
   };
 
   const handleJobInvitationStatus = ({ status, jobId, employerId }) => {
     console.log(status, jobId, employerId, "JOB_INVITATION FUNCTION");
     dispatch(updateJobInvitationStatus({ status, jobId, employerId }));
+    dispatch(fetchJobInvitations({ status: "Sent", page }));
   };
-
-  useEffect(() => {
-    if (jobType === "saved") {
-      dispatch(fetchSavedJobs({ sort, page }));
-    } else if (jobType === "applied") {
-      dispatch(fetchAppliedJobs({ sort, status, page }));
-    } else if (jobType === "jobInvitation") {
-      dispatch(fetchJobInvitations({ status: "sent", page }));
-    } else {
-      dispatch(fetchJobInvitations({ status: "accepted", page }));
-    }
-  }, [jobType, sort, status, page]);
 
   const uniqueJobs = Array.from(
     new Map(jobs.map((job) => [job._id, job])).values(),
@@ -203,17 +221,17 @@ const page = () => {
           <div className="flex">
             <button
               onClick={() => {
-                handleJobStatus("saved");
+                handleJobStatus("Saved");
               }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "saved" ? "bg-blue-500" : "bg-gray-400"}`}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Saved" ? "bg-blue-500" : "bg-gray-400"}`}
             >
               Saved
             </button>
             <button
               onClick={() => {
-                handleJobStatus("applied");
+                handleJobStatus("Applied");
               }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Applied" ? "bg-blue-500" : "bg-gray-400"}`}
             >
               Applied
             </button>
@@ -221,33 +239,35 @@ const page = () => {
             <button
               // onClick={handleJobInvitations}
               onClick={() => {
-                handleJobStatus("jobInvitation");
+                handleJobStatus("JobInvitation");
               }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "JobInvitation" ? "bg-blue-500" : "bg-gray-400"}`}
             >
               Invitations
             </button>
             <button
               // onClick={handleJobInvitations}
               onClick={() => {
-                handleJobStatus("accepted");
+                handleJobStatus("Accepted");
               }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "applied" ? "bg-blue-500" : "bg-gray-400"}`}
+              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Accepted" ? "bg-blue-500" : "bg-gray-400"}`}
             >
               Accepted
             </button>
           </div>
-          {jobType !== "jobInvitation" && (
+          {jobType !== "JobInvitation" && jobType !== "Accepted" && (
             <div className="relative inline-block">
               <div className="flex items-center gap-2 mt-3">
-                {jobType === "applied" && (
+                {jobType === "Applied" && (
                   <FilterButtons
                     title="Status"
                     setDropdownStatus={setShowStatusDropdown}
                     dropDown={showStatusDropdown}
-                    setValue={setStatus}
-                    defaultLabel="Applied"
                     value={status}
+                    setValue={setStatus}
+                    defaultLabel="APPLIED"
+                    // statusVal="Applied"
+                    // value="Applied"
                     options={APPLIED_JOB_STATUS}
                     onClick={() => {
                       console.log("ANUGRAHA 7", jobType);
@@ -264,7 +284,7 @@ const page = () => {
                   value={sort}
                   defaultLabel={defaultLabel}
                   onClick={() => {
-                    if (jobType === "applied") {
+                    if (jobType === "Applied") {
                       console.log("ANUGRAHA 8", jobType);
                       dispatch(fetchAppliedJobs({ sort, status, page }));
                     } else {
@@ -296,7 +316,7 @@ const page = () => {
                           <h4 className=" text-gray-600">{job.jobCategory}</h4>
                         </div>
 
-                        {jobType === "saved" && (
+                        {jobType === "Saved" && (
                           <button
                             className="p-2 rounded-full hover:bg-gray-100"
                             onClick={() => {
@@ -318,7 +338,7 @@ const page = () => {
                       </div>
 
                       <Link
-                        href={`/${role}Dashboard/jobs/${job._id}?type=${jobType}`}
+                        href={`/${role}Dashboard/jobs/${job?._id ? String(job._id) : null}?type=${jobType}`}
                       >
                         <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
                           <p>
@@ -335,15 +355,15 @@ const page = () => {
                         {jobType !== "jobInvitation" && (
                           <div className="space-y-2 md:min-w-[170px] md:text-right mt-4 flex flex-row justify-between">
                             <div className="flex items-center gap-2 md:justify-end">
-                              {jobType === ("saved" || "applied") && (
+                              {jobType === ("Saved" || "Applied") && (
                                 <>
                                   <span
-                                    className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).dot}`}
+                                    className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(jobType === "Saved" ? job.status : job.applicationStatus).dot}`}
                                   ></span>
                                   <p
-                                    className={`text-sm font-medium ${getStatusColor(jobType === "saved" ? job.status : job.applicationStatus).text}`}
+                                    className={`text-sm font-medium ${getStatusColor(jobType === "Saved" ? job.status : job.applicationStatus).text}`}
                                   >
-                                    {jobType === "saved"
+                                    {jobType === "Saved"
                                       ? job.status
                                       : job.applicationStatus}
                                   </p>
@@ -355,16 +375,16 @@ const page = () => {
                       </Link>
                     </div>
 
-                    {jobType !== "jobInvitation" ? (
+                    {jobType !== "JobInvitation" ? (
                       <div
                         className={`flex justify-between border-t pt-4 flex-row items-center`}
                       >
-                        {jobType === ("saved" || "applied") && (
+                        {jobType === ("Saved" || "Applied") && (
                           <p className="text-sm text-gray-500">
                             {" "}
                             {getPostedText({
                               createdAt:
-                                jobType === "saved"
+                                jobType === "Saved"
                                   ? job.createdAt
                                   : job.appliedAt,
                               jobType,
@@ -372,9 +392,9 @@ const page = () => {
                           </p>
                         )}
 
-                        {(jobType === "saved" || "applied") && (
+                        {(jobType === "Saved" || "Applied") && (
                           <div className="flex gap-2 md:gap-3 md:mt-0">
-                            {jobType === "saved" ? (
+                            {jobType === "Saved" ? (
                               <button
                                 className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
                                 onClick={() => {
@@ -383,7 +403,7 @@ const page = () => {
                               >
                                 Apply Now
                               </button>
-                            ) : (
+                            ) : jobType === "Applied" ? (
                               <button
                                 className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
                                 onClick={() =>
@@ -392,6 +412,8 @@ const page = () => {
                               >
                                 Cancel
                               </button>
+                            ) : (
+                              <></>
                             )}
                           </div>
                         )}
@@ -403,7 +425,7 @@ const page = () => {
                           className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
                           onClick={() => {
                             handleJobInvitationStatus({
-                              status: "rejected",
+                              status: "Rejected",
                               jobId: job._id,
                               employerId: job.employerId,
                             });
@@ -416,7 +438,7 @@ const page = () => {
                           className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
                           onClick={() => {
                             handleJobInvitationStatus({
-                              status: "accepted",
+                              status: "Accepted",
                               jobId: job._id,
                               employerId: job.employerId,
                             });
@@ -437,8 +459,7 @@ const page = () => {
                   </h2>
 
                   <p className="mt-2 text-sm text-gray-500">
-                    You haven't created any jobs yet. Create your first job to
-                    start receiving applications from workers.
+                    {`You haven't ${getMessage(jobType)} any jobs yet.`}
                   </p>
                   <Link href="/employerDashboard/dashboard">
                     <button className="mt-6 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
@@ -450,7 +471,7 @@ const page = () => {
             )}
           </section>
           <Pagination
-            onClick={(p)=>goToPage({p,totalPages,setPage})}
+            onClick={(p) => goToPage({ p, totalPages, setPage })}
             totalPages={totalPages}
             page={page}
             totalCount={totalCount}

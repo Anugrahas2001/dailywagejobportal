@@ -7,6 +7,7 @@ import Pagination from "./Pagination";
 import useControls from "./hooks/useControls";
 import { NotificationsListSkeleton } from "./skeltons/NotificationsSkeleton";
 import useLoading from "./hooks/useLoading";
+import { PAGE_SIZE } from "@/constants/constant";
 
 const ShowNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -22,9 +23,7 @@ const ShowNotifications = () => {
     initialLoading,
     setInitialLoading,
   } = useControls();
-
-  const pageSize = 12;
-  const totalPages = Math.ceil(totalCount / pageSize) || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
 
   console.log(page, "=====================PAGE PAGE");
 

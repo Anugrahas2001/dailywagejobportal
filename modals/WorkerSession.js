@@ -8,9 +8,9 @@ const WorkSessionSchema = new mongoose.Schema(
   {
     _id: { type: String, required: true },
     jobId: { type: String, required: true, index: true },
-    workerId: { type: String, required: true, },
+    workerId: { type: String, required: true },
     employerId: { type: String, required: true, index: true },
-    workDate: { type: String, default: null, required: true }, // "2026-10-16"
+    workDate: { type: Date, default: Date.now, required: true }, // "2026-10-16"
 
     // Rate snapshot taken at hire time
     agreedRate: { type: Number, required: true, min: 0 },
@@ -34,7 +34,7 @@ const WorkSessionSchema = new mongoose.Schema(
       {
         _id: false,
         startedAt: { type: Date, required: true },
-        endedAt: { type: Date ,default:null},
+        endedAt: { type: Date, default: null },
       },
     ],
     breakMinutes: { type: Number, default: 0, min: 0 },
@@ -71,7 +71,6 @@ WorkSessionSchema.index(
     },
   },
 );
-
 
 export default mongoose.models.WorkSession ||
   mongoose.model("WorkSession", WorkSessionSchema);

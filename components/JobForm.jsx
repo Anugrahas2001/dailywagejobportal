@@ -105,6 +105,8 @@ const JobForm = ({ mode, initialData }) => {
 
     const currentSelectedSkills = watch("skillsRequired");
 
+    console.log(currentSelectedSkills, "CURRENT SELECTED SKILLLS=======");
+
     if (currentSelectedSkills.includes(skill)) {
       setValue(
         "skillsRequired",
@@ -127,6 +129,7 @@ const JobForm = ({ mode, initialData }) => {
     setIsAdding(true);
     const currentResponsibilities = watch("responsibilities");
     if (currentResponsibilities.includes(trimmedResponsibility)) {
+      setResponsibility(""); // clear the input for duplicates
       setIsAdding(false); // <-- was missing, caused isAdding to stay true
       return;
     }
@@ -201,26 +204,12 @@ const JobForm = ({ mode, initialData }) => {
     }
   };
 
-  // const onSubmit = async (data) => {
-  //   console.log(data, "DATA SEND TO THE BACKEND");
-  //   if (mode === "create") {
-  //     dispatch(createJob({ body: data }));
-  //   } else {
-  //     dispatch(updateJob({ body: data, id: initialData._id }));
-  //     await dispatch(fetchAvilableJobs({ page: 1 })).unwrap();
-  //   }
-
-  //   router.push("/employerDashboard");
-  // };
-
   const onSubmit = async (data) => {
     try {
       if (mode === "create") {
-        console.log(data, "===================%%%%%%%%%%%%%%%###########");
         await dispatch(createJob({ body: data })).unwrap();
       } else {
         await dispatch(updateJob({ body: data, id: initialData._id })).unwrap();
-        // await dispatch(fetchAvilableJobs({ page: 1 })).unwrap();
       }
       router.push("/employerDashboard");
     } catch (error) {
@@ -287,6 +276,7 @@ const JobForm = ({ mode, initialData }) => {
           }))}
           {...register("jobCategory", {
             required: "Job Category is required",
+            onChange: () => setValue("skillsRequired", []),
           })}
           error={errors.jobCategory?.message}
         />
@@ -458,7 +448,7 @@ const JobForm = ({ mode, initialData }) => {
           error={errors.salaryType?.message}
         />
 
-        <div className="flex items-center justify-between rounded-lg border p-2 mt-3 mb-3">
+        <div className="flex items-center justify-between rounded-lg border px-3 py-2 my-3">
           <label
             htmlFor="use-current-location"
             className="text-sm font-medium mb-1.5 cursor-pointer"

@@ -307,7 +307,7 @@ const MyProfile = () => {
   console.log(editedText, "BIO VALUE");
   // skills
   const [skill, setSkill] = useState("");
-  const [experience, setExperience] = useState("");
+  const [experience, setExperience] = useState("Beginner");
   const [skillsDraft, setSkillsDraft] = useState([]);
   // job preferences: only a temporary copy while editing.
   // The saved values live in profile.preference (single source of truth).
@@ -634,9 +634,9 @@ const MyProfile = () => {
     }
   };
 
-  const handleWorkingStatusUpdate = async (e) => {
-    console.log(e.target.value, "CHCEK THE WORKING STATUS OF THE USER");
-    const status = e.target.value;
+  const handleWorkingStatusUpdate = async (status) => {
+    console.log(status, "CHCEK THE WORKING STATUS OF THE USER");
+    // const status = e.target.value;
     setWorkingStatus(status);
     const jobId = localStorage.getItem("currentJobId");
 
@@ -689,7 +689,7 @@ const MyProfile = () => {
           <select
             className="absolute right-4 top-4 rounded-lg p-2 text-sm bg-green-500"
             value={workingStatus}
-            onChange={(e) => handleWorkingStatusUpdate(e)}
+            onChange={(e) => handleWorkingStatusUpdate(e.target.value)}
           >
             {Object.values(WORKER_WORKING_STATUS).map((status) => (
               <option key={status} value={status} className="px-1">
@@ -967,20 +967,20 @@ const MyProfile = () => {
               <div>
                 <p className="mb-3 font-medium">Experience Level</p>
                 <div className="flex flex-wrap gap-5">
-                  {EXPERIENCE_LEVELS.map((level) => (
+                  {Object.entries(EXPERIENCE_LEVELS).map(([key, value]) => (
                     <label
-                      key={level}
+                      key={value}
                       className="flex cursor-pointer items-center gap-2"
                     >
                       <input
                         type="radio"
                         name="experience"
-                        value={level}
-                        checked={experience === level}
+                        value={value}
+                        checked={experience === value}
                         onChange={(e) => setExperience(e.target.value)}
                         className="accent-blue-600"
                       />
-                      <span className="text-sm text-gray-700">{level}</span>
+                      <span className="text-sm text-gray-700">{key}</span>
                     </label>
                   ))}
                 </div>

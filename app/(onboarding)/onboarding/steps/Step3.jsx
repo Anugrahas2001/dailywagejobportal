@@ -102,7 +102,7 @@ const Step3 = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-auto space-y-8 bg-gray-100">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Tell Us About Your Skills

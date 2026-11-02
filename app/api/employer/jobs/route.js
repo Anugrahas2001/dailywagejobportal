@@ -39,8 +39,8 @@ export async function POST(request) {
     // when a job is CREATED
     await matchQueue.add(
       "compute-matches",
-      { jobId: job._id.toString(), employerId: uid, notify: true },
-      { jobId: `job-${job._id}`, removeOnComplete: true },
+      { jobId: newJob._id.toString(), employerId: uid, notify: true },
+      { jobId: `job-${newJob._id}`, removeOnComplete: true },
     );
 
     console.log(uid, "EMPLOYER USER ID 2");

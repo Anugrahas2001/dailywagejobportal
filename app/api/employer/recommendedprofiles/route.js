@@ -21,7 +21,7 @@ export async function GET(request) {
     const parsedMatching = rawMatching !== null ? Number(rawMatching) : NaN;
     const matchingRate = Number.isNaN(parsedMatching) ? 20 : parsedMatching;
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;                                                                                                     
 
     const allTheAvailableUsers = await UserMatches.find({
       jobId,
@@ -38,9 +38,9 @@ export async function GET(request) {
 
     const allTheUserIds = allTheAvailableUsers.map((job) => job.workerId);
 
-    console.log(allTheUserIds, "ALL THE USER IDS");
+    console.log(allTheUserIds,allTheAvailableUsers.length, "ALL THE USER IDS");
 
-    const [users, userPref, jobInvitations,job] = await Promise.all([
+    const [users, userPref, jobInvitations, job] = await Promise.all([
       User.find({ _id: { $in: allTheUserIds } })
         .select(
           "name email gender mobileNumber city state isVerified profileImage skills",
@@ -53,7 +53,7 @@ export async function GET(request) {
         jobId,
         status: "sent",
       }).lean(),
-      JobDetails.findById(jobId).select("jobName -_id").lean()
+      JobDetails.findById(jobId).select("jobName -_id").lean(),
     ]);
 
     console.log(jobInvitations, "ALL JOB INVIATAIONS");
@@ -86,7 +86,6 @@ export async function GET(request) {
         ...pref,
         matchPercentage: matchingScoreMap.get(String(us._id)),
         applicationAvailable: usermatch ? true : false,
-        jobTitle:job?.jobName
       };
     });
 
@@ -98,6 +97,7 @@ export async function GET(request) {
       {
         message: "Successfully fetched recommended candidates profiles.",
         data: sortedResult,
+        jobTitle: job?.jobName,
         totalCount: allTheAvailableUsers.length,
       },
       {

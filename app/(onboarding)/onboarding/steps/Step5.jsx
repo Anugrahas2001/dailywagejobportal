@@ -7,6 +7,7 @@ import Loading from "@/components/Loading";
 import Step5Skeleton from "@/components/skeltons/Step5Skeleton";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
 import { step5Onboarding } from "@/lib/features/profiles/userThunk";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -157,7 +158,7 @@ const Step5 = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-lg border p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
@@ -238,15 +239,37 @@ const Step5 = () => {
                 )}
 
                 {verificationStatus === "failed" && (
-                  <div className="w-full max-w-lg rounded-lg border border-red-300 bg-red-100 p-4 text-center text-red-700 font-medium">
-                    ❌ Face verification failed. Please retake your selfie and
-                    try again.
-                  </div>
+                  <>
+                    <div className="relative w-full max-w-lg rounded-lg border border-red-300 bg-red-100 p-4 pr-10 text-center font-medium text-red-700">
+                      <button
+                        type="button"
+                        aria-label="Dismiss"
+                        onClick={() => {
+                          dispatch(clearOnboardingError());
+                          retakePhoto();
+                        }}
+                        className="absolute right-2 top-2 rounded p-1 text-red-700 hover:bg-red-200"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                      Face verification failed. Please retake your selfie and
+                      try again.
+                    </div>
+                    <button
+                      onClick={handleSkip}
+                      className="text-gray-600 hover:text-black"
+                    >
+                      Skip for now
+                    </button>
+                  </>
                 )}
 
                 <div className="flex flex-wrap justify-center gap-4">
                   <button
-                    onClick={retakePhoto}
+                    onClick={() => {
+                      retakePhoto();
+                      dispatch(clearOnboardingError());
+                    }}
                     className="rounded-lg border border-gray-300 px-6 py-3 hover:bg-gray-100"
                   >
                     Retake
@@ -259,15 +282,16 @@ const Step5 = () => {
                   >
                     {verifying ? "Verifying Face" : "Verify Face"}
                   </button> */}
-
-                  <Button
-                    loadingText="Verifying Face..."
-                    loading={verifying}
-                    disabled={verifying}
-                    onClick={handleFaceVerification}
-                  >
-                    Verify Face
-                  </Button>
+                  {verificationStatus !== "failed" && (
+                    <Button
+                      loadingText="Verifying Face..."
+                      loading={verifying}
+                      disabled={verifying}
+                      onClick={handleFaceVerification}
+                    >
+                      Verify Face
+                    </Button>
+                  )}
                 </div>
               </div>
             )}

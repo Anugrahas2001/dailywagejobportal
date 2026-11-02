@@ -45,6 +45,7 @@ import FcmTokenRegistrar from "./FcmTokenRegistrar";
 import JobCardSkeleton from "./skeltons/JobCardSkeleton";
 import useControls from "./hooks/useControls";
 import Button from "./Button";
+import { PAGE_SIZE } from "@/constants/constant";
 
 const DashboardPage = ({ role }) => {
   const [status, setStatus] = useState("");
@@ -61,8 +62,13 @@ const DashboardPage = ({ role }) => {
     setInitialLoading,
   } = useControls();
   const loadingStatus = useSelector((state) => state.jobs.status);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  const pageSize = 12;
+  useEffect(() => {
+    if (loadingStatus === "succeeded" || loadingStatus === "failed") {
+      setHasLoadedOnce(true);
+    }
+  }, [loadingStatus]);
 
   const workJobs = useSelector(selectAllJobsForWorker);
   const empJobs = useSelector(selectAllJobsForEmployer);
@@ -87,12 +93,11 @@ const DashboardPage = ({ role }) => {
 
   const count = useSelector((state) => state.jobs.statusCounts);
 
-  const totalPages = Math.ceil(totalCount / pageSize) || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
 
   const savedJobs = useSelector((state) => state.saved.savedJobs);
 
   useEffect(() => {
-    setInitialLoading(false);
     if (role === "employer") {
       if (status) {
         // Employer selected a specific status
@@ -114,6 +119,7 @@ const DashboardPage = ({ role }) => {
 
     if (role === "worker") {
       // Worker should initially fetch Active jobs
+      console.log(page, val, "USEEFFCET DATA FETCH ALL JOBS FOR WORKER");
       dispatch(
         fetchActiveJobs({
           page,
@@ -121,10 +127,18 @@ const DashboardPage = ({ role }) => {
         }),
       );
     }
+    setInitialLoading(false);
   }, [page, status, role, val, dispatch]);
 
-  if (!jobs || initialLoading || loadingStatus === "pending")
-    return <JobCardSkeleton role={role} />;
+  // const showSkeleton =
+  //   !jobs ||
+  //   initialLoading ||
+  //   (loadingStatus === "pending" && jobs.length === 0);
+
+  // if (showSkeleton) return <JobCardSkeleton role={role} />;
+
+  const showSkeleton = !jobs || initialLoading || !hasLoadedOnce;
+  if (showSkeleton) return <JobCardSkeleton role={role} />;
 
   const handleToggleSavedJob = (jobId) => {
     runWithPending(`save-${jobId}`, async () => {
@@ -143,8 +157,9 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleAppliedJob = (jobId) => {
+    console.log(jobId, "============JOB ID DATA");
     runWithPending(`applyjob-${jobId}`, async () => {
-      await dispatch(applyToJob(jobId)).unwrap();
+      await dispatch(applyToJob({ jobId })).unwrap();
       setPage(1);
       await dispatch(fetchActiveJobs({ page: 1 })).unwrap();
     });

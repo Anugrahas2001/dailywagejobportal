@@ -72,7 +72,7 @@ const JobSchema = new mongoose.Schema(
     numberOfOpenings: {
       type: Number,
       min: [1, "There must be at least 1 opening"],
-      default: 1,
+      default: 0,
     },
 
     minSalary: {

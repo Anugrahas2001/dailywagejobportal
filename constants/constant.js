@@ -9,7 +9,7 @@ export const JOB_APPLICATION_STATUS = Object.freeze({
 });
 
 export const JOB_INVITATION_STATUS = Object.freeze({
-  SENT: "sent",
+  SENT: "Sent",
   ACCEPTED: "Accepted",
   REJECTED: "Rejected",
 });
@@ -72,22 +72,34 @@ export const filterOptions = {
 export const APPLIED_JOB_STATUS = Object.freeze({
   APPLIED: "Applied",
   VIEWED: "Viewed",
-  ACCEPTED: "Accepted",
   SHORTLISTED: "Shortlisted",
+  ACCEPTED: "Accepted",
   REJECTED: "Rejected",
 });
 
-export const savedSortingOptions = [
-  { value: "newest", label: "Newest Saved" },
-  { value: "oldest", label: "Oldest Saved" },
-  { value: "high-to-low", label: "High to low salary" },
-  { value: "low-to-high", label: "Low to high salary" },
-];
+export const SAVED_SORTING_OPTIONS = Object.freeze({
+  NEWEST_SAVED: "Newest",
+  OLDEST_SAVED: "Oldest",
+  HIGH_TO_LOW_SALARY: "High to low salary",
+  LOW_TO_HIGH_SALARY: "Low to high salary",
+});
 
-export const appliedSortingOptions = [
-  { value: "newest", label: "Newest Applied" },
-  { value: "oldest", label: "Oldest Applied" },
-];
+// [
+//   { value: "newest", label: "Newest Saved" },
+//   { value: "oldest", label: "Oldest Saved" },
+//   { value: "high-to-low", label: "High to low salary" },
+//   { value: "low-to-high", label: "Low to high salary" },
+// ];
+
+// export const appliedSortingOptions = [
+//   { value: "newest", label: "Newest Applied" },
+//   { value: "oldest", label: "Oldest Applied" },
+// ];
+
+export const APPLIED_SORT_OPTIONS = Object.freeze({
+  NEWEST_APPLIED: "Newest",
+  OLDEST_APPLIED: "Oldest",
+});
 
 export const ALLOWED_ROLES = Object.freeze({
   // ["admin", "employer", "worker"];
@@ -459,7 +471,9 @@ export const JOB_STATUS_VALUES = Object.freeze({
   DELETED: "Deleted",
 });
 
-export const MAX_NUM_SKILLS=8;
-export const SIX_HOURS = 12 * 60 * 60 * 1000;
+export const MAX_NUM_SKILLS = 8;
+export const SIX_HOURS = 1 * 60 * 60 * 1000;
+export const PAGE_SIZE = 12;
 
-export const APP_ICON_URL="https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1793220020718/1793220020718-d610ebff-6afd-4ae6-a090-a6121a76d7c9.png"
+export const APP_ICON_URL =
+  "https://eumbavyknovpbruaexpy.supabase.co/storage/v1/object/public/ImageBucket/1793220020718/1793220020718-d610ebff-6afd-4ae6-a090-a6121a76d7c9.png";

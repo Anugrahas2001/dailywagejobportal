@@ -2,16 +2,16 @@
 
 import { getJoiningPeriodType, getShiftTypes } from "./commonFunctions";
 import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
-import { useRouter } from "next/navigation";
 import { JOB_COMPLETION_STATUS } from "@/constants/constant";
 import { useEffect, useState } from "react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 import useLoading from "./hooks/useLoading";
 import JobDetailsSkeleton from "./skeltons/JobDetailsSkeleton";
+import { fetchSavedJobs } from "@/lib/features/workerJobs/savedjobs/savedJobThunk";
+import useControls from "./hooks/useControls";
 
 export default function JobDetailsPage({ id, role, isModal, type }) {
   console.log(id, role, isModal, type, "CHECK ALL THE 3 VALUES");
-  const router = useRouter();
   console.log(id, "ID DATAAA GYAPPPPPP");
   const { toggleSavedJob, applyToJob } = useWorkerJobActions();
   const [workStatus, setWorkStatus] = useState("");
@@ -22,6 +22,16 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   const [job, setJob] = useState(null);
   const { loading, setLoading } = useLoading();
   console.log(workStatus, "USER WORKING STATUS");
+  const {
+    page,
+    setPage,
+    router,
+    dispatch,
+    runWithPending,
+    isPending, ///============= Do this
+    initialLoading,
+    setInitialLoading,
+  }=useControls();
 
   // ✅ ALL hooks first
   // useEffect(() => {
@@ -69,6 +79,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
         setJob(result);
         setWorkStatus(result.jobCompletionStatus ?? "");
         setUploadedImages(result.workPics ?? []);
+        setInitialLoading(false);
       } catch (e) {
         if (e.name !== "AbortError") setError("Couldn't load this job.");
       }
@@ -77,19 +88,25 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   }, [id, role]);
 
   // ✅ early return LAST, right before the JSX
-  if (!job) return <JobDetailsSkeleton />;
+  if (!job || !initialLoading) return <JobDetailsSkeleton />;
 
-  const handleJobApplication = (jobId) => {
-    console.log(jobId, "JOB ID");
-    applyToJob(jobId);
-    router.replace("/workerDashboard");
-  };
+ const handleJobApplication = async (jobId) => {
+  try {
+    await applyToJob(jobId);   // make sure your hook returns the promise / uses .unwrap()
+    router.back();             // closes the intercepted modal
+    await dispatch(fetchSavedJobs({ sort:"Newest", page:1 })).unwrap();
+    // or: router.replace("/workerDashboard/<your-page>");
+  } catch (err) {
+    console.error("Apply failed:", err);
+    setUploadError("Couldn't apply. Please try again.");
+  }
+};
 
-  const handleSavedJobs = (jobId) => {
-    console.log(jobId, "JOB ID");
-    toggleSavedJob(jobId);
-    router.replace("/workerDashboard");
-  };
+  // const handleSavedJobs = async(jobId) => {
+  //   console.log(jobId, "JOB ID");
+  //   await toggleSavedJob(jobId);
+  //   router.replace("/workerDashboard");
+  // };
 
   const handleJobWorkingStatus = async ({ e, jobId }) => {
     console.log(e.target.value, jobId, "CHECK THIS VALUE");
@@ -285,7 +302,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
       {
         role === "worker" && isModal && (
           <div className="flex w-full flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center items-center">
-            {type === "saved" ? (
+            {type === "Saved" ? (
               <button
                 disabled={loading}
                 className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
@@ -293,7 +310,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
               >
                 Apply Now
               </button>
-            ) : type === "accepted" ? (
+            ) : type === "Accepted" ? (
               <div className="w-full bg-gray-300">
                 <div className="flex justify-between items-center m-2">
                   <p className="font-medium">Worker Job Status: </p>
@@ -387,23 +404,25 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                   </button>
                 </div>
               </div>
-            ) : type === "applied" || type === "jobInvitation" ? null : (
-              <>
-                <button
-                  disabled={loading}
-                  className="rounded-lg border cursor-pointer border-blue-600 bg-white px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-50"
-                  onClick={() => handleSavedJobs(job._id)}
-                >
-                  Save for Later
-                </button>
-                <button
-                  disabled={loading}
-                  className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-                  onClick={() => handleJobApplication(job._id)}
-                >
-                  Apply Now
-                </button>
-              </>
+            ) : type === "JobInvitation" ||
+              type === "Accepted" ||
+              type === "Applied" ? null : (
+              <button
+                disabled={loading}
+                className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+                onClick={() => handleJobApplication(job._id)}
+              >
+                Apply Now
+              </button>
+              // <>
+              //   <button
+              //     disabled={loading}
+              //     className="rounded-lg border cursor-pointer border-blue-600 bg-white px-6 py-3 font-medium text-blue-600 transition-colors hover:bg-blue-50"
+              //     onClick={() => handleSavedJobs(job._id)}
+              //   >
+              //     Save for Later
+              //   </button>
+              // </>
             )}
           </div>
         )

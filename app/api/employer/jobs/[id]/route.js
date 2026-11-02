@@ -6,7 +6,6 @@ import { validationError } from "@/lib/validationError";
 import { jobUpdateSchema } from "@/lib/validations/employer/employerJobValidation";
 import { verifyFirebaseToken } from "@/lib/verifyFirebaseToken";
 import JobDetails from "@/modals/JobDetails";
-import JobDeatils from "@/modals/JobDetails";
 import { NextResponse } from "next/server";
 
 export async function DELETE(request, { params }) {
@@ -17,7 +16,7 @@ export async function DELETE(request, { params }) {
     const { id } = await params;
     const { uid } = await verifyFirebaseToken(request);
 
-    const deletedJob = await JobDeatils.findByIdAndUpdate(
+    const deletedJob = await JobDetails.findByIdAndUpdate(
       {
         _id: id,
         employerId: uid,
@@ -268,7 +267,7 @@ export async function GET(request, { params }) {
     await connectDB();
     const { id } = await params;
     const { uid } = await verifyFirebaseToken(request);
-    const job = await JobDeatils.findById(id).lean();
+    const job = await JobDetails.findById(id).lean();
     if (!job) {
       return NextResponse.json(
         {

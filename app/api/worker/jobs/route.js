@@ -212,6 +212,7 @@ export async function POST(request) {
 
 export async function GET(request) {
   console.log("app/api/worker/jobs/route.js - GET");
+  // /api/worker/jobs?matching=${val}&page=${page}&limit=12
   try {
     const { uid } = await verifyFirebaseToken(request);
 
@@ -227,7 +228,7 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     const appliedJobs = await JobApplication.find(
-      { workerId: uid },
+      { workerId: uid,cancelled:false },
       { jobId: 1 },
     ).lean();
 
@@ -254,7 +255,7 @@ export async function GET(request) {
       .select("jobId matchingScore")
       .sort({ matchingScore: -1 })
       .lean();
-
+    console.log(matches?.length, "MATCHES LENGTH");
     // Create a Map:
     // jobId -> matchingScore
 
@@ -263,7 +264,7 @@ export async function GET(request) {
     );
 
     const matchingJobIds = matches.map((job) => job.jobId);
-
+    console.log(matchingJobIds, "ALL THE MATCHING JOB IDS");
     const allMatchingJobs = await JobDetails.find({
       _id: { $in: matchingJobIds },
     }).lean();
@@ -283,6 +284,7 @@ export async function GET(request) {
 
     // Paginate AFTER sorting
     const paginatedJobs = jobsWithScores.slice(skip, skip + limit);
+    console.log(paginatedJobs.length, "PAGINATED JOBD SAR DAAAAAAATA");
     // e.g. skip = 12, limit = 12 → array.slice(12, 24) → items 13–24;
     // console.log(paginatedJobs, "*************************");
     return NextResponse.json(
@@ -308,7 +310,6 @@ export async function GET(request) {
     );
   }
 }
-
 
 // const MS_PER_MIN = 60 * 1000;
 
@@ -590,9 +591,6 @@ export async function GET(request) {
 // //   body: JSON.stringify({ jobId, action: "END", workerStatus: "START_TOMORROW", imageUrls }),
 // // });
 
-
-
-
 const MS_PER_MIN = 60 * 1000;
 const MAX_PHOTOS = 10;
 
@@ -779,22 +777,22 @@ const handlers = {
   //   return ok(session);
   // },
   async DEFAULT({ jobId, uid, now, workerStatus }) {
-  if (!MANUAL_STATUSES.includes(workerStatus))
-    return fail("Invalid status for this action.", 400);
+    if (!MANUAL_STATUSES.includes(workerStatus))
+      return fail("Invalid status for this action.", 400);
 
-  const session = await WorkerSession.findOneAndUpdate(
-    { jobId, workerId: uid, workDate: getWorkDate(now) },
-    {
-      $set: {
-        workingStatus: workerStatus,
-        endTime: workerStatus === START_TOMORROW ? now : null,
+    const session = await WorkerSession.findOneAndUpdate(
+      { jobId, workerId: uid, workDate: getWorkDate(now) },
+      {
+        $set: {
+          workingStatus: workerStatus,
+          endTime: workerStatus === START_TOMORROW ? now : null,
+        },
       },
-    },
-    { new: true, runValidators: true },
-  );
-  if (!session) return fail("No session found for today.", 404);
-  return ok(session);
-},
+      { new: true, runValidators: true },
+    );
+    if (!session) return fail("No session found for today.", 404);
+    return ok(session);
+  },
 };
 
 // ───────────── ROUTE ─────────────
@@ -810,11 +808,14 @@ export async function PUT(request) {
     }
 
     const body = await request.json().catch(() => null);
+    console.log(body, "BODY BODAY DATA");
     if (!body) return fail("Invalid request body.", 400);
 
     const { jobId, workerStatus } = body;
     const rawAction = body.action;
-    if (!jobId || !rawAction) return fail("jobId and action are required.", 400);
+    if (!jobId || !rawAction)
+     { console.log(jobId, workerStatus, rawAction, "CHECK ALL THESE CONTENTS");
+    return fail("jobId and action are required.", 400);}
 
     const action = ACTION_ALIASES[rawAction] ?? rawAction;
     const handler = handlers[action] ?? handlers.DEFAULT;

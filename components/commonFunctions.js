@@ -230,7 +230,7 @@ export const getMatchStyle = (rate) => {
 
 // Get the joining period
 export const getJoiningPeriodType = (jValue) => {
-  Object.values(JOINING_TYPES).includes(jValue) ? jValue : "";
+  return Object.values(JOINING_TYPES).includes(jValue) ? jValue : "";
 };
 
 //GET the shift type
@@ -274,6 +274,7 @@ export const fetchUserJobDetails = async ({
   }
 
   const { data } = await response.json();
+  console.log(data, "SHOW CANDIDATE DATA");
   return data;
 };
 

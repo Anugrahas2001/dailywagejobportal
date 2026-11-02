@@ -24,16 +24,18 @@ import Slider from "./Slider";
 import CandidateCardSkeleton from "./skeltons/CandidateCardSkeleton";
 import useControls from "./hooks/useControls";
 import useLoading from "./hooks/useLoading";
+import { PAGE_SIZE } from "@/constants/constant";
 
 const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [applicants, setApplicants] = useState([]);
-  const [status, setStatus] = useState("all");
+  console.log(applicants, "ASE APPLICANTS");
+  const [status, setStatus] = useState("All");
+  const [title, setTitle] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [expandedSkills, setExpandedSkills] = useState(null);
   const { loading, setLoading } = useLoading();
   const [val, setVal] = useState(20);
-  const pageSize = 12;
-  const totalPages = Math.ceil(totalCount / pageSize) || 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
 
   const {
     page,
@@ -65,10 +67,11 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         cache: "no-store",
       });
 
-      const { data, totalCount } = await response.json();
+      const { data, jobTitle, totalCount } = await response.json();
       if (!response.ok) throw new Error("Failed to fetch applicants");
 
       setApplicants(data);
+      setTitle(jobTitle);
       setTotalCount(totalCount);
     } catch (error) {
       console.error("Failed to fetch applicants:", error);
@@ -112,8 +115,15 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           type,
         });
         console.log(updatedWorkerId, "STATUS UPDATED");
+        // setApplicants((prev) =>
+        //   prev.filter((applicant) => applicant.userId !== updatedWorkerId),
+        // );
         setApplicants((prev) =>
-          prev.filter((applicant) => applicant.userId !== updatedWorkerId),
+          status === "Rejected"
+            ? prev.filter((a) => a.userId !== updatedWorkerId)
+            : prev.map((a) =>
+                a.userId === updatedWorkerId ? { ...a, status } : a,
+              ),
         );
         setLoading(false);
       } catch (error) {
@@ -131,11 +141,9 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   };
 
   const tabs = [
-    { value: "all", label: "All Applications" },
-    { value: "accepted", label: "Accepted Applications" },
+    { value: "All", label: "All Applications" },
+    { value: "Accepted", label: "Accepted Applications" },
   ];
-
-  const jobName = applicants[0]?.jobTitle;
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
@@ -144,11 +152,14 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-gray-900">
-            {type === "applications" ? "Applicants":"Recommended Profiles" }
+            {type === "applications" ? "Applicants" : "Recommended Profiles"}
           </h1>
 
           <p className="mt-1 text-sm text-gray-500">
-            {totalCount} applicant{totalCount !== 1 ? "s" : ""}
+            {/* {totalCount} applicant{totalCount !== 1 ? "s" : ""} */}
+            {type === "applications"
+              ? `${totalCount} Applicant${totalCount !== 1 ? "s" : ""}`
+              : `${totalCount} Recommended Profile${totalCount !== 1 ? "s" : ""}`}
           </p>
         </div>
 
@@ -217,7 +228,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                 Job Name:
               </span>
               <h3 className="text-lg font-semibold text-gray-900 md:text-xl">
-                {jobName}
+                {title}
               </h3>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -238,17 +249,17 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     <button
                       type="button"
                       disabled={isPending(
-                        `updatecandidateInvitestatus-${profile.userId}`,
+                        `updatecandidateInvitestatus-${profile?.userId}`,
                       )}
                       aria-busy={isPending(
-                        `updatecandidateInvitestatus-${profile.userId}`,
+                        `updatecandidateInvitestatus-${profile?.userId}`,
                       )}
                       title="Reject application"
                       className="rounded-full cursor-pointer absolute top-2 right-2 p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
                       onClick={() =>
                         handleSatusUpdates({
-                          status: "rejected",
-                          workerId: profile.userId,
+                          status: "Rejected",
+                          workerId: profile?.userId,
                           jobId,
                         })
                       }
@@ -427,7 +438,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
 
                       <Link
                         className="ml-auto"
-                        href={`/employerDashboard/viewjobapplication/${profile.userId}?jobId=${jobId}&type=${type}${
+                        href={`/employerDashboard/viewjobapplication/${profile?.userId}?jobId=${jobId}&type=${type}${
                           type === "recommendation"
                             ? `&matching=${profile.matchPercentage}&jobInvitation=${profile?.applicationAvailable}`
                             : `&status=${status}`
@@ -436,17 +447,17 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         <button
                           type="button"
                           disabled={isPending(
-                            `updatecandidateInvitestatus-${profile.userId}`,
+                            `updatecandidateInvitestatus-${profile?.userId}`,
                           )}
                           aria-busy={isPending(
-                            `updatecandidateInvitestatus-${profile.userId}`,
+                            `updatecandidateInvitestatus-${profile?.userId}`,
                           )}
                           title="View application"
                           className="inline-flex items-center justify-center gap-2 cursor-pointer rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => {
                             if (!profile?.status) {
                               handleSatusUpdates({
-                                status: "viewed",
+                                status: "Viewed",
                                 workerId: profile?.userId,
                                 jobId,
                               });
@@ -465,7 +476,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
             </div>
           </div>
         ) : (
-          <div className="rounded-xl bg-white p-10 text-center shadow-sm">
+          <div className="rounded-xl bg-white p-10 mt-6 text-center shadow-sm">
             <h2 className="text-lg font-medium text-gray-800">
               No Applications Available
             </h2>

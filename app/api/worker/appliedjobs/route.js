@@ -5,7 +5,7 @@ import SavedJobs from "@/modals/SavedJobs";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
-console.log("app/api/worker/appliedjobs/route.js - GET");
+  console.log("app/api/worker/appliedjobs/route.js - GET");
   try {
     const { uid } = await verifyFirebaseToken(request);
     const { searchParams } = new URL(request.url);
@@ -15,51 +15,36 @@ console.log("app/api/worker/appliedjobs/route.js - GET");
     const limit = Number(searchParams.get("limit")) || 12;
     const skip = (page - 1) * limit;
 
-    let sortOption;
-    let statusOption;
+    const sortOption = sort === "Oldest" ? { appliedAt: 1 } : { appliedAt: -1 };
 
-    switch (sort) {
-      case "newest":
-        sortOption = { appliedAt: -1 };
-        break;
-      case "oldest":
-        sortOption = { appliedAt: 1 };
-        break;
-      default:
-        sortOption = { appliedAt: -1 };
-        break;
-    }
-
-    switch (status) {
-      case "applied":
-      case "viewed":
-      case "shortlisted":
-      case "accepted":
-      case "rejected":
-        statusOption = { status };
-        break;
-      default:
-        statusOption = { status: "applied" };
-        break;
-    }
+    const validStatuses = [
+      "Applied",
+      "Viewed",
+      "Shortlisted",
+      "Accepted",
+      "Rejected",
+    ];
+    const statusValue = validStatuses.includes(status) ? status : "Applied";
 
     const filter = {
       workerId: uid,
       cancelled: false,
-      ...statusOption,
+      status: statusValue,
     };
 
-    const allAppliedJobs = await JobApplication.find(filter)
-      .sort(sortOption)
-      .lean()
-      .skip(skip)
-      .limit(limit);
+    const [allAppliedJobs, totalCount] = await Promise.all([
+      JobApplication.find(filter)
+        .sort(sortOption)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      JobApplication.countDocuments(filter),
+    ]);
 
+    console.log(allAppliedJobs.length, "ALL THE APPLIED JOBS");
     const applicationMAP = new Map(
       allAppliedJobs.map((application) => [application.jobId, application]),
     );
-
-    const totalCount = await JobApplication.countDocuments(filter);
 
     const allAppliedJobIds = allAppliedJobs.map((job) => job.jobId);
     const allJobs = await JobDetails.find({
@@ -105,7 +90,7 @@ console.log("app/api/worker/appliedjobs/route.js - GET");
 }
 
 export async function PUT(request) {
-   console.log("app/api/worker/appliedjobs/route.js - PUT");
+  console.log("app/api/worker/appliedjobs/route.js - PUT");
   try {
     const { uid } = await verifyFirebaseToken(request);
     const body = await request.json();

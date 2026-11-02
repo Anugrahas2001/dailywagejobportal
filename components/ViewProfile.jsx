@@ -24,6 +24,7 @@ import {
 import ViewProfileSkeleton from "./skeltons/ViewProfileSkeleton";
 import useControls from "./hooks/useControls";
 import useLoading from "./hooks/useLoading";
+import { JOB_APPLICATION_STATUS } from "@/constants/constant";
 
 const ViewProfile = ({
   workerId,
@@ -376,9 +377,11 @@ const ViewProfile = ({
                   </p>
                 </div>
 
-                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                  {workerData?.jobWorkingStatus}
-                </span>
+                {workerData?.jobWorkingStatus && (
+                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                    {workerData?.jobWorkingStatus}
+                  </span>
+                )}
               </div>
 
               <div className="py-4 border-b flex items-center px-2 justify-between">
@@ -391,9 +394,11 @@ const ViewProfile = ({
                   </p>
                 </div>
 
-                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                  {workerData?.workerCurrentStatus}
-                </span>
+                {workerData?.workerCurrentStatus && (
+                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                    {workerData?.workerCurrentStatus}
+                  </span>
+                )}
               </div>
 
               <h2 className="text-lg font-semibold text-gray-900">
@@ -421,7 +426,7 @@ const ViewProfile = ({
                   </p>
                 </div>
 
-                {status === "all" ? (
+                {status === "All" ? (
                   <select
                     value={jobStatus ? jobStatus : workerData?.status}
                     onChange={(e) =>
@@ -437,10 +442,16 @@ const ViewProfile = ({
                     }`}
                   >
                     {/* <option>Viewed</option> */}
+
+                    {/* <option value="Shortlisted">Shortlisted</option>
+                    <option value="Accepted">Accepted</option>
+                    <option value="rejected">Rejected</option> */}
                     <option value="">Select Status</option>
-                    <option value="shortlisted">Shortlisted</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="rejected">Rejected</option>
+                    {Object.values(JOB_APPLICATION_STATUS).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
                   </select>
                 ) : (
                   <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
