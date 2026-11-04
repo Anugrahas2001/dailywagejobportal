@@ -27,6 +27,10 @@ const JobInvitationSchema = new mongoose.Schema({
     enum: Object.values(JOB_INVITATION_STATUS),
     default: JOB_INVITATION_STATUS.SENT,
   },
+  cancelled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 export default mongoose.models.JobInvitation ||

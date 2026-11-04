@@ -411,7 +411,7 @@ const MyProfile = () => {
   const savedPreference = profile?.preference ?? {};
   const replaceName = user?.name?.charAt(0).toUpperCase();
   const pref = isEditing === "jobpref" ? draft : savedPreference;
-
+  const profileImage = user.profileImage;
   const safePref = pref ?? {};
 
   const age = getAge(user.dob);
@@ -624,7 +624,7 @@ const MyProfile = () => {
         profileImage: urlData?.publicUrl,
       });
       if (ok) setIsEditing("");
-
+      localStorage.setItem("profileImage", urlData?.publicUrl);
       handleRemove();
     } catch (err) {
       console.error("Profile image upload failed:", err);
@@ -698,15 +698,20 @@ const MyProfile = () => {
             ))}
           </select>
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
+            {/* <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
               <div className="flex flex-col items-center">
                 <div className="relative h-28 w-28">
                   <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
                     {previewUrl || user?.profileImage ? (
+                      // <img
+                      //   src={previewUrl || user.profileImage}
+                      //   alt="Profile photo"
+                      //   className="h-40 w-40"
+                      // />
                       <img
                         src={previewUrl || user.profileImage}
                         alt="Profile photo"
-                        className="h-40 w-40 object-cover"
+                        className="h-full w-full object-cover"
                       />
                     ) : (
                       <span aria-hidden="true">{replaceName}</span>
@@ -724,7 +729,6 @@ const MyProfile = () => {
                   </button>
                 </div>
 
-                {/* Hidden file input */}
                 <input
                   id="profile-image-input"
                   ref={fileInputRef}
@@ -735,7 +739,6 @@ const MyProfile = () => {
                   className="hidden"
                 />
 
-                {/* Preview actions */}
                 {previewUrl && (
                   <div className="mt-4 flex items-center gap-3">
                     <button
@@ -764,7 +767,75 @@ const MyProfile = () => {
                   </p>
                 )}
               </div>
+            </div> */}
+
+            <div className="flex flex-col items-center text-center">
+              {/* Avatar */}
+              <div className="relative h-28 w-28">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-gray-500 ring-4 ring-indigo-50">
+                  {previewUrl || user?.profileImage ? (
+                    <img
+                      src={previewUrl || profileImage}
+                      alt="Profile photo"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span aria-hidden="true">{replaceName}</span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  aria-label="Change profile photo"
+                  className="absolute bottom-0 right-0 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
+                >
+                  <Camera className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Hidden file input */}
+              <input
+                id="profile-image-input"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                disabled={uploading}
+                className="hidden"
+              />
+
+              {/* Preview actions: now below the avatar */}
+              {previewUrl && (
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    disabled={uploading}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleUpload}
+                    disabled={uploading || !file}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {uploading ? "Uploading..." : "Save photo"}
+                  </button>
+                </div>
+              )}
+
+              {error && (
+                <p role="alert" className="mt-3 text-sm text-red-600">
+                  {error}
+                </p>
+              )}
             </div>
+
             <div className="mt-4 flex items-center gap-2">
               <h1 className="text-2xl font-bold text-gray-900">
                 {user?.name || "Your name"}

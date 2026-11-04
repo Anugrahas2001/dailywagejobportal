@@ -305,7 +305,7 @@ const page = () => {
                 return (
                   <article
                     className="rounded-lg bg-white p-4 shadow mt-7"
-                    key={job._id}
+                    key={`${jobType}-${job._id}`}
                   >
                     <div className="flex flex-col gap-4">
                       <div className="flex flex-row w-full items-center justify-between">

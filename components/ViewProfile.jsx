@@ -46,17 +46,17 @@ const ViewProfile = ({
     initialLoading,
     setInitialLoading,
   } = useControls();
-  const isInvited =
-    jobInvitation === "false"
-      ? false
-      : jobInvitation === "true"
-        ? true
-        : jobInvitation;
+  // const isInvited =
+  //   jobInvitation === "false"
+  //     ? false
+  //     : jobInvitation === "true"
+  //       ? true
+  //       : jobInvitation;
   console.log(
     matchingRate,
     jobInvitation,
     typeof jobInvitation,
-    isInvited,
+    // isInvited,
     "WORKER DATA AVILABLESSS",
   );
 
@@ -121,29 +121,135 @@ const ViewProfile = ({
     }
   };
 
-  const handleJobInvitation = async ({ workerId, jobId }) => {
-    const token = await fetchUserToken();
+  const handleJobInvitation = ({ workerId, jobId }) => {
     console.log(workerId, "WORKER ID");
-    try {
-      setLoading(true);
-      const response = await fetch("/api/employer/jobInvitation", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ workerId, jobId }),
-      });
 
-      const { data } = await response.json();
-      // router.replace("/employerDashboard");
-      router.back();
-      console.log(data, "RESPONSE DATA ");
-      setLoading(false);
-    } catch (error) {
-      console.log(error, "ERROR DATA");
-      setLoading(false);
-    }
+    runWithPending(`sentjobinvite-${workerId}`, async () => {
+      try {
+        const token = await fetchUserToken();
+        setLoading(true);
+        const response = await fetch("/api/employer/jobInvitation", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ workerId, jobId }),
+        });
+
+        const { data } = await response.json();
+        // router.replace("/employerDashboard");
+        router.back();
+        console.log(data, "RESPONSE DATA ");
+        setLoading(false);
+      } catch (error) {
+        console.log(error, "ERROR DATA");
+        setLoading(false);
+      }
+    });
+  };
+
+  const handleCancelJobInvitation = ({ workerId, jobId }) => {
+    runWithPending(`canceljobinvite${workerId}`, async () => {
+      try {
+        const token = await fetchUserToken();
+
+        setLoading(true);
+        const response = await fetch("/api/employer/jobInvitation", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ workerId, jobId, isCancelled: true }),
+        });
+
+        const { data } = await response.json();
+        router.back();
+        console.log(data, "RESPONSE DATA CANCELLED");
+        setLoading(false);
+      } catch (error) {
+        console.log(error, "ERROR DATA");
+        setLoading(false);
+      }
+    });
+  };
+  const formatRupees = (v) => `₹${Number(v).toLocaleString("en-IN")}`;
+  const formatMinutes = (v) => `${v} hrs`;
+
+  const SALARY_ROWS = [
+    {
+      key: "agreedRate",
+      title: "Worker Salary",
+      description: "Current salary of the worker",
+      format: formatRupees,
+    },
+    {
+      key: "salaryType",
+      title: "Salary Credit Type",
+      description: "Worker salary type",
+    },
+    {
+      key: "totalWorkingHours",
+      title: "Total working time",
+      description: "Working time of the user",
+      format: formatMinutes,
+    },
+    {
+      key: "totalSalary",
+      title: "Total salary",
+      description: "Working salary of the worker",
+      format: formatRupees,
+    },
+  ];
+
+  // Inside your component
+  const {
+    jobWorkingStatus,
+    workerCurrentStatus,
+    workerPics = [],
+    status: workerStatus,
+    userId,
+  } = workerData ?? {};
+
+  const showSalary =
+    workerCurrentStatus === "Start Tomorrow" ||
+    jobWorkingStatus === "Completed" ||
+    jobWorkingStatus === "InProgress";
+
+  const BADGE_CLASS =
+    "inline-flex items-center gap-2 bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium";
+
+  const InfoRow = ({ title, description, value }) => (
+    <div className="py-4 border-b flex items-center px-2 justify-between">
+      <div className="flex flex-col">
+        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <p className="mt-1 text-sm text-gray-500">{description}</p>
+      </div>
+      {value != null && value !== "" && (
+        <span className={BADGE_CLASS}>{value}</span>
+      )}
+    </div>
+  );
+
+  // const BADGES_CLASS =
+  //   "inline-flex items-center gap-2 shrink-0 bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-800";
+
+  const InfoJobCompletionRow = ({ title, description, value, format }) => {
+    const hasValue = value != null && value !== "";
+
+    return (
+      <div className="grid grid-cols-2 items-center gap-3 border-b px-2 py-4">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <p className="mt-1 text-sm text-gray-500">{description}</p>
+        </div>
+
+        <span className={`${BADGE_CLASS} justify-self-end`}>
+          {hasValue ? (format ? format(value) : value) : "—"}
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -365,56 +471,132 @@ const ViewProfile = ({
           </section>
 
           {/* Application Status */}
-          {type === "applications" ? (
-            <section className="p-4 md:p-8 border-b">
-              <div className="py-4 border-b flex items-center px-2 justify-between">
-                <div className="flex flex-col">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Job Completion Status{" "}
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Current status of the job
-                  </p>
-                </div>
 
-                {workerData?.jobWorkingStatus && (
-                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                    {workerData?.jobWorkingStatus}
-                  </span>
-                )}
+          {/* <section className="p-4 md:p-8 border-b">
+            <div className="py-4 border-b flex items-center px-2 justify-between">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Job Completion Status{" "}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Current status of the job
+                </p>
               </div>
 
-              <div className="py-4 border-b flex items-center px-2 justify-between">
-                <div className="flex flex-col">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Worker Current Status{" "}
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Current status of the worker
-                  </p>
-                </div>
+              {workerData?.jobWorkingStatus && (
+                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                  {workerData?.jobWorkingStatus}
+                </span>
+              )}
+            </div>
 
-                {workerData?.workerCurrentStatus && (
-                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                    {workerData?.workerCurrentStatus}
-                  </span>
-                )}
+            {workerData?.workerCurrentStatus === "Start Tomorrow" &&
+              (
+                workerData?.jobWorkingStatus === "Completed" ||
+                workerData?.jobWorkingStatus === "InProgress"
+              )(
+                <div>
+                  <div className="py-4 border-b flex items-center px-2 justify-between">
+                    <div className="flex flex-col">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Worker Salary{" "}
+                      </h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Current salary of the worker
+                      </p>
+                    </div>
+
+                    {workerData?.agreedRate && (
+                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                        {workerData?.agreedRate}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="py-4 border-b flex items-center px-2 justify-between">
+                    <div className="flex flex-col">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Salary Credit Type{" "}
+                      </h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Worker salary Type
+                      </p>
+                    </div>
+
+                    {workerData?.salaryType && (
+                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                        {workerData?.salaryType}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="py-4 border-b flex items-center px-2 justify-between">
+                    <div className="flex flex-col">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Total working time{" "}
+                      </h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Working time of the user
+                      </p>
+                    </div>
+
+                    {workerData?.totalWorkingMinutes && (
+                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                        {workerData?.totalWorkingMinutes}
+                      </span>
+                    )}
+                  </div>
+                  <div className="py-4 border-b flex items-center px-2 justify-between">
+                    <div className="flex flex-col">
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        Total salary{" "}
+                      </h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Working salary of the worker
+                      </p>
+                    </div>
+
+                    {workerData?.totalSalary && (
+                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                        {workerData?.totalSalary}
+                      </span>
+                    )}
+                  </div>
+                </div>,
+              )}
+
+            <div className="py-4 border-b flex items-center px-2 justify-between">
+              <div className="flex flex-col">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Worker Current Status{" "}
+                </h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Current status of the worker
+                </p>
               </div>
 
-              <h2 className="text-lg font-semibold text-gray-900">
-                Work Site Images
-              </h2>
-              <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
-                {workerData?.workerPics?.map((img, index) => (
-                  <img
-                    key={index}
-                    src={img}
-                    alt={`Work image ${index + 1}`}
-                    className="h-24 w-24 rounded-md object-cover shrink-0"
-                  />
-                ))}
-              </div>
+              {workerData?.workerCurrentStatus && (
+                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
+                  {workerData?.workerCurrentStatus}
+                </span>
+              )}
+            </div>
 
+            <h2 className="text-lg font-semibold text-gray-900">
+              Work Site Images
+            </h2>
+            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
+              {workerData?.workerPics?.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Work image ${index + 1}`}
+                  className="h-24 w-24 rounded-md object-cover shrink-0"
+                />
+              ))}
+            </div>
+
+            {type === "application" && (
               <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
@@ -438,14 +620,9 @@ const ViewProfile = ({
                     className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
                       workerData?.status || jobStatus
                         ? "border-blue-300 bg-blue-50 text-blue-700"
-                        : "border-gray-300 bg-white text-gray-700"
+                        : ""
                     }`}
                   >
-                    {/* <option>Viewed</option> */}
-
-                    {/* <option value="Shortlisted">Shortlisted</option>
-                    <option value="Accepted">Accepted</option>
-                    <option value="rejected">Rejected</option> */}
                     <option value="">Select Status</option>
                     {Object.values(JOB_APPLICATION_STATUS).map((value) => (
                       <option key={value} value={value}>
@@ -453,16 +630,150 @@ const ViewProfile = ({
                       </option>
                     ))}
                   </select>
-                ) : (
-                  <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                    {workerData?.status}
+                ) : workerData?.status ? (
+                  <span
+                    className={`bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {workerData.status}
                   </span>
-                )}
+                ) : null}
               </div>
-            </section>
-          ) : (
+            )}
+          </section> */}
+
+          <section className="p-4 md:p-8 border-b">
+            <InfoRow
+              title="Job Completion Status"
+              description="Current status of the job"
+              value={jobWorkingStatus}
+            />
+
+            {showSalary &&
+              SALARY_ROWS.map(({ key, title, description, format }) => (
+                <>
+                <InfoJobCompletionRow
+                  key={key}
+                  title={title}
+                  description={description}
+                  value={workerData?.[key]}
+                  format={format}
+                />
+
+                <button className="bg-blue-600 text-white font-medium">Pay Now</button>
+                </>
+              ))}
+
+            <InfoRow
+              title="Worker Current Status"
+              description="Current status of the worker"
+              value={workerCurrentStatus}
+            />
+
+            <h2 className="text-lg font-semibold text-gray-900">
+              Work Site Images
+            </h2>
+            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
+              {workerData?.workerPics?.map((img, index) => (
+                <img
+                  key={index}
+                  src={img}
+                  alt={`Work image ${index + 1}`}
+                  className="h-24 w-24 rounded-md object-cover shrink-0"
+                />
+              ))}
+            </div>
+
+            
+
+            {/* {type === "application" && (
+              <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Application Status
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Update the applicant's current status.
+                  </p>
+                </div>
+
+                {status === "All" ? (
+                  <select
+                    value={jobStatus || workerStatus || ""}
+                    onChange={(e) =>
+                      handleJobApplicationStatus(e, { workerId: userId, jobId })
+                    }
+                    className={`rounded-lg border px-4 py-2.5 text-sm font-medium outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
+                      jobStatus || workerStatus
+                        ? "border-blue-300 bg-blue-50 text-blue-700"
+                        : "border-gray-300 text-gray-700"
+                    }`}
+                  >
+                    <option value="">Select Status</option>
+                    {Object.values(JOB_APPLICATION_STATUS).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                ) : workerStatus ? (
+                  <span className={BADGE_CLASS}>
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {workerStatus}
+                  </span>
+                ) : null}
+              </div>
+            )} */}
+
+            {type === "applications" && (
+              <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Application Status
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Update the applicant's current status.
+                  </p>
+                </div>
+
+                {status === "All" ? (
+                  <select
+                    value={jobStatus ? jobStatus : workerData?.status}
+                    onChange={(e) =>
+                      handleJobApplicationStatus(e, {
+                        workerId: workerData?.userId,
+                        jobId,
+                      })
+                    }
+                    className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
+                      workerData?.status || jobStatus
+                        ? "border-blue-300 bg-blue-50 text-blue-700"
+                        : ""
+                    }`}
+                  >
+                    <option value="">Select Status</option>
+                    {Object.values(JOB_APPLICATION_STATUS).map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                ) : workerData?.status ? (
+                  <span
+                    className={`bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium`}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    {workerData.status}
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </section>
+
+          {type === "recommendation" && !workerData?.status && (
             <section className="flex justify-center items-center">
-              {isInvited === false && (
+              {jobInvitation === "send" || jobInvitation === "resend" ? (
                 <button
                   disabled={isPending(`sentjobinvite-${workerData?.userId}`)}
                   aria-busy={isPending(`sentjobinvite-${workerData?.userId}`)}
@@ -476,6 +787,21 @@ const ViewProfile = ({
                   }}
                 >
                   Send Job Invitation
+                </button>
+              ) : (
+                <button
+                  disabled={isPending(`canceljobinvite-${workerData?.userId}`)}
+                  aria-busy={isPending(`canceljobinvite-${workerData?.userId}`)}
+                  title="Job Invitation"
+                  className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                  onClick={() => {
+                    handleCancelJobInvitation({
+                      workerId: workerData?.userId,
+                      jobId,
+                    });
+                  }}
+                >
+                  Cancel
                 </button>
               )}
             </section>

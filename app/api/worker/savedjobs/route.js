@@ -89,21 +89,23 @@ export async function GET(request) {
     );
 
     const skip = (page - 1) * limit;
-    const sort = searchParams.get("sorttype") || "newest";
+    const sort = searchParams.get("sorttype") || "Newest";
     const { uid } = await verifyFirebaseToken(request);
 
+    console.log(sort, "SORT TYPE DATA");
+    
     let sortOption = {};
     switch (sort) {
-      case "newest":
+      case "Newest":
         sortOption = { savedAt: -1 };
         break;
-      case "oldest":
+      case "Oldest":
         sortOption = { savedAt: 1 };
         break;
-      case "high-to-low":
+      case "High to low salary":
         sortOption = { minSalary: -1, maxSalary: -1 };
         break;
-      case "low-to-high":
+      case "Low to high salary":
         sortOption = { minSalary: 1, maxSalary: 1 };
         break;
       default:

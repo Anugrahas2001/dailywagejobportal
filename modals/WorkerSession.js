@@ -1,5 +1,6 @@
 import {
   JOB_COMPLETION_STATUS,
+  SALARY_CREDIT_TYPES,
   WORKER_WORKING_STATUS,
 } from "@/constants/constant";
 import mongoose from "mongoose";
@@ -14,7 +15,7 @@ const WorkSessionSchema = new mongoose.Schema(
 
     // Rate snapshot taken at hire time
     agreedRate: { type: Number, required: true, min: 0 },
-    rateType: { type: String, enum: ["Hourly", "Daily"], required: true },
+    rateType: { type: String, enum: SALARY_CREDIT_TYPES.HOURLY, required: true },
     workingStatus: {
       type: String,
       enum: Object.values(WORKER_WORKING_STATUS),
@@ -38,7 +39,8 @@ const WorkSessionSchema = new mongoose.Schema(
       },
     ],
     breakMinutes: { type: Number, default: 0, min: 0 },
-    totalWorkingMinutes: { type: Number, default: 0, min: 0 },
+    // totalWorkingMinutes: { type: Number, default: 0, min: 0 },
+    totalWorkingHours: { type: Number, default: 0, min: 0 },
     totalSalaryAmount: { type: Number, default: 0 },
     workPics: [String],
     // paymentId: { type: String },

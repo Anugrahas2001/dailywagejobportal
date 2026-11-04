@@ -5,7 +5,6 @@ import { useWorkerJobActions } from "./hooks/useWorkerJobActions";
 import { JOB_COMPLETION_STATUS } from "@/constants/constant";
 import { useEffect, useState } from "react";
 import { fetchUserToken } from "@/lib/fetchUserToken";
-import useLoading from "./hooks/useLoading";
 import JobDetailsSkeleton from "./skeltons/JobDetailsSkeleton";
 import { fetchSavedJobs } from "@/lib/features/workerJobs/savedjobs/savedJobThunk";
 import useControls from "./hooks/useControls";
@@ -20,8 +19,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   const [uploadError, setUploadError] = useState("");
   const [uploadedImages, setUploadedImages] = useState([]);
   const [job, setJob] = useState(null);
-  const { loading, setLoading } = useLoading();
-  console.log(workStatus, "USER WORKING STATUS");
+  console.log(job, workStatus, "USER WORKING STATUS");
   const {
     page,
     setPage,
@@ -31,7 +29,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
     isPending, ///============= Do this
     initialLoading,
     setInitialLoading,
-  }=useControls();
+  } = useControls();
 
   // ✅ ALL hooks first
   // useEffect(() => {
@@ -76,6 +74,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
         });
         if (!res.ok) throw new Error(res.status);
         const { result } = await res.json();
+        console.log(result,"OKAY RESULT DATA");
         setJob(result);
         setWorkStatus(result.jobCompletionStatus ?? "");
         setUploadedImages(result.workPics ?? []);
@@ -88,19 +87,20 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   }, [id, role]);
 
   // ✅ early return LAST, right before the JSX
-  if (!job || !initialLoading) return <JobDetailsSkeleton />;
+  if (!job) return <JobDetailsSkeleton />;
 
- const handleJobApplication = async (jobId) => {
-  try {
-    await applyToJob(jobId);   // make sure your hook returns the promise / uses .unwrap()
-    router.back();             // closes the intercepted modal
-    await dispatch(fetchSavedJobs({ sort:"Newest", page:1 })).unwrap();
-    // or: router.replace("/workerDashboard/<your-page>");
-  } catch (err) {
-    console.error("Apply failed:", err);
-    setUploadError("Couldn't apply. Please try again.");
-  }
-};
+  const handleJobApplication = (jobId) => {
+    runWithPending(`application-${jobId}`, async () => {
+      try {
+        await applyToJob(jobId); // make sure your hook returns the promise / uses .unwrap()
+        router.back(); // closes the intercepted modal
+        await dispatch(fetchSavedJobs({ sort: "Newest", page: 1 })).unwrap();
+      } catch (err) {
+        console.error("Apply failed:", err);
+        setUploadError("Couldn't apply. Please try again.");
+      }
+    });
+  };
 
   // const handleSavedJobs = async(jobId) => {
   //   console.log(jobId, "JOB ID");
@@ -304,7 +304,8 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
           <div className="flex w-full flex-col gap-3 sm:gap-7 sm:flex-row sm:justify-center items-center">
             {type === "Saved" ? (
               <button
-                disabled={loading}
+                disabled={isPending(`application-${job._id}`)}
+                aria-busy={isPending(`application-${job._id}`)}
                 className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                 onClick={() => handleJobApplication(job._id)}
               >
@@ -408,7 +409,8 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
               type === "Accepted" ||
               type === "Applied" ? null : (
               <button
-                disabled={loading}
+                disabled={isPending(`application-${job._id}`)}
+                aria-busy={isPending(`application-${job._id}`)}
                 className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
                 onClick={() => handleJobApplication(job._id)}
               >

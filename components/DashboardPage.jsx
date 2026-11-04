@@ -270,6 +270,7 @@ const DashboardPage = ({ role }) => {
                     💰 ₹{job.minSalary} - ₹{job.maxSalary}
                   </p>
                   <p>👥 Openings: {job.numberOfOpenings}</p>
+                  <p>🔗 Active Applicants: {job.applicantsCount}</p>
                 </div>
               );
               return (

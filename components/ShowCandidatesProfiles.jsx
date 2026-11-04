@@ -145,6 +145,10 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
     { value: "Accepted", label: "Accepted Applications" },
   ];
 
+  if (loading || initialLoading) {
+    return <CandidateCardSkeleton cards={6} className="md:grid-cols-2" />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-6">
       {/* {(loading || applicants.length ===0) && <CandidateCardSkeleton />} */}
@@ -169,31 +173,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </div>
         )}
 
-        {/* {type === "applications" && (
-          <div className="flex gap-2">
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded cursor-pointer bg-gray-500 px-3 py-2 text-sm text-white
-        disabled:cursor-not-allowed disabled:opacity-50 ${getButtonClass("all")}`}
-              onClick={() => {
-                setStatus("all");
-                setPage(1);
-              }}
-            >
-              All Applications
-            </button>
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded cursor-pointer bg-gray-500 px-3 py-2 text-sm text-white
-        disabled:cursor-not-allowed disabled:opacity-50 ${getButtonClass("accepted")}`}
-              onClick={() => {
-                setStatus("accepted");
-                setPage(1);
-              }}
-            >
-              Accepted Applications
-            </button>
-          </div>
-        )} */}
-
         {type === "applications" && (
           <div className="flex gap-2">
             {tabs.map((tab) => (
@@ -214,14 +193,15 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           </div>
         )}
 
-        {loading || initialLoading ? (
+        {/* ? (
           <div className="mt-2" role="status" aria-busy="true">
-            <span className="sr-only">Loading candidates…</span>
             <div className="motion-safe:animate-pulse" aria-hidden="true">
               <CandidateCardSkeleton cards={6} className="md:grid-cols-2" />
             </div>
           </div>
-        ) : applicants.length > 0 ? (
+        ) : */}
+
+        {applicants.length > 0 ? (
           <div className="mt-2">
             <div className="flex mb-5">
               <span className="text-lg font-semibold md:text-xl text-gray-500">
@@ -237,6 +217,18 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                 const visibleSkills = isExpanded
                   ? profile?.skills
                   : profile?.skills?.slice(0, 3);
+
+                // utils/invitation.js
+
+                const getInvitationState = (
+                  invitationSent,
+                  invitationCancelled,
+                ) => {
+                  if (!invitationSent) return "send";
+                  return invitationCancelled
+                    ? "resend"
+                    : "cancel";
+                };
                 return (
                   // <>
 
@@ -423,14 +415,21 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     {/* Bottom Actions */}
                     <div className="mt-5 flex items-center justify-between border-t pt-4">
                       {/* Job Invitation Status */}
-                      {profile?.applicationAvailable && (
-                        <span className="bg-blue-50 text-blue-700 border-blue-700">
-                          Job Invitation Sent.
-                        </span>
+                      {profile?.invitationSent &&
+                        !profile?.invitationCancelled && (
+                          <span className="bg-blue-50 text-blue-700 border-blue-700">
+                            Job Invitation Sent.
+                          </span>
+                        )}
+                        
+                        {type === "recommendation" && profile?.applicationStatus && (
+                        <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
+                          {profile.applicationStatus}
+                        </button>
                       )}
 
                       {/* Status */}
-                      {profile?.status && (
+                      {type === "applications" && profile?.status && (
                         <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
                           {profile.status}
                         </button>
@@ -440,7 +439,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         className="ml-auto"
                         href={`/employerDashboard/viewjobapplication/${profile?.userId}?jobId=${jobId}&type=${type}${
                           type === "recommendation"
-                            ? `&matching=${profile.matchPercentage}&jobInvitation=${profile?.applicationAvailable}`
+                            ? `&matching=${profile.matchPercentage}&jobInvitation=${getInvitationState(profile?.invitationSent, profile?.invitationCancelled)}`
                             : `&status=${status}`
                         }`}
                       >
@@ -493,7 +492,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         page={page}
         totalCount={totalCount}
       />
-      {/* <div>{loading && <Loading />}</div> */}
     </div>
   );
 };

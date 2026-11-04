@@ -17,6 +17,7 @@ import {
 } from "@/constants/constant";
 import { NextResponse } from "next/server";
 import User from "@/modals/User";
+import JobInvitation from "@/modals/JobInvitation";
 
 export async function POST(request) {
   console.log("app\api\worker\jobs\route.js - POST");
@@ -214,6 +215,7 @@ export async function GET(request) {
   console.log("app/api/worker/jobs/route.js - GET");
   // /api/worker/jobs?matching=${val}&page=${page}&limit=12
   try {
+    await connectDB();
     const { uid } = await verifyFirebaseToken(request);
 
     const { searchParams } = new URL(request.url);
@@ -228,24 +230,34 @@ export async function GET(request) {
     const skip = (page - 1) * limit;
 
     const appliedJobs = await JobApplication.find(
-      { workerId: uid,cancelled:false },
+      { workerId: uid, cancelled: false },
       { jobId: 1 },
     ).lean();
 
     const appliedJobIds = appliedJobs.map((job) => job.jobId);
     console.log(appliedJobIds, "APPLIED IDS");
-    const allSavedJobs = await SavedJobs.find(
-      {
-        workerId: uid,
-        isDeleted: false,
-        jobId: { $nin: appliedJobIds },
-      },
-      { jobId: 1, _id: 0 },
-    ).lean();
+    const [allSavedJobs, jonInvitations] = await Promise.all([
+      SavedJobs.find(
+        {
+          workerId: uid,
+          isDeleted: false,
+          jobId: { $nin: appliedJobIds },
+        },
+        { jobId: 1, _id: 0 },
+      ).lean(),
+      JobInvitation.find({ workerId: uid }).select("jobId").lean(),
+    ]);
 
     const savedJobIds = allSavedJobs.map((job) => job.jobId);
-    const excludedIds = [...appliedJobIds, ...savedJobIds];
-    console.log(excludedIds, "ALL THE EXCLUDEDiDS");
+    const invitedIds = jonInvitations.map((j) => j.jobId);
+    const excludedIds = Array.from(
+      new Set(
+        [...appliedJobIds, ...savedJobIds, ...invitedIds]
+          .filter(Boolean)
+          .map((id) => id.toString()),
+      ),
+    );
+    console.log(invitedIds, "ALL THE EXCLUDEDiDS");
 
     const matches = await JobMatches.find({
       workerId: uid,
@@ -594,13 +606,14 @@ export async function GET(request) {
 const MS_PER_MIN = 60 * 1000;
 const MAX_PHOTOS = 10;
 
-const { STARTED, IN_PROGRESS, COMPLETED } = JOB_COMPLETION_STATUS;
-const { WORKING, BREAK_START, NOT_AVAILABLE, AVAILABLE, START_TOMORROW } =
-  WORKER_WORKING_STATUS;
-
-const OPEN_STATUSES = [STARTED, IN_PROGRESS];
-const END_OF_DAY_STATUSES = [NOT_AVAILABLE, START_TOMORROW];
-const MANUAL_STATUSES = [NOT_AVAILABLE, WORKING, AVAILABLE, START_TOMORROW];
+const OPEN_STATUSES = ["Started", "InProgress"];
+const END_OF_DAY_STATUSES = ["Not Available", "Start Tomorrow"];
+const MANUAL_STATUSES = [
+  "Not Available",
+  "Working",
+  "Available",
+  "Start Tomorrow",
+];
 
 // old/alternate action names -> canonical
 const ACTION_ALIASES = { INPROGESS: "IN_PROGRESS", END: "COMPLETED" };
@@ -620,33 +633,60 @@ const cleanImages = (urls) =>
 // ───────────── ACTION HANDLERS ─────────────
 const handlers = {
   async START({ jobId, uid, now }) {
+    console.log(
+      jobId,
+      uid,
+      now,
+      JOB_COMPLETION_STATUS.STARTED,
+      WORKER_WORKING_STATUS.WORKING,
+      "INITIAL STARTED VALUES",
+    );
+
+    console.log(getWorkDate(now), "GET WORKER DATE");
+
     const [job, worker] = await Promise.all([
-      JobDetails.findById(jobId).lean(),
+      JobDetails.findOne({ _id: jobId, isDeleted: false }).lean(),
       User.findById(uid).lean(),
     ]);
     if (!job) return fail("Job not found.", 404);
     // TODO: verify this worker is actually assigned to this job
 
     try {
+      console.log(jobId, uid, "=========ANUGRAHAS");
+      const workerSess = await WorkerSession.findOne({
+        jobId,
+        workerId: uid,
+        workDate: getWorkDate(now),
+        // jobCompletionStatus: "Assigned",
+        startTime: null,
+      });
+      console.log(workerSess, "FIRST WORKER SESSION");
       // Matches only if today's session hasn't started. If it already has,
       // the upsert tries an insert and the unique index rejects it (11000).
       const session = await WorkerSession.findOneAndUpdate(
-        { jobId, workerId: uid, workDate: getWorkDate(now), startTime: null },
+        {
+          jobId,
+          workerId: uid,
+          workDate: getWorkDate(now),
+          jobCompletionStatus: "Assigned",
+          startTime: null,
+        },
         {
           $setOnInsert: {
             _id: generateId(),
             employerId: job.employerId, // from DB, never from the client
             agreedRate: calculateSuggestedRate(job, worker),
-            rateType: job.rateType || "Hourly",
+            rateType: job.salaryType || "Hourly",
           },
           $set: {
-            jobCompletionStatus: STARTED,
-            workingStatus: WORKING,
+            jobCompletionStatus: JOB_COMPLETION_STATUS.STARTED,
+            workingStatus: WORKER_WORKING_STATUS.WORKING,
             startTime: now,
           },
         },
         { upsert: true, new: true },
       );
+      console.log(session, "STARTED DATA");
       return ok(session);
     } catch (err) {
       if (err.code === 11000) {
@@ -659,24 +699,27 @@ const handlers = {
   },
 
   async IN_PROGRESS({ open }) {
+    console.log(open, "IN_PROGRESS OPEN DATA");
     const session = await WorkerSession.findOneAndUpdate(
       open,
-      { $set: { jobCompletionStatus: IN_PROGRESS } },
+      { $set: { jobCompletionStatus: JOB_COMPLETION_STATUS.IN_PROGRESS } },
       { new: true },
     );
+    console.log(session, "UPDATED IN_PROGRESS DATA");
     if (!session) return fail("No active session found.", 404);
     return ok(session);
   },
 
   async BREAK_START({ open, now }) {
     const session = await WorkerSession.findOneAndUpdate(
-      { ...open, workingStatus: WORKING },
+      { ...open, workingStatus: WORKER_WORKING_STATUS.WORKING },
       {
         $push: { breaks: { startedAt: now } },
-        $set: { workingStatus: BREAK_START },
+        $set: { workingStatus: WORKER_WORKING_STATUS.BREAK_START },
       },
       { new: true },
     );
+    console.log(session, "BREAK START SESSION DATA");
     if (!session)
       return fail("No active working session to take a break from.", 400);
     return ok(session);
@@ -686,11 +729,14 @@ const handlers = {
     const session = await WorkerSession.findOneAndUpdate(
       {
         ...open,
-        workingStatus: BREAK_START,
+        workingStatus: WORKER_WORKING_STATUS.BREAK_START,
         breaks: { $elemMatch: { endedAt: null } },
       },
       {
-        $set: { "breaks.$[open].endedAt": now, workingStatus: WORKING },
+        $set: {
+          "breaks.$[open].endedAt": now,
+          workingStatus: WORKER_WORKING_STATUS.WORKING,
+        },
       },
       { new: true, arrayFilters: [{ "open.endedAt": null }] },
     );
@@ -698,58 +744,130 @@ const handlers = {
     return ok(session);
   },
 
-  async COMPLETED({ open, now, workerStatus, imageUrls }) {
-    const session = await WorkerSession.findOne(open).lean();
-    if (!session?.startTime) return fail("No active session to end.", 404);
+  // async COMPLETED({ open, now, workerStatus, imageUrls }) {
+  //   console.log(
+  //     open,
+  //     now,
+  //     workerStatus,
+  //     imageUrls,
+  //     "ALL THE COMPLETED INITIAL DATA",
+  //   );
+  //   const session = await WorkerSession.findOne(open).lean();
+  //   if (!session?.startTime) return fail("No active session to end.", 404);
 
-    // close an open break at the end time
-    const breaks = session.breaks.map((b) => ({
-      startedAt: b.startedAt,
-      endedAt: b.endedAt ?? now,
-    }));
+  //   // close an open break at the end time
+  //   const breaks = session.breaks.map((b) => ({
+  //     startedAt: b.startedAt,
+  //     endedAt: b.endedAt ?? now,
+  //   }));
 
-    const breakMs = breaks.reduce(
-      (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
-      0,
-    );
-    const workedMs = Math.max(0, now - session.startTime - breakMs);
+  //   console.log(breaks, "BREAKS DATA");
 
-    const breakMinutes = Math.round(breakMs / MS_PER_MIN);
-    const totalWorkingMinutes = Math.round(workedMs / MS_PER_MIN);
+  //   const breakMs = breaks.reduce(
+  //     (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
+  //     0,
+  //   );
+  //   const workedMs = Math.max(0, now - session.startTime - breakMs);
 
-    const totalSalaryAmount =
-      session.rateType === "Daily"
-        ? session.agreedRate
-        : round2((totalWorkingMinutes / 60) * session.agreedRate);
+  //   const breakMinutes = Math.round(breakMs / MS_PER_MIN);
+  //   const totalWorkingHours = Math.round(workedMs / MS_PER_MIN);
+  //   console.log(breakMinutes, totalWorkingHours, "BREAK AND TOTAL WORK");
+  //   const totalSalaryAmount =
+  //     session.rateType === "Daily"
+  //       ? session.agreedRate
+  //       : round2((totalWorkingHours / 60) * session.agreedRate);
+  //   console.log(totalSalaryAmount, "TOTAL SALARY AMOUNT");
+  //   const update = {
+  //     $set: {
+  //       jobCompletionStatus: JOB_COMPLETION_STATUS.COMPLETED,
+  //       workingStatus: END_OF_DAY_STATUSES.includes(workerStatus)
+  //         ? workerStatus
+  //         : WORKER_WORKING_STATUS.NOT_AVAILABLE,
+  //       endTime: now,
+  //       breaks,
+  //       breakMinutes,
+  //       totalWorkingMinutes,
+  //       totalSalaryAmount,
+  //     },
+  //   };
+  //   if (imageUrls.length) update.$push = { workPics: { $each: imageUrls } };
 
-    const update = {
-      $set: {
-        jobCompletionStatus: COMPLETED,
-        workingStatus: END_OF_DAY_STATUSES.includes(workerStatus)
-          ? workerStatus
-          : NOT_AVAILABLE,
-        endTime: now,
-        breaks,
-        breakMinutes,
-        totalWorkingMinutes,
-        totalSalaryAmount,
-      },
-    };
-    if (imageUrls.length) update.$push = { workPics: { $each: imageUrls } };
+  //   const updated = await WorkerSession.findOneAndUpdate(
+  //     {
+  //       _id: session._id,
+  //       jobCompletionStatus: { $in: OPEN_STATUSES }, // blocks double-submit
+  //       updatedAt: session.updatedAt, // blocks a break change mid-calculation
+  //     },
+  //     update,
+  //     { new: true },
+  //   );
+  //   if (!updated)
+  //     return fail("Session was already ended or just changed. Retry.", 409);
+  //   return ok(updated);
+  // },
 
-    const updated = await WorkerSession.findOneAndUpdate(
-      {
-        _id: session._id,
-        jobCompletionStatus: { $in: OPEN_STATUSES }, // blocks double-submit
-        updatedAt: session.updatedAt, // blocks a break change mid-calculation
-      },
-      update,
-      { new: true },
-    );
-    if (!updated)
-      return fail("Session was already ended or just changed. Retry.", 409);
-    return ok(updated);
-  },
+  async COMPLETED({ open, now, workerStatus, imageUrls = [] }) {
+  const session = await WorkerSession.findOne(open).lean();
+  if (!session?.startTime) return fail("No active session to end.", 404);
+
+  // close an open break at the end time
+  const breaks = (session.breaks ?? []).map((b) => ({
+    startedAt: b.startedAt,
+    endedAt: b.endedAt ?? now,
+  }));
+
+  const breakMs = breaks.reduce(
+    (sum, b) => sum + Math.max(0, b.endedAt - b.startedAt),
+    0,
+  );
+  const workedMs = Math.max(0, now - session.startTime - breakMs);
+
+  const breakMinutes = Math.round(breakMs / MS_PER_MIN);
+  const totalWorkingMinutes = Math.round(workedMs / MS_PER_MIN);
+
+  const isDaily = session.rateType === "Daily";
+  const DAILY_WORK_HOURS = 8;
+
+  // Hourly: actual worked hours. Daily: fixed 8 hours.
+  const totalWorkingHours = isDaily
+    ? DAILY_WORK_HOURS
+    : round2(totalWorkingMinutes / 60);
+
+  // Hourly: hours x hourly rate. Daily: the agreed rate covers the full 8 hours.
+  const totalSalaryAmount = isDaily
+    ? session.agreedRate
+    : round2(totalWorkingHours * session.agreedRate);
+
+  const update = {
+    $set: {
+      jobCompletionStatus: JOB_COMPLETION_STATUS.COMPLETED,
+      workingStatus: END_OF_DAY_STATUSES.includes(workerStatus)
+        ? workerStatus
+        : WORKER_WORKING_STATUS.NOT_AVAILABLE,
+      endTime: now,
+      breaks,
+      breakMinutes,
+      // totalWorkingMinutes,
+      totalWorkingHours,
+      totalSalaryAmount,
+    },
+  };
+  if (imageUrls.length) update.$push = { workPics: { $each: imageUrls } };
+
+  const updated = await WorkerSession.findOneAndUpdate(
+    {
+      _id: session._id,
+      jobCompletionStatus: { $in: OPEN_STATUSES }, // blocks double-submit
+      updatedAt: session.updatedAt, // blocks a break change mid-calculation
+    },
+    update,
+    { new: true },
+  );
+
+  if (!updated)
+    return fail("Session was already ended or just changed. Retry.", 409);
+  return ok(updated);
+},
 
   async ADD_PHOTOS({ jobId, uid, imageUrls }) {
     if (!imageUrls.length) return fail("No images provided.", 400);
@@ -780,16 +898,37 @@ const handlers = {
     if (!MANUAL_STATUSES.includes(workerStatus))
       return fail("Invalid status for this action.", 400);
 
+    const isStartTomorrow =
+      workerStatus === WORKER_WORKING_STATUS.START_TOMORROW;
+
+    const update = {
+      workingStatus: workerStatus,
+      endTime: isStartTomorrow ? now : null,
+    };
+
+    // Only change the job completion status when the worker is leaving for the day
+    if (isStartTomorrow) {
+      update.jobCompletionStatus = JOB_COMPLETION_STATUS.IN_PROGRESS;
+    }
+
+    console.log(update, "UPDATED UPDATED DEFULT DATA");
+
+    const sse = await WorkerSession.findOne({
+      jobId,
+      workerId: uid,
+      workDate: getWorkDate(now),
+    });
+
+    console.log(sse, "========AAAAJJJJUUUEUEU");
+
     const session = await WorkerSession.findOneAndUpdate(
       { jobId, workerId: uid, workDate: getWorkDate(now) },
       {
-        $set: {
-          workingStatus: workerStatus,
-          endTime: workerStatus === START_TOMORROW ? now : null,
-        },
+        $set: update,
       },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
+    console.log(session, "===========SESSION DATA=============");
     if (!session) return fail("No session found for today.", 404);
     return ok(session);
   },
@@ -813,9 +952,10 @@ export async function PUT(request) {
 
     const { jobId, workerStatus } = body;
     const rawAction = body.action;
-    if (!jobId || !rawAction)
-     { console.log(jobId, workerStatus, rawAction, "CHECK ALL THESE CONTENTS");
-    return fail("jobId and action are required.", 400);}
+    if (!jobId || !rawAction) {
+      console.log(jobId, workerStatus, rawAction, "CHECK ALL THESE CONTENTS");
+      return fail("jobId and action are required.", 400);
+    }
 
     const action = ACTION_ALIASES[rawAction] ?? rawAction;
     const handler = handlers[action] ?? handlers.DEFAULT;

@@ -24,8 +24,6 @@ export async function GET(request, { params }) {
       .sort({ createdAt: -1 })
       .lean();
 
-      
-
     // status of the latest session (index 0 after the sort)
     const jobCompletionStatus = workerSessions[0]?.jobCompletionStatus ?? "";
 
@@ -37,6 +35,8 @@ export async function GET(request, { params }) {
       jobCompletionStatus,
       workPics,
     };
+
+    console.log(result, "RESULT RESULT DATA");
 
     return NextResponse.json(
       {

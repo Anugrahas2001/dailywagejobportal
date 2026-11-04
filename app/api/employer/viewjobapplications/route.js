@@ -284,7 +284,8 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const jobId = searchParams.get("jobId");
     const applicationStatus = searchParams.get("status") || "Accepted";
-
+    console.log(jobId, applicationStatus, "JOB ID AND APPLICATION STATUS");
+    
     if (!jobId) {
       return NextResponse.json(
         { message: "jobId is required." },

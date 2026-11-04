@@ -57,7 +57,9 @@ export async function GET(request, { params }) {
       employerId: uid,
     })
       .sort({ createdAt: -1 })
-      .select("workPics jobCompletionStatus workingStatus")
+      .select(
+        "workPics jobCompletionStatus workingStatus agreedRate rateType totalWorkingHours totalSalaryAmount",
+      )
       .lean();
 
     const workerPics = workerSession.flatMap((s) => s.workPics ?? []);
@@ -65,6 +67,10 @@ export async function GET(request, { params }) {
 
     const jobWorkingStatus = workerSession[0]?.jobCompletionStatus;
     const workerCurrentStatus = workerSession[0]?.workingStatus;
+    const agreedRate = workerSession[0]?.agreedRate;
+    const salaryType = workerSession[0]?.rateType;
+    const totalWorkingHours = workerSession[0]?.totalWorkingHours;
+    const totalSalary = workerSession[0]?.totalSalaryAmount;
     console.log(workerPics, jobInvite?.status, jobApp?.status, "WORKER PICS");
     console.log(jobWorkingStatus, workerCurrentStatus, "CHECK BOTH STATUS");
     return NextResponse.json(
@@ -76,6 +82,10 @@ export async function GET(request, { params }) {
           workerPics,
           jobWorkingStatus,
           workerCurrentStatus,
+          agreedRate,
+          salaryType,
+          totalWorkingHours,
+          totalSalary,
           status: jobApp?.status || jobInvite?.status,
         },
       },
@@ -348,6 +358,8 @@ export async function PUT(request, { params }) {
           }
 
           if (!isAccepting) return;
+
+          // const existingJob=await JobDetails
 
           // Atomically claim an opening
           const job = await JobDetails.findOneAndUpdate(
