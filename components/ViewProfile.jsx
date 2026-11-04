@@ -20,11 +20,11 @@ import {
   salaryCreditTypes,
   getMatchStyle,
 } from "./commonFunctions";
-// import { useRouter } from "next/navigation";
 import ViewProfileSkeleton from "./skeltons/ViewProfileSkeleton";
 import useControls from "./hooks/useControls";
 import useLoading from "./hooks/useLoading";
 import { JOB_APPLICATION_STATUS } from "@/constants/constant";
+import PaymentModal from "./PaymentModal";
 
 const ViewProfile = ({
   workerId,
@@ -38,6 +38,8 @@ const ViewProfile = ({
   console.log(workerData, type, "NEW WORKER DATA");
   const [jobStatus, setJobStatus] = useState("");
   const { loading, setLoading } = useLoading();
+  const [showPayment, setShowPayment] = useState(false);
+  const [justPaid, setJustPaid] = useState(false);
   const {
     router,
     dispatch,
@@ -46,12 +48,7 @@ const ViewProfile = ({
     initialLoading,
     setInitialLoading,
   } = useControls();
-  // const isInvited =
-  //   jobInvitation === "false"
-  //     ? false
-  //     : jobInvitation === "true"
-  //       ? true
-  //       : jobInvitation;
+
   console.log(
     matchingRate,
     jobInvitation,
@@ -203,6 +200,11 @@ const ViewProfile = ({
     },
   ];
 
+  const handlePaymentClose = () => {
+    setShowPayment(false);
+    if (justPaid) fetchUserData(); // refresh after the modal closes
+  };
+
   // Inside your component
   const {
     jobWorkingStatus,
@@ -216,6 +218,8 @@ const ViewProfile = ({
     workerCurrentStatus === "Start Tomorrow" ||
     jobWorkingStatus === "Completed" ||
     jobWorkingStatus === "InProgress";
+
+  const canPay = showSalary && Number(workerData?.totalSalary) > 0 && !justPaid;
 
   const BADGE_CLASS =
     "inline-flex items-center gap-2 bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium";
@@ -472,176 +476,6 @@ const ViewProfile = ({
 
           {/* Application Status */}
 
-          {/* <section className="p-4 md:p-8 border-b">
-            <div className="py-4 border-b flex items-center px-2 justify-between">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Job Completion Status{" "}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Current status of the job
-                </p>
-              </div>
-
-              {workerData?.jobWorkingStatus && (
-                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                  {workerData?.jobWorkingStatus}
-                </span>
-              )}
-            </div>
-
-            {workerData?.workerCurrentStatus === "Start Tomorrow" &&
-              (
-                workerData?.jobWorkingStatus === "Completed" ||
-                workerData?.jobWorkingStatus === "InProgress"
-              )(
-                <div>
-                  <div className="py-4 border-b flex items-center px-2 justify-between">
-                    <div className="flex flex-col">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Worker Salary{" "}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Current salary of the worker
-                      </p>
-                    </div>
-
-                    {workerData?.agreedRate && (
-                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                        {workerData?.agreedRate}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="py-4 border-b flex items-center px-2 justify-between">
-                    <div className="flex flex-col">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Salary Credit Type{" "}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Worker salary Type
-                      </p>
-                    </div>
-
-                    {workerData?.salaryType && (
-                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                        {workerData?.salaryType}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="py-4 border-b flex items-center px-2 justify-between">
-                    <div className="flex flex-col">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Total working time{" "}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Working time of the user
-                      </p>
-                    </div>
-
-                    {workerData?.totalWorkingMinutes && (
-                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                        {workerData?.totalWorkingMinutes}
-                      </span>
-                    )}
-                  </div>
-                  <div className="py-4 border-b flex items-center px-2 justify-between">
-                    <div className="flex flex-col">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Total salary{" "}
-                      </h2>
-                      <p className="mt-1 text-sm text-gray-500">
-                        Working salary of the worker
-                      </p>
-                    </div>
-
-                    {workerData?.totalSalary && (
-                      <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                        {workerData?.totalSalary}
-                      </span>
-                    )}
-                  </div>
-                </div>,
-              )}
-
-            <div className="py-4 border-b flex items-center px-2 justify-between">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Worker Current Status{" "}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  Current status of the worker
-                </p>
-              </div>
-
-              {workerData?.workerCurrentStatus && (
-                <span className="bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium">
-                  {workerData?.workerCurrentStatus}
-                </span>
-              )}
-            </div>
-
-            <h2 className="text-lg font-semibold text-gray-900">
-              Work Site Images
-            </h2>
-            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
-              {workerData?.workerPics?.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`Work image ${index + 1}`}
-                  className="h-24 w-24 rounded-md object-cover shrink-0"
-                />
-              ))}
-            </div>
-
-            {type === "application" && (
-              <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Application Status
-                  </h2>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Update the applicant's current status.
-                  </p>
-                </div>
-
-                {status === "All" ? (
-                  <select
-                    value={jobStatus ? jobStatus : workerData?.status}
-                    onChange={(e) =>
-                      handleJobApplicationStatus(e, {
-                        workerId: workerData?.userId,
-                        jobId,
-                      })
-                    }
-                    className={`rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
-                      workerData?.status || jobStatus
-                        ? "border-blue-300 bg-blue-50 text-blue-700"
-                        : ""
-                    }`}
-                  >
-                    <option value="">Select Status</option>
-                    {Object.values(JOB_APPLICATION_STATUS).map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                ) : workerData?.status ? (
-                  <span
-                    className={`bg-gray-400 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium`}
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {workerData.status}
-                  </span>
-                ) : null}
-              </div>
-            )}
-          </section> */}
-
           <section className="p-4 md:p-8 border-b">
             <InfoRow
               title="Job Completion Status"
@@ -651,18 +485,28 @@ const ViewProfile = ({
 
             {showSalary &&
               SALARY_ROWS.map(({ key, title, description, format }) => (
-                <>
-                <InfoJobCompletionRow
-                  key={key}
-                  title={title}
-                  description={description}
-                  value={workerData?.[key]}
-                  format={format}
-                />
-
-                <button className="bg-blue-600 text-white font-medium">Pay Now</button>
-                </>
+                
+                  <InfoJobCompletionRow
+                    key={key}
+                    title={title}
+                    description={description}
+                    value={workerData?.[key]}
+                    format={format}
+                  />
+                
               ))}
+            {/* {showSalary &&
+              Number(workerData?.totalSalary) > 0 &&
+              !justPaid && (
+                <div className="flex justify-end py-4">
+                  <button
+                    onClick={() => setShowPayment(true)}
+                    className="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+                  >
+                    Pay Now
+                  </button>
+                </div>
+              )} */}
 
             <InfoRow
               title="Worker Current Status"
@@ -670,60 +514,40 @@ const ViewProfile = ({
               value={workerCurrentStatus}
             />
 
-            <h2 className="text-lg font-semibold text-gray-900">
-              Work Site Images
-            </h2>
-            <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
-              {workerData?.workerPics?.map((img, index) => (
-                <img
-                  key={index}
-                  src={img}
-                  alt={`Work image ${index + 1}`}
-                  className="h-24 w-24 rounded-md object-cover shrink-0"
-                />
-              ))}
-            </div>
-
-            
-
-            {/* {type === "application" && (
-              <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Application Status
-                  </h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Update the applicant's current status.
-                  </p>
+            {workerData?.workerPics?.map((img, index) => (
+              <>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Work Site Images
+                </h2>
+                <div className="py-4 border-b flex items-center gap-2 px-2 overflow-x-auto">
+                  <img
+                    key={index}
+                    src={img}
+                    alt={`Work image ${index + 1}`}
+                    className="h-24 w-24 rounded-md object-cover shrink-0"
+                  />
                 </div>
+              </>
+            ))}
 
-                {status === "All" ? (
-                  <select
-                    value={jobStatus || workerStatus || ""}
-                    onChange={(e) =>
-                      handleJobApplicationStatus(e, { workerId: userId, jobId })
-                    }
-                    className={`rounded-lg border px-4 py-2.5 text-sm font-medium outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${
-                      jobStatus || workerStatus
-                        ? "border-blue-300 bg-blue-50 text-blue-700"
-                        : "border-gray-300 text-gray-700"
-                    }`}
-                  >
-                    <option value="">Select Status</option>
-                    {Object.values(JOB_APPLICATION_STATUS).map((value) => (
-                      <option key={value} value={value}>
-                        {value}
-                      </option>
-                    ))}
-                  </select>
-                ) : workerStatus ? (
-                  <span className={BADGE_CLASS}>
-                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                    {workerStatus}
-                  </span>
-                ) : null}
+            {canPay && (
+              <div className="flex justify-center items-center py-4">
+                <button
+                  onClick={() => setShowPayment(true)}
+                  className="rounded-lg bg-green-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  Pay Now
+                </button>
               </div>
-            )} */}
+            )}
+
+            {justPaid && (
+              <div className="flex justify-center items-center py-4">
+                <span className="rounded-lg bg-green-100 px-4 py-2 text-sm font-medium text-green-700">
+                  ✓ Paid
+                </span>
+              </div>
+            )}
 
             {type === "applications" && (
               <div className="flex flex-col border-b py-4 gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -742,7 +566,7 @@ const ViewProfile = ({
                     value={jobStatus ? jobStatus : workerData?.status}
                     onChange={(e) =>
                       handleJobApplicationStatus(e, {
-                        workerId: workerData?.userId,
+                        workerId: userId,
                         jobId,
                       })
                     }
@@ -775,13 +599,13 @@ const ViewProfile = ({
             <section className="flex justify-center items-center">
               {jobInvitation === "send" || jobInvitation === "resend" ? (
                 <button
-                  disabled={isPending(`sentjobinvite-${workerData?.userId}`)}
-                  aria-busy={isPending(`sentjobinvite-${workerData?.userId}`)}
+                  disabled={isPending(`sentjobinvite-${userId}`)}
+                  aria-busy={isPending(`sentjobinvite-${userId}`)}
                   title="Job Invitation"
                   className="m-3 rounded-md bg-blue-600 p-3 text-white"
                   onClick={() => {
                     handleJobInvitation({
-                      workerId: workerData?.userId,
+                      workerId: userId,
                       jobId,
                     });
                   }}
@@ -790,13 +614,13 @@ const ViewProfile = ({
                 </button>
               ) : (
                 <button
-                  disabled={isPending(`canceljobinvite-${workerData?.userId}`)}
-                  aria-busy={isPending(`canceljobinvite-${workerData?.userId}`)}
+                  disabled={isPending(`canceljobinvite-${userId}`)}
+                  aria-busy={isPending(`canceljobinvite-${userId}`)}
                   title="Job Invitation"
                   className="m-3 rounded-md bg-blue-600 p-3 text-white"
                   onClick={() => {
                     handleCancelJobInvitation({
-                      workerId: workerData?.userId,
+                      workerId: userId,
                       jobId,
                     });
                   }}
@@ -809,7 +633,17 @@ const ViewProfile = ({
         </div>
       )}
 
-      {/* <div>{loading && <Loading />}</div> */}
+      {/* Outside the loading ternary so it isn't unmounted during refetch */}
+      <PaymentModal
+        open={showPayment}
+        onClose={handlePaymentClose}
+        workerId={userId}
+        workerName={workerData?.name}
+        amount={Number(workerData?.totalSalary)}
+        jobId={jobId}
+        // employerName={employerName}
+        onSuccess={() => setJustPaid(true)}
+      />
     </div>
   );
 };

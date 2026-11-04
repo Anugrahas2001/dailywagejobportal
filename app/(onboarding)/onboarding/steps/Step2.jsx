@@ -147,11 +147,7 @@ const Step2 = () => {
           error={errors.shiftType?.message}
         />
 
-        {/* {errors.shiftType && (
-          <p className="text-red-500"></p>
-        )} */}
-
-        <SelectField
+        {/* <SelectField
           label="Salary Credit Type"
           options={Object.entries(SALARY_CREDIT_TYPES).map(([key, value]) => ({
             label: key,
@@ -161,7 +157,7 @@ const Step2 = () => {
             required: "Please select a salary credit type",
           })}
           error={errors.salaryCreditType?.message}
-        />
+        /> */}
 
         {/* {errors.salaryCreditType && (
           <p className="text-red-500"></p>

@@ -471,6 +471,12 @@ export const JOB_STATUS_VALUES = Object.freeze({
   DELETED: "Deleted",
 });
 
+export const PAYMENT_STATUS = Object.freeze({
+  PENDING: "Pending",
+  PAID: "Paid",
+  FAILED: "Failed",
+});
+
 export const MAX_NUM_SKILLS = 8;
 export const SIX_HOURS = 1 * 60 * 60 * 1000;
 export const PAGE_SIZE = 12;

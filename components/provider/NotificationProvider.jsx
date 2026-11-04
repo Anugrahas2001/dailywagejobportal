@@ -1,210 +1,3 @@
-// "use client";
-
-// import {
-//   createContext,
-//   useCallback,
-//   useContext,
-//   useEffect,
-//   useRef,
-//   useState,
-// } from "react";
-// import { toast } from "sonner";
-// import { fetchUserToken } from "@/lib/fetchUserToken";
-
-// const NotificationContext = createContext(null);
-
-// export function NotificationProvider({ children }) {
-//   const [isConnected, setIsConnected] = useState(false);
-
-//   const wsRef = useRef(null);
-//   const retryTimerRef = useRef(null);
-//   const closedRef = useRef(false);
-//   const connectingRef = useRef(false);
-
-//   /*
-//    * --------------------------------------------------
-//    * WebSocket connection
-//    * --------------------------------------------------
-//    */
-//   const connect = useCallback(async () => {
-//     if (closedRef.current) {
-//       return;
-//     }
-
-//     // Prevent duplicate connections
-//     if (
-//       connectingRef.current ||
-//       wsRef.current?.readyState === WebSocket.OPEN ||
-//       wsRef.current?.readyState === WebSocket.CONNECTING
-//     ) {
-//       return;
-//     }
-
-//     connectingRef.current = true;
-
-//     try {
-//       console.log("🔐 Fetching Firebase token...");
-
-//       const token = await fetchUserToken();
-
-//       if (!token) {
-//         throw new Error("WebSocket token is missing");
-//       }
-
-//       if (closedRef.current) {
-//         return;
-//       }
-
-//       const wsUrl = "ws://localhost:8080" || process.env.NEXT_PUBLIC_WS_URL;
-
-//       if (!wsUrl) {
-//         throw new Error("NEXT_PUBLIC_WS_URL is not defined");
-//       }
-
-//       const websocketUrl = `${wsUrl}?token=${encodeURIComponent(token)}`;
-
-//       console.log("🔌 Creating WebSocket connection...");
-
-//       const ws = new WebSocket(websocketUrl);
-
-//       wsRef.current = ws;
-
-//       /*
-//        * --------------------------------------------------
-//        * Connected
-//        * --------------------------------------------------
-//        */
-//       ws.onopen = () => {
-//         console.log("✅ WebSocket connected");
-
-//         connectingRef.current = false;
-//         setIsConnected(true);
-//       };
-
-//       /*
-//        * --------------------------------------------------
-//        * Notification received
-//        * --------------------------------------------------
-//        */
-//       ws.onmessage = (event) => {
-//         try {
-//           const notification = JSON.parse(event.data);
-
-//           console.log("🔔 Notification received:", notification);
-
-//           toast(notification?.title ?? "New notification", {
-//             description: notification?.message,
-//           });
-//         } catch (error) {
-//           console.error("❌ Invalid WebSocket message:", error);
-//         }
-//       };
-
-//       /*
-//        * --------------------------------------------------
-//        * Error
-//        * --------------------------------------------------
-//        */
-//       ws.onerror = (error) => {
-//         console.error("❌ WebSocket error:", error);
-//       };
-
-//       /*
-//        * --------------------------------------------------
-//        * Closed
-//        * --------------------------------------------------
-//        */
-//       ws.onclose = (event) => {
-//         console.log("🔌 WebSocket disconnected:", event.code, event.reason);
-
-//         connectingRef.current = false;
-//         wsRef.current = null;
-
-//         setIsConnected(false);
-
-//         if (!closedRef.current) {
-//           retryTimerRef.current = setTimeout(() => {
-//             connect();
-//           }, 3000);
-//         }
-//       };
-//     } catch (error) {
-//       console.error("❌ Failed to connect WebSocket:", error);
-
-//       connectingRef.current = false;
-//       setIsConnected(false);
-
-//       if (!closedRef.current) {
-//         retryTimerRef.current = setTimeout(() => {
-//           connect();
-//         }, 3000);
-//       }
-//     }
-//   }, []);
-
-//   /*
-//    * --------------------------------------------------
-//    * Start notification system
-//    * --------------------------------------------------
-//    */
-//   useEffect(() => {
-//     closedRef.current = false;
-//     connect();
-
-//     /*
-//      * Cleanup only when Provider is destroyed
-//      */
-//     return () => {
-//       console.log("🧹 Cleaning NotificationProvider");
-
-//       closedRef.current = true;
-
-//       if (retryTimerRef.current) {
-//         clearTimeout(retryTimerRef.current);
-//         retryTimerRef.current = null;
-//       }
-
-//       if (wsRef.current) {
-//         wsRef.current.close();
-//         wsRef.current = null;
-//       }
-
-//       connectingRef.current = false;
-//     };
-//   }, [connect]);
-
-//   /*
-//    * --------------------------------------------------
-//    * Context value
-//    * --------------------------------------------------
-//    */
-//   const value = {
-//     isConnected,
-//     reconnect: connect,
-//   };
-
-//   return (
-//     <NotificationContext.Provider value={value}>
-//       {children}
-//     </NotificationContext.Provider>
-//   );
-// }
-
-// /*
-//  * --------------------------------------------------
-//  * Custom hook
-//  * --------------------------------------------------
-//  */
-// export function useNotification() {
-//   const context = useContext(NotificationContext);
-
-//   if (!context) {
-//     throw new Error("useNotification must be used inside NotificationProvider");
-//   }
-
-//   return context;
-// }
-
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
@@ -234,15 +27,16 @@ export function NotificationProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  // Depend on a stable primitive, not the whole user object
+  const uid = user?.uid;
+
   /*
    * --------------------------------------------------
-   * 2. Connect while a user is logged in, disconnect on logout.
-   *    Everything is local to this effect run, so React Strict Mode
-   *    (which runs effects twice in dev) can't create two sockets.
+   * 2. Open / maintain the WebSocket while a user is logged in
    * --------------------------------------------------
    */
   useEffect(() => {
-    if (!user) {
+    if (!uid) {
       setIsConnected(false);
       reconnectRef.current = () => {};
       return;
@@ -256,6 +50,7 @@ export function NotificationProvider({ children }) {
 
     const scheduleRetry = () => {
       if (cancelled) return;
+      clearTimeout(retryTimer);
       // Backoff: 1s, 2s, 4s ... max 30s
       const delay = Math.min(1000 * 2 ** attempts, 30000);
       attempts += 1;
@@ -279,21 +74,30 @@ export function NotificationProvider({ children }) {
         // Fresh token each time, since Firebase tokens expire
         const token = await fetchUserToken();
         if (!token) throw new Error("WebSocket token is missing");
+
+        // Effect may have been cleaned up while we awaited the token
         if (cancelled) return;
 
-        ws = new WebSocket(`${WS_URL}?token=${encodeURIComponent(token)}`);
+        const socket = new WebSocket(
+          `${WS_URL}?token=${encodeURIComponent(token)}`
+        );
+        ws = socket;
 
-        ws.onopen = () => {
+        socket.onopen = () => {
+          if (cancelled) {
+            socket.close(1000, "unmounted");
+            return;
+          }
           console.log("✅ WebSocket connected");
           attempts = 0;
           setIsConnected(true);
         };
 
-        ws.onmessage = (event) => {
+        socket.onmessage = (event) => {
+          if (cancelled) return;
           try {
             const notification = JSON.parse(event.data);
             toast(notification?.title ?? "New notification", {
-              // avoids duplicate toasts
               description: notification?.message,
               duration: 10000,
             });
@@ -302,17 +106,27 @@ export function NotificationProvider({ children }) {
           }
         };
 
-        ws.onerror = (error) => {
-          console.error("❌ WebSocket error:", error);
+        socket.onerror = () => {
+          if (cancelled) return;
+          // The error event carries no details; the real info is in onclose.
+          // Don't log socket.url here, it contains the auth token.
+          console.error("❌ WebSocket error, readyState:", socket.readyState);
         };
 
-        ws.onclose = (event) => {
-          console.log("🔌 WebSocket disconnected:", event.code, event.reason);
-          ws = null;
-          if (!cancelled) setIsConnected(false);
+        socket.onclose = (event) => {
+          if (ws === socket) ws = null;
+          if (cancelled) return; // closed by our own cleanup, don't retry
+
+          console.warn("🔌 WebSocket closed", {
+            code: event.code,
+            reason: event.reason,
+            wasClean: event.wasClean,
+          });
+          setIsConnected(false);
           scheduleRetry();
         };
       } catch (error) {
+        if (cancelled) return;
         console.error("❌ Failed to connect WebSocket:", error);
         scheduleRetry();
       } finally {
@@ -320,20 +134,41 @@ export function NotificationProvider({ children }) {
       }
     }
 
-    reconnectRef.current = connect;
+    // Manual reconnect exposed through context
+    reconnectRef.current = () => {
+      if (cancelled) return;
+      attempts = 0;
+      clearTimeout(retryTimer);
+      connect();
+    };
+
     connect();
 
     // Runs on logout, user change, or when the app unmounts
     return () => {
       cancelled = true;
       clearTimeout(retryTimer);
+      reconnectRef.current = () => {};
+
       if (ws) {
-        ws.close();
+        const socket = ws;
         ws = null;
+        socket.onmessage = null;
+        socket.onerror = null;
+        socket.onclose = null;
+
+        if (socket.readyState === WebSocket.CONNECTING) {
+          // Closing a CONNECTING socket makes the browser log
+          // "closed before the connection is established".
+          // Let it finish opening, then close it quietly.
+          socket.onopen = () => socket.close(1000, "unmounted");
+        } else {
+          socket.onopen = null;
+          socket.close(1000, "unmounted");
+        }
       }
-      setIsConnected(false);
     };
-  }, [user]);
+  }, [uid]);
 
   const value = {
     isConnected,
