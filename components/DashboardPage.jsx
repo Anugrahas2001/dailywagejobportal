@@ -61,19 +61,28 @@ const DashboardPage = ({ role }) => {
     initialLoading,
     setInitialLoading,
   } = useControls();
-  const loadingStatus = useSelector((state) => state.jobs.status);
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const searchAndFilterStatus = useSelector((state) => state.searchJobs.status);
+  const jobStatus = useSelector((state) => state.jobs.status);
+  const loadingStatus = jobStatus || searchAndFilterStatus;
+  console.log(
+    searchAndFilterStatus,
+    jobStatus,
+    loadingStatus,
+    "LOADING DATA STATUS",
+  );
+  // const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
-  useEffect(() => {
-    if (loadingStatus === "succeeded" || loadingStatus === "failed") {
-      setHasLoadedOnce(true);
-    }
-  }, [loadingStatus]);
+  // useEffect(() => {
+  //   if (jobStatus === "succeeded" || jobStatus === "failed") {
+  //     setHasLoadedOnce(true);
+  //   }
+  // }, [jobStatus]);
 
   const workJobs = useSelector(selectAllJobsForWorker);
   const empJobs = useSelector(selectAllJobsForEmployer);
 
   const searchAndFilterJobs = useSelector((state) => state.searchJobs.jobs);
+  console.log(searchAndFilterJobs.length, "SEARCH AND FILTER LENGTH");
   const jobs =
     role === "worker"
       ? activeSearch
@@ -137,8 +146,13 @@ const DashboardPage = ({ role }) => {
 
   // if (showSkeleton) return <JobCardSkeleton role={role} />;
 
-  const showSkeleton = !jobs || initialLoading || !hasLoadedOnce;
-  if (showSkeleton) return <JobCardSkeleton role={role} />;
+  const showSkeleton =
+    !jobs ||
+    initialLoading ||
+    jobStatus === "pending"||searchAndFilterStatus === "pending";
+
+  // console.log(showSkeleton, loadingStatus, "SHOWING SKELETON OR NOT");
+  // if (showSkeleton) return <JobCardSkeleton role={role} />;
 
   const handleToggleSavedJob = (jobId) => {
     runWithPending(`save-${jobId}`, async () => {
@@ -202,11 +216,27 @@ const DashboardPage = ({ role }) => {
     <main className="bg-gray-100 p-4 md:py-6 md:px-16">
       <FcmTokenRegistrar />
 
-      {role === "worker" && (
+      {/* {role === "worker" && (
         <section className="w-full m-3">
           <SearchAndFilter
             page={page}
             onClick={() => setSearchActive((prev) => !prev)}
+          />
+        </section>
+      )} */}
+
+      {role === "worker" && (
+        <section className="w-full m-3">
+          <SearchAndFilter
+            page={page}
+            onClick={() => setSearchActive(true)} // set, don't toggle
+            onClear={() => {
+              setSearchActive(false);
+              setPage(1);
+              dispatch(fetchAvilableJobs({ page: 1 }));
+              // If workers' list comes from fetchActiveJobs, use this instead:
+              // dispatch(fetchActiveJobs({ page: 1, val }));
+            }}
           />
         </section>
       )}
@@ -255,7 +285,10 @@ const DashboardPage = ({ role }) => {
           </div>
         </>
       )}
-      {jobs.length > 0 ? (
+
+    {showSkeleton ? (
+        <JobCardSkeleton role={role} />
+      ) : jobs.length > 0 ? (
         <>
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
             {jobs.map((job) => {
@@ -329,7 +362,6 @@ const DashboardPage = ({ role }) => {
                         {role === "employer" ? (
                           <>
                             <div className="flex gap-3">
-                              {" "}
                               <div className="group relative inline-block">
                                 <button className="flex items-center gap-1 py-2">
                                   <BotMessageSquare className="h-5 w-5" />
@@ -381,9 +413,7 @@ const DashboardPage = ({ role }) => {
                   <div
                     className={`flex justify-between border-t pt-4 flex-${role === "worker" ? "row items-center" : "col"}`}
                   >
-                    {/* md:flex-row */}
                     <p className="text-sm text-gray-500">
-                      {" "}
                       {getPostedText({ createdAt: job.createdAt })}
                     </p>
 
@@ -470,9 +500,9 @@ const DashboardPage = ({ role }) => {
             <Error
               error={error}
               onClick={() => {
-                (dispatch(clearJobsError()),
-                  dispatch(clearAppliedJobsError()),
-                  dispatch(clearSavedJobsError()));
+                dispatch(clearJobsError());
+                dispatch(clearAppliedJobsError());
+                dispatch(clearSavedJobsError());
               }}
             />
           )}
@@ -499,6 +529,7 @@ const DashboardPage = ({ role }) => {
           )}
         </div>
       )}
+    
     </main>
   );
 };
@@ -509,4 +540,4 @@ export default DashboardPage;
 
 // If you want to write it to the DOM, pass a string instead: loading="false" or loading={value.toString()}.
 
-// If you used to conditionally omit it with loading={condition && value}, pass loading={condition ? value : undefined} instead.
+// If you used to conditionally omit it with loading={condition && value}, pass loading={condition ? value : undefined} instead.   

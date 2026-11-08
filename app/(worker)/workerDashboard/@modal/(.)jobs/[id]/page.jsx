@@ -18,7 +18,6 @@ export default function Page() {
   return (
     <Modal>
       <NavBar />
-      {/* <JobDetailsPage role="worker" isModal={true} /> */}
       <JobDetailsPage role="worker" id={id} isModal={true} type={type} />;
       <Footer />
     </Modal>

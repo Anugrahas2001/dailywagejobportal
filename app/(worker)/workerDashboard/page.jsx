@@ -1,10 +1,9 @@
-"use client"
+"use client";
 import DashboardPage from "@/components/DashboardPage";
 import React from "react";
 
 const page = () => {
-
-  const role="worker";
+  const role = "worker";
   return (
     <div>
       <DashboardPage role={role} />

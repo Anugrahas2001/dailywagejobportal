@@ -44,7 +44,7 @@ export async function GET(request) {
     const excludedIds = [...appliedJobIds, ...savedJobIds];
     console.log(excludedIds.length, "ALL THE EXCLUDEDiDS");
 
-    console.log(userLoc, "USER DATA");
+    console.log(userLoc, search, nearby, "USER DATA");
 
     const filter = {
       isDeleted: false,
@@ -87,64 +87,213 @@ export async function GET(request) {
       }
     }
 
-    if (nearby) {
-      const distanceKm = Number(nearby);
+    function getDistanceInKm([lng1, lat1], [lng2, lat2]) {
+      const R = 6371; // Earth radius in km
+      const toRad = (deg) => (deg * Math.PI) / 180;
 
-      if (!Number.isNaN(distanceKm) && distanceKm > 0) {
-        const coordinates = userLoc?.loc?.coordinates;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
 
-        if (
-          !coordinates ||
-          coordinates.length !== 2 ||
-          coordinates.some((value) => Number.isNaN(Number(value)))
-        ) {
-          return NextResponse.json(
-            {
-              message:
-                "Latitude and longitude are required to search for nearby jobs.",
-            },
-            {
-              status: 400,
-            },
-          );
-        }
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
 
-        filter.loc = {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: coordinates,
-            },
-            $maxDistance: distanceKm * 1000,
-          },
-        };
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // if (nearby) {
+    //   const distanceKm = Number(nearby);
+    //   console.log(distanceKm, "DISTANCE IN KM");
+
+    //   if (!Number.isNaN(distanceKm) && distanceKm > 0) {
+    //     const coordinates = userLoc?.loc?.coordinates;
+
+    //     if (
+    //       !coordinates ||
+    //       coordinates.length !== 2 ||
+    //       coordinates.some((value) => Number.isNaN(Number(value)))
+    //     ) {
+    //       return NextResponse.json(
+    //         {
+    //           message:
+    //             "Latitude and longitude are required to search for nearby jobs.",
+    //         },
+    //         {
+    //           status: 400,
+    //         },
+    //       );
+    //     }
+
+    //     filter.loc = {
+    //       $near: {
+    //         $geometry: {
+    //           type: "Point",
+    //           coordinates: coordinates,
+    //         },
+    //         $maxDistance: distanceKm * 1000,
+    //       },
+    //     };
+    //   }
+    // }
+
+    // let query = JobDetails.find(filter);
+
+    // if (!nearby) {
+    //   // no $near in the filter → safe to sort explicitly
+    //   query = query.sort({
+    //     createdAt: date === "oldest" ? 1 : -1,
+    //   });
+    // }
+
+    // console.log(filter, "CHECK THE FILTER");
+
+    // const [allJobs, totalCount] = await Promise.all([
+    //   query.skip(skip).limit(limit).lean(),
+    //   JobDetails.countDocuments(filter),
+    // ]);
+
+    // let nearFilter = null;
+    // let withinFilter = null;
+
+    // if (nearby) {
+    //   const distanceKm = Number(nearby);
+
+    //   if (!Number.isNaN(distanceKm) && distanceKm > 0) {
+    //     const coordinates = userLoc?.loc?.coordinates; // [lng, lat]
+
+    //     if (
+    //       !coordinates ||
+    //       coordinates.length !== 2 ||
+    //       coordinates.some((v) => Number.isNaN(Number(v)))
+    //     ) {
+    //       return NextResponse.json(
+    //         {
+    //           message:
+    //             "Latitude and longitude are required to search for nearby jobs.",
+    //         },
+    //         { status: 400 },
+    //       );
+    //     }
+
+    //     // for find(): filters AND sorts nearest-first
+    //     nearFilter = {
+    //       $near: {
+    //         $geometry: { type: "Point", coordinates },
+    //         $maxDistance: distanceKm * 1000, // meters
+    //       },
+    //     };
+
+    //     // for countDocuments(): same radius, no sorting
+    //     withinFilter = {
+    //       $geoWithin: {
+    //         $centerSphere: [coordinates, (distanceKm * 1000) / 6378100], // radians
+    //       },
+    //     };
+    //   }
+    // }
+
+
+let allJobs = [];
+let totalCount = 0;
+
+if (nearby) {
+  // "0-10" -> [0, 10]
+  const [minKm, maxKm] = nearby.split("-").map(Number);
+
+  if (Number.isNaN(minKm) || Number.isNaN(maxKm) || maxKm <= 0 || minKm > maxKm) {
+    return NextResponse.json(
+      { message: "Invalid nearby distance range." },
+      { status: 400 },
+    );
+  }
+
+  const coordinates = userLoc?.loc?.coordinates; // [lng, lat]
+
+  if (
+    !coordinates ||
+    coordinates.length !== 2 ||
+    coordinates.some((v) => Number.isNaN(Number(v)))
+  ) {
+    return NextResponse.json(
+      { message: "Latitude and longitude are required to search for nearby jobs." },
+      { status: 400 },
+    );
+  }
+
+  // aggregate() does NOT auto-cast like find(), so cast ids manually
+  const aggFilter = {
+    ...filter,
+    _id: { $nin: excludedIds},
+  };
+
+  const [result] = await JobDetails.aggregate([
+    {
+      $geoNear: {
+        near: { type: "Point", coordinates },
+        distanceField: "distanceInMeters",
+        spherical: true,
+        minDistance: minKm * 1000,
+        maxDistance: maxKm * 1000,
+        query: aggFilter,
+      },
+    },
+    {
+      $addFields: {
+        distanceInKm: { $round: [{ $divide: ["$distanceInMeters", 1000] }, 2] },
+      },
+    },
+    {
+      $facet: {
+        data: [{ $skip: skip }, { $limit: limit }],
+        total: [{ $count: "count" }],
+      },
+    },
+  ]);
+
+  allJobs = result?.data ?? [];
+  totalCount = result?.total?.[0]?.count ?? 0;
+} else {
+  const query = JobDetails.find(filter).sort({
+    createdAt: date === "oldest" ? 1 : -1,
+  });
+
+  [allJobs, totalCount] = await Promise.all([
+    query.skip(skip).limit(limit).lean(),
+    JobDetails.countDocuments(filter),
+  ]);
+}
+
+    const findFilter = nearFilter ? { ...filter, loc: nearFilter } : filter;
+    const countFilter = withinFilter
+      ? { ...filter, loc: withinFilter }
+      : filter;
+
+    let query = JobDetails.find(findFilter);
+    if (!nearFilter) {
+      query = query.sort({ createdAt: date === "oldest" ? 1 : -1 });
+    }
+
+    // const [allJobs, totalCount] = await Promise.all([
+    //   query.skip(skip).limit(limit).lean(),
+    //   JobDetails.countDocuments(countFilter),
+    // ]);
+
+    const userCoords = userLoc?.loc?.coordinates; // [lng, lat]
+
+    allJobs.forEach((job) => {
+      const jobCoords = job.loc?.coordinates; // [lng, lat]
+
+      if (userCoords?.length === 2 && jobCoords?.length === 2) {
+        const distanceKm = getDistanceInKm(userCoords, jobCoords);
+        console.log(
+          `Job: ${job.jobName} | ID: ${job._id} | Distance: ${distanceKm.toFixed(2)} km`,
+        );
+      } else {
+        console.log(
+          `Job: ${job.jobName} | ID: ${job._id} | Distance: N/A (missing coordinates)`,
+        );
       }
-    }
-
-    let query = JobDetails.find(filter);
-
-    if (!nearby) {
-      // no $near in the filter → safe to sort explicitly
-      query = query.sort({
-        createdAt: date === "oldest" ? 1 : -1,
-      });
-    }
-
-    console.log(filter, "CHECK THE FILTER");
-
-    const [allJobs, totalCount] = await Promise.all([
-      query.skip(skip).limit(limit).lean(),
-      JobDetails.countDocuments(filter),
-    ]);
-    // console.log("=======================4");
-
-    // console.log(
-    //   "RESULT ORDER:",
-    //   allJobs.map((job) => ({
-    //     id: job._id,
-    //     createdAt: job.createdAt,
-    //   })),
-    // );
+    });
 
     console.log(allJobs.length, totalCount, "=======================5");
 

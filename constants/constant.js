@@ -16,44 +16,45 @@ export const JOB_INVITATION_STATUS = Object.freeze({
 
 export const filterOptions = {
   Nearby: [
-    { label: "Within 1 km", value: "1" },
-    { label: "Within 5 km", value: "5" },
-    { label: "Within 10 km", value: "10" },
-    { label: "Within 25 km", value: "25" },
+    { label: "Within 5 km", value: "0-5" },
+    { label: "Within 10 km", value: "6-10" },
+    { label: "Within 25 km", value: "11-25" },
+    { label: "Within 50 km", value: "26-50" },
+    { label: "Within 100 km", value: "51-100" },
   ],
 
   Availability: [
     // { label: "Today", value: "today" },
     // { label: "Tomorrow", value: "tomorrow" },
     // { label: "This Week", value: "week" },
-    { value: "same_day", label: "Same Day" },
-    { value: "next_day", label: "Next Day" },
-    { value: "within-1-weeks", label: "within 1 weeks" },
-    { value: "within-2-weeks", label: "within 2 weeks" },
-    { value: "This_month", label: "This Month" },
+    { value: "Same Day", label: "Same Day" },
+    { value: "Next Day", label: "Next Day" },
+    { value: "within 1 weeks", label: "within 1 weeks" },
+    { value: "within 2 weeks", label: "within 2 weeks" },
+    // { value: "This_month", label: "This Month" },
   ],
 
   Shift: [
     {
-      value: "full_day",
+      value: "Full Day",
       label: "Full Day (8:00 AM - 5:00 PM)",
     },
     {
-      value: "half_day_morning",
+      value: "Half Day Morning",
       label: "Half Day - Morning (8:00 AM - 12:00 PM)",
     },
     {
-      value: "half_day_afternoon",
+      value: "Half Day Afternoon",
       label: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
     },
     {
-      value: "night_shift",
+      value: "Night Shift",
       label: "Night Shift (10:00 PM - 6:00 AM)",
     },
-    {
-      value: "flexible",
-      label: "Flexible Hours",
-    },
+    // {
+    //   value: "flexible",
+    //   label: "Flexible Hours",
+    // },
   ],
 
   Salary: [
@@ -129,7 +130,7 @@ export const SHIFT_TYPE_LABELS = Object.freeze({
   [SHIFT_TYPE.HALF_DAY_MORNING]: "Half Day - Morning (8:00 AM - 12:00 PM)",
   [SHIFT_TYPE.HALF_DAY_AFTERNOON]: "Half Day - Afternoon (1:00 PM - 5:00 PM)",
   [SHIFT_TYPE.NIGHT_SHIFT]: "Night Shift (10:00 PM - 6:00 AM)",
-  [SHIFT_TYPE.FLEXIBLE]: "Flexible Hours",
+  // [SHIFT_TYPE.FLEXIBLE]: "Flexible Hours",
 });
 
 // Options for <select> dropdowns

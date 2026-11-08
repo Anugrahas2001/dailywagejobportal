@@ -1,13 +1,13 @@
-import DashboardPage from '@/components/DashboardPage'
-import React from 'react'
+import DashboardPage from "@/components/DashboardPage";
+import React from "react";
 
 const page = () => {
-  const role="employer";
+  const role = "employer";
   return (
-     <div>
-          <DashboardPage role={role} />
-        </div>
-  )
-}
+    <div>
+      <DashboardPage role={role} />
+    </div>
+  );
+};
 
-export default page
+export default page;

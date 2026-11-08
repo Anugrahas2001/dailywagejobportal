@@ -27,6 +27,17 @@ export default function Modal({
   };
 
 
+  //  {  role === "worker" &&
+  //     (status && status === "all"
+  //       ? window.location.assign(
+  //           `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&status=${status}`,
+  //         )
+  //       : window.location.assign(
+  //           `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&matching=${matchingRate}&jobInvitation=false`,
+  //         ));
+  // };
+
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"

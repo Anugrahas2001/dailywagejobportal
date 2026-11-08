@@ -20,13 +20,13 @@ import { fetchUserToken } from "@/lib/fetchUserToken";
 // };
 
 export const getPostedText = ({ createdAt, jobType }) => {
-  console.log(createdAt, jobType, "CHECK BOTH");
+  // console.log(createdAt, jobType, "CHECK BOTH");
   const createdDate = new Date(createdAt);
   const today = new Date();
 
   const diffInMs = today - createdDate;
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-  console.log(diffInMs, diffInDays, "CHECK BOTH OF THIS");
+  // console.log(diffInMs, diffInDays, "CHECK BOTH OF THIS");
 
   const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
   if (diffInDays === 0) {
@@ -40,7 +40,7 @@ export const getPostedText = ({ createdAt, jobType }) => {
 };
 
 export function getStatusColor(status) {
-  console.log(status, "STATUS");
+  // console.log(status, "STATUS");
 
   switch (status) {
     // Application statuses
