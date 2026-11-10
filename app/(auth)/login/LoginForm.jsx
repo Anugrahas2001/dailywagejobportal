@@ -361,7 +361,6 @@ const LoginForm = () => {
 
         try {
           const { data } = await dispatch(login({ token, role })).unwrap();
-          console.log(data, "SECOND PROFILE IMAGE");
           localStorage.setItem("profileImage", data?.profileImage);
           return;
         } catch (error) {
@@ -417,7 +416,6 @@ const LoginForm = () => {
 
       try {
         const { data } = await dispatch(login({ token, role })).unwrap();
-        console.log(data, "FIRST PROFILE IMAGE");
         localStorage.setItem("profileImage", data?.profileImage);
       } catch (error) {
         // Login failed
@@ -463,15 +461,12 @@ const LoginForm = () => {
 
       // Onboarding is not completed
       if (!isOnboardingComplete) {
-        console.log("Redirecting to onboarding:", onboardPage);
-
         router.replace(`/onboarding/${onboardPage}`);
         return;
       }
 
       // Onboarding completed
       if (isOnboardingComplete) {
-        console.log(userRole, role, "USER ROLE DATA");
         router.replace(
           role === "worker" ? "/workerDashboard" : "/employerDashboard",
         );

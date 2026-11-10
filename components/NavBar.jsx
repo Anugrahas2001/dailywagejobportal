@@ -37,8 +37,6 @@ const NavBar = () => {
   const onboardPage = onboardingPage || reduxOnboardPage;
   const profileimage = profileImage;
 
-  console.log(userRole, profileImage, onboardingPage, "PROFILE IMAGES DATA");
-
   const handleLogOut = async () => {
     const token = await fetchUserToken();
     if (token) {
@@ -219,7 +217,7 @@ const NavBar = () => {
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
-              <CircleUserRound className="w-5 h-6 m-2 md:w-12 md:h-12 object-none object-center rounded-full hover:scale-105 cursor-pointer" />
+              <CircleUserRound className="w-10 h-10 m-2 md:w-12 md:h-12 object-none object-center rounded-full hover:scale-105 cursor-pointer" />
             )}
           </button>
 

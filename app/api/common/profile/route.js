@@ -8,6 +8,7 @@ import SavedJobs from "@/modals/SavedJobs";
 import User from "@/modals/User";
 import WorkerSession from "@/modals/WorkerSession";
 import { matchQueue } from "@/lib/queues/matchQueue";
+import JobDetails from "@/modals/JobDetails";
 
 const isFilled = (value) => {
   if (value === null || value === undefined) return false;
@@ -75,59 +76,105 @@ const savedJobsCount = async (uid) => {
   };
 };
 
-export async function GET(request) {
-  try {
-    await connectDB();
-    const { uid } = await verifyFirebaseToken(request);
+// export async function GET(request) {
+//   try {
+//     await connectDB();
+//     const { uid } = await verifyFirebaseToken(request);
+//     const { searchParams } = new URL(request.url);
+//     const role = searchParams.get("role");
 
-    const [userData, jobPref] = await Promise.all([
-      User.findById(uid).lean(),
-      JobPreferences.findOne({ userId: uid }).lean(),
-    ]);
+//     const [userData, jobPref] = await Promise.all([
+//       User.findById(uid).lean(),
+//       JobPreferences.findOne({ userId: uid }).lean(),
+//     ]);
 
-    const profileCompleteness = calculateProfileCompleteness(userData, jobPref);
-    const { savedCount, invitationsCount } = await savedJobsCount(uid);
-    const workerSess = await WorkerSession.findOne({
-      workerId: uid,
-    })
-      .sort({ createdAt: -1 })
-      .select("workingStatus")
-      .lean();
+//     let counts = { All: 0, Active: 0, Paused: 0, Completed: 0 };
+//     let invitationsCount,savedCount=0;
+//     let workerSess=null;
+//     let profileCompleteness=0;
 
-    console.log(workerSess, "CHECK WORKER WORKER SESSION DATA");
+//     if (role === "employer") {
+//       const matchStage = {
+//         employerId: uid,
+//         isDeleted: false,
+//       };
 
-    const data = {
-      user: userData,
-      preference: jobPref,
-      profileCompleteness, // e.g. 75
-      savedJobs: savedCount,
-      jobInvitations: invitationsCount,
-      workingStatus: workerSess?.workingStatus,
-    };
-    console.log(data, "DATA VALUE");
+//       const [result] = await JobDetails.aggregate([
+//         { $match: matchStage },
+//         {
+//           $facet: {
+//             jobs: [
+//               { $sort: { createdAt: -1 } }, // adjust to whatever sort you want
+//               { $skip: skip },
+//               { $limit: limit },
+//             ],
+//             statusCounts: [
+//               {
+//                 $group: {
+//                   _id: "$status",
+//                   count: { $sum: 1 },
+//                 },
+//               },
+//             ],
+//             totalCount: [{ $count: "count" }],
+//           },
+//         },
+//       ]);
 
-    return NextResponse.json(
-      {
-        data,
-        message: "Successfully complete user details",
-      },
-      { status: 200 },
-    );
-  } catch (error) {
-    console.log(error, "ERROR DATA");
-    return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 },
-    );
-  }
-}
+//       // console.log(result, "RESULT DATA");
+
+//       result.statusCounts.forEach(({ _id, count }) => {
+//         if (counts[_id] !== undefined) counts[_id] = count;
+//       });
+//       counts.All = result.totalCount[0]?.count || 0;
+//     } else {
+//        profileCompleteness = calculateProfileCompleteness(
+//         userData,
+//         jobPref,
+//       );
+//        { savedCount, invitationsCount } = await savedJobsCount(uid);
+//        workerSess = await WorkerSession.findOne({
+//         workerId: uid,
+//       })
+//         .sort({ createdAt: -1 })
+//         .select("workingStatus")
+//         .lean();
+//     }
+
+//     console.log(workerSess, "CHECK WORKER WORKER SESSION DATA");
+
+//     const data = {
+//       user: userData,
+//       preference: jobPref,
+//       profileCompleteness, // e.g. 75
+//       savedJobs: savedCount,
+//       jobInvitations: invitationsCount,
+//       workingStatus: workerSess?.workingStatus,
+//     };
+//     console.log(data, "DATA VALUE");
+
+//     return NextResponse.json(
+//       {
+//         data,
+//         message: "Successfully complete user details",
+//       },
+//       { status: 200 },
+//     );
+//   } catch (error) {
+//     console.log(error, "ERROR DATA");
+//     return NextResponse.json(
+//       { success: false, message: "Internal server error" },
+//       { status: 500 },
+//     );
+//   }
+// }
 
 export async function PUT(request) {
   try {
     await connectDB();
 
     const { uid } = await verifyFirebaseToken(request);
-    const { type, data } = await request.json();
+    const { type, data, role } = await request.json();
 
     if (!["userinfo", "jobinfo"].includes(type)) {
       return NextResponse.json(
@@ -136,66 +183,96 @@ export async function PUT(request) {
       );
     }
 
-    // 1. Update user information or job preferences
-    if (type === "userinfo") {
-      await User.findByIdAndUpdate(
-        uid,
-        { $set: data },
-        {
-          runValidators: true,
-          returnDocument: "after",
-          upsert: false,
-        },
-      );
-    } else {
-      await JobPreferences.findOneAndUpdate(
-        { userId: uid },
-        { $set: data },
-        {
-          runValidators: true,
-          returnDocument: "after",
-          upsert: false,
-        },
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      return NextResponse.json(
+        { message: "Invalid data payload." },
+        { status: 400 },
       );
     }
 
-    // 2. Fetch the latest user and job preference data
-    const [userData, jobPref] = await Promise.all([
-      User.findById(uid).lean(),
-      JobPreferences.findOne({ userId: uid }).lean(),
-    ]);
+    // ───────────── WORKER: full flow ─────────────
+    if (role === "worker") {
+      // 1. Update user info or job preferences
+      if (type === "userinfo") {
+        await User.findByIdAndUpdate(
+          uid,
+          { $set: data },
+          { runValidators: true, upsert: false },
+        );
+      } else {
+        await JobPreferences.findOneAndUpdate(
+          { userId: uid },
+          { $set: data },
+          { runValidators: true, upsert: false },
+        );
+      }
 
-    if (!userData) {
+      // 2. Fetch the latest user and job preference data
+      const [userData, jobPref] = await Promise.all([
+        User.findById(uid).lean(),
+        JobPreferences.findOne({ userId: uid }).lean(),
+      ]);
+
+      if (!userData) {
+        return NextResponse.json(
+          { message: "User not found." },
+          { status: 404 },
+        );
+      }
+
+      // 3. Saved jobs and invitations
+      const { savedCount, invitationsCount } = await savedJobsCount(uid);
+
+      // 4. Profile completeness
+      const profileCompleteness = calculateProfileCompleteness(
+        userData,
+        jobPref,
+      );
+
+      // 5. Queue job matching (BullMQ's dedupe option is `jobId`)
+      await matchQueue.add(
+        "compute-matchedJobs",
+        { userId: userData._id.toString(), status: "Active", notify: true },
+        { jobId: `user-${userData._id}`, removeOnComplete: true },
+      );
+
+      return NextResponse.json(
+        {
+          message: "Successfully updated the user profile page.",
+          result: {
+            user: userData,
+            preference: jobPref,
+            profileCompleteness,
+            savedJobs: savedCount,
+            jobInvitations: invitationsCount,
+          },
+        },
+        { status: 200 },
+      );
+    }
+
+    // ───────────── EMPLOYER: only update user details ─────────────
+    if (type !== "userinfo") {
+      return NextResponse.json(
+        { message: "Employers can only update user information." },
+        { status: 400 },
+      );
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      uid,
+      { $set: data },
+      { runValidators: true, new: true, upsert: false },
+    ).lean();
+
+    if (!updatedUser) {
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
-
-    // 3. Fetch saved jobs and job invitations
-    const { savedCount, invitationsCount } = await savedJobsCount(uid);
-
-    // 4. Calculate profile completeness
-    // Replace this with your existing profile-completeness logic.
-    const profileCompleteness = calculateProfileCompleteness(userData, jobPref);
-
-    // 5. Build the response in the required format
-    // const result = ;
-
-    await matchQueue.add(
-      "compute-matchedJobs",
-      { userId: userData?._id.toString(), status: "Active", notify: true },
-      // { userId: `user-${uid}` }, // dedupe key
-      { userId: `user-${userData?._id}`, removeOnComplete: true },
-    );
 
     return NextResponse.json(
       {
         message: "Successfully updated the user profile page.",
-        result: {
-          user: userData,
-          preference: jobPref,
-          profileCompleteness,
-          savedJobs: savedCount,
-          jobInvitations: invitationsCount,
-        },
+        result: { user: updatedUser },
       },
       { status: 200 },
     );
@@ -204,6 +281,105 @@ export async function PUT(request) {
 
     return NextResponse.json(
       { message: "Unable to update user profile data." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function GET(request) {
+  try {
+    await connectDB();
+    const { uid } = await verifyFirebaseToken(request);
+
+    const { searchParams } = new URL(request.url);
+    const role = searchParams.get("role");
+
+    if (!["worker", "employer"].includes(role)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid role." },
+        { status: 400 },
+      );
+    }
+
+    const userData = await User.findById(uid).lean();
+    if (!userData) {
+      return NextResponse.json(
+        { success: false, message: "User not found." },
+        { status: 404 },
+      );
+    }
+
+    // ───────────── EMPLOYER ─────────────
+    if (role === "employer") {
+
+      const counts = { All: 0, Active: 0, Paused: 0, Completed: 0 };
+
+      // aggregate() does NOT auto-cast strings to ObjectId
+      const matchStage = {
+        employerId: uid,
+        isDeleted: false,
+      };
+
+      const [result] = await JobDetails.aggregate([
+        { $match: matchStage },
+        {
+          $facet: {
+            jobs: [{ $sort: { createdAt: -1 } }],
+            statusCounts: [{ $group: { _id: "$status", count: { $sum: 1 } } }],
+            totalCount: [{ $count: "count" }],
+          },
+        },
+      ]);
+
+      result.statusCounts.forEach(({ _id, count }) => {
+        if (counts[_id] !== undefined) counts[_id] = count;
+      });
+      counts.All = result.totalCount[0]?.count || 0;
+
+      return NextResponse.json(
+        {
+          data: {
+            user: userData,
+            jobs: result.jobs,
+            counts,
+          },
+          message: "Successfully fetched employer details",
+        },
+        { status: 200 },
+      );
+    }
+
+    // ───────────── WORKER ─────────────
+    const [jobPref, { savedCount, invitationsCount }, workerSess] =
+      await Promise.all([
+        JobPreferences.findOne({ userId: uid }).lean(),
+        savedJobsCount(uid),
+        WorkerSession.findOne({ workerId: uid })
+          .sort({ createdAt: -1 })
+          .select("workingStatus")
+          .lean(),
+      ]);
+
+    const profileCompleteness = calculateProfileCompleteness(userData, jobPref);
+
+    return NextResponse.json(
+      {
+        data: {
+          user: userData,
+          preference: jobPref,
+          profileCompleteness,
+          savedJobs: savedCount,
+          jobInvitations: invitationsCount,
+          workingStatus: workerSess?.workingStatus ?? null,
+        },
+        message: "Successfully fetched worker details",
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal server error" },
       { status: 500 },
     );
   }

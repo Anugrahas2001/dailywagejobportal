@@ -180,7 +180,7 @@ export async function PUT(request) {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
 
-    const { jobId, status } = await request.json();
+    const { status, jobId, employerId } = await request.json();
 
     if (!jobId || !ALLOWED_STATUSES.has(status)) {
       return NextResponse.json(
@@ -195,14 +195,15 @@ export async function PUT(request) {
     const isAccepting = status === "Accepted";
 
     // Fetch outside the transaction, only when needed
-    [worker, jobPref] = isAccepting
+    [worker] = isAccepting
       ? await Promise.all([
           User.findById(uid).lean(),
-          JobPreferences.findOne({ userId: uid })
-            .select("salaryCreditType")
-            .lean(),
+          // JobPreferences.findOne({ userId: uid })
+          //   .select("salaryCreditType")
+          //   .lean(),
         ])
       : [null, null];
+    console.log(jobPref, "JOB USER PREFRENCE");
     if (isAccepting && !worker)
       return NextResponse.json(
         { message: "Worker not found." },
@@ -257,7 +258,7 @@ export async function PUT(request) {
               employerId: job.employerId,
               workerId: uid,
               workDate: Date.now(),
-              rateType: jobPref?.salaryCreditType,
+              rateType: job?.salaryType,
               agreedRate: calculateSuggestedRate(job, worker),
               jobCompletionStatus: "Assigned",
               isCurrentlyWorking: false,

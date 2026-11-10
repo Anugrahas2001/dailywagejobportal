@@ -32,7 +32,7 @@ const Step2 = () => {
       salaryCreditType: "",
       joiningPeriod: "",
       shiftType: "",
-      locRange: 100,
+      locRange: 10,
     },
   });
   const router = useRouter();
@@ -123,7 +123,7 @@ const Step2 = () => {
         />
 
         <InputField
-          label="Location Range in Meters"
+          label="Location Range in KM"
           type="number"
           placeholder="Location Range"
           min={10}

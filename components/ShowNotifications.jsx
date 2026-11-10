@@ -8,10 +8,12 @@ import useControls from "./hooks/useControls";
 import { NotificationsListSkeleton } from "./skeltons/NotificationsSkeleton";
 import useLoading from "./hooks/useLoading";
 import { PAGE_SIZE } from "@/constants/constant";
+import Error from "./Error";
+import useError from "./hooks/useError";
 
 const ShowNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
+   const {error, setError}=useError();
   const { loading, setLoading } = useLoading();
   const {
     page,
@@ -22,10 +24,9 @@ const ShowNotifications = () => {
     isPending,
     initialLoading,
     setInitialLoading,
+    totalCount, setTotalCount
   } = useControls();
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
-
-  console.log(page, "=====================PAGE PAGE");
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -42,14 +43,17 @@ const ShowNotifications = () => {
           },
         );
 
+        if (!response.ok) {
+          const data = await res.json().catch(() => ({})); // body may not be JSON
+          const message =
+            data.message ||
+            `Failed to fetch notifications (status ${response.status})`;
+          setError(message);
+          return; // stop here, don't touch job state
+        }
+
         const { data, message, totalCount } = await response.json();
 
-        if (!response.ok) {
-          console.log(
-            message || "Something went wrong with the notification fetching",
-          );
-        }
-        console.log(data, "ALL THE NOTIFICATIONS DATA");
         setNotifications(data);
         setTotalCount(totalCount);
         setLoading(false);
@@ -154,7 +158,7 @@ const ShowNotifications = () => {
   // );
 
   return (
-    <div className="mx-auto mt-4 flex w-full max-w-2xl flex-col gap-3">
+    <div className="mx-auto mt-4 flex w-full bg-gray-100 max-w-2xl flex-col gap-3">
       {initialLoading || loading ? (
         <NotificationsListSkeleton />
       ) : (
@@ -216,6 +220,7 @@ const ShowNotifications = () => {
           />
         </>
       )}
+      {error && <Error error={error} onClick={() => setError("")} />}
     </div>
   );
 };

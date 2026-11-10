@@ -2,31 +2,15 @@ import {
   JOINING_TYPES,
   SALARY_CREDIT_TYPES,
   SHIFT_TYPE_LABELS,
-  SHIFT_TYPES,
 } from "@/constants/constant";
 import { fetchUserToken } from "@/lib/fetchUserToken";
 
-// export const getShiftLabel = (shiftValue) => {
-//   return (
-//     SHIFT_TYPES.find((shift) => shift.value === shiftValue)?.label ?? shiftValue
-//   );
-// };
-
-// export const getJoingDate = (joingTime) => {
-//   return (
-//     JOINING_TYPES.find((joining) => joining.value === joingTime)?.label ??
-//     joingTime
-//   );
-// };
-
 export const getPostedText = ({ createdAt, jobType }) => {
-  // console.log(createdAt, jobType, "CHECK BOTH");
   const createdDate = new Date(createdAt);
   const today = new Date();
 
   const diffInMs = today - createdDate;
   const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-  // console.log(diffInMs, diffInDays, "CHECK BOTH OF THIS");
 
   const postedDay = jobType === "applied" ? "Applied" : "Posted" || "POSTED";
   if (diffInDays === 0) {
@@ -40,8 +24,6 @@ export const getPostedText = ({ createdAt, jobType }) => {
 };
 
 export function getStatusColor(status) {
-  // console.log(status, "STATUS");
-
   switch (status) {
     // Application statuses
     case "applied":
@@ -146,14 +128,6 @@ export function calculateAge(dob) {
 
   return age;
 }
-
-// export function getJoiningType(joinType) {
-//   return JOINING_TYPES.find((type) => type.value === joinType)?.label;
-// }
-
-// export function getShiftTypes(shiftType) {
-//   return SHIFT_TYPES.find((shift) => shift.value === shiftType)?.label;
-// }
 
 export const timeAgo = (createdAt) => {
   const seconds = Math.floor(

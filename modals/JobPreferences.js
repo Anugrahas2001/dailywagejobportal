@@ -31,11 +31,11 @@ const JobPreferencesSchema = new mongoose.Schema(
       type: Number,
       default: 800,
     },
-    salaryCreditType: {
-      type: String,
-      enum: Object.values(SALARY_CREDIT_TYPES),
-      default: SALARY_CREDIT_TYPES.HOURLY,
-    },
+    // salaryCreditType: {
+    //   type: String,
+    //   enum: Object.values(SALARY_CREDIT_TYPES),
+    //   default: SALARY_CREDIT_TYPES.HOURLY,
+    // },
     joiningPeriod: {
       type: String,
       enum: Object.values(JOINING_TYPES),

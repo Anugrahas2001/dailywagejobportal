@@ -77,7 +77,6 @@ const JobForm = ({ mode, initialData }) => {
     setInitialLoading,
   } = useControls();
 
-  console.log(SHIFT_TYPE_OPTIONS, "SHIFT TYPES VALUES");
 
   const error = useSelector((state) => state.jobs.error);
   const status = useSelector((state) => state.jobs.status);
@@ -92,7 +91,6 @@ const JobForm = ({ mode, initialData }) => {
 
   const handleDelete = (indx) => {
     const currentResponsibilities = watch("responsibilities");
-    console.log("NOW AVILABLE RESPONSIBILITIES", currentResponsibilities);
     const filteredResp = currentResponsibilities.filter(
       (_, index) => index !== indx,
     );
@@ -101,11 +99,8 @@ const JobForm = ({ mode, initialData }) => {
   };
 
   const handleSkillSelect = (skill) => {
-    console.log(skill, "SELECTED SKILL");
 
     const currentSelectedSkills = watch("skillsRequired");
-
-    console.log(currentSelectedSkills, "CURRENT SELECTED SKILLLS=======");
 
     if (currentSelectedSkills.includes(skill)) {
       setValue(
@@ -219,7 +214,7 @@ const JobForm = ({ mode, initialData }) => {
   };
 
   return (
-    <div className="mx-auto max-w-5xl rounded-lg bg-white p-6 shadow">
+    <div className="mx-auto max-w-5xl rounded-lg bg-gray-100 p-6 shadow">
       {/* <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
     {mode === "create" ? "Create Job" : "Edit Job"}
   </h2> */}

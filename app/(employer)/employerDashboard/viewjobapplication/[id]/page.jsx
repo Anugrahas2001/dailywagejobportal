@@ -10,10 +10,10 @@ const page = () => {
 
   const jobId = searchParams.get("jobId");
   const type = searchParams.get("type");
-  const status=searchParams.get("status");
+  const status = searchParams.get("status");
   const matchingRate = searchParams.get("matching");
   const jobInvitation = searchParams.get("jobInvitation");
-
+  console.log(jobInvitation, "JOB INVITATION DATAA");
   return (
     <ViewProfile
       workerId={workerId}

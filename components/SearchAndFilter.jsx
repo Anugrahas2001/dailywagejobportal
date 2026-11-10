@@ -2,7 +2,7 @@
 
 import { filterOptions } from "@/constants/constant";
 import { fetchSearchAndFilterResults } from "@/lib/features/searchFilter/searchJobsThunk";
-import { Filter, Search, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -11,7 +11,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
   const [searchInput, setSearchInput] = useState(search ?? "");
 
   const [showFilter, setShowFilter] = useState(false);
-  console.log(search, showFilter, "SHOW FILTER VALUE");
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedFilterValue, setSelectedFilterValue] = useState({
     Nearby: null,
@@ -20,7 +19,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
     Salary: null,
     Date: null,
   });
-  // const [page, setPage] = useState(1);
   const dispatch = useDispatch();
 
   // Tracks whether a search has been explicitly triggered at least once
@@ -30,7 +28,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
   // page-change effect doesn't fire on mount.
   const hasSearchedRef = useRef(false);
 
-  // console.log(activeFilter, selectedFilterValue, "SELECTED FILETR VALUES");
   useEffect(() => {
     // Skip firing on mount / before the user has actually searched.
     // This effect should only react to page changes (e.g. pagination
@@ -50,14 +47,10 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
     return params;
   };
 
-  // const goToPage = (p) => {
-  //   if (p >= 1 && p <= totalPages) setPage(p);
-  // };
-
   // Always pass the values explicitly so we never read stale state.
   const doSearchAndFilter = (filters, currentPage = 1, searchText = search) => {
     hasSearchedRef.current = true;
-    console.log(filters, "FILTERS DATAAA");
+
     dispatch(
       fetchSearchAndFilterResults({
         page: currentPage,
@@ -65,8 +58,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
         params: buildParams(filters, searchText),
       }),
     );
-
-    // setSearchInput("");
   };
 
   const getLabel = (option, value) =>
@@ -104,19 +95,8 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
     setSelectedFilterValue(updatedFilters);
     setActiveFilter(null);
 
-    doSearchAndFilter(updatedFilters, 1); // was `page`
+    doSearchAndFilter(updatedFilters, 1);
   };
-
-  // const handleClearFilter = (option) => {
-  //   const updatedFilters = {
-  //     ...selectedFilterValue,
-  //     [option]: null,
-  //   };
-
-  //   setSelectedFilterValue(updatedFilters);
-
-  //   doSearchAndFilter(updatedFilters, page);
-  // };
 
   const handleClearFilter = (option) => {
     const updatedFilters = { ...selectedFilterValue, [option]: null };
@@ -125,20 +105,12 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
     const stillHasFilters = Object.values(updatedFilters).some(
       (v) => v !== null && v !== undefined && v !== "",
     );
-    console.log(
-      !stillHasFilters && !search,
-      stillHasFilters,
-      search,
-      updatedFilters,
-      "CHECK MY BIRTHDAT",
-    );
 
     if (!stillHasFilters && !search) {
       hasSearchedRef.current = false;
       onClear?.();
       return;
     }
-
     doSearchAndFilter(updatedFilters, 1);
   };
 
@@ -146,11 +118,11 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
     const text = searchInput.trim();
     setSearch(text);
     doSearchAndFilter(selectedFilterValue, 1, text);
-    onClick?.(); // parent should reset its page to 1
+    onClick?.();
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-gray-100">
       {/* Search bar */}
       <div className="flex w-full items-center gap-2 bg-white">
         <div
@@ -165,8 +137,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
         >
           <input
             value={searchInput}
-            // onChange={(e) => setSearchInput(e.target.value)}
-            // onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Enter here..."
@@ -215,8 +185,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
                 className="relative"
                 onMouseEnter={() => setActiveFilter(option)}
               >
-                {/* Filter button */}
-
                 <button
                   type="button"
                   className={`
@@ -311,13 +279,6 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
           })}
         </div>
       )}
-
-      {/* <Pagination
-        onClick={goToPage}
-        totalPages={totalPages}
-        page={page}
-        totalCount={totalCount}
-      /> */}
     </div>
   );
 };

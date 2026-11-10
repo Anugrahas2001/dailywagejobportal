@@ -9,9 +9,9 @@ const page = () => {
   const jobId = searchParams.get("jobId");
 
   return (
-    <div>
-      <ShowCandidatesProfiles jobId={jobId} type={profileType}/>
-    </div>
+    <>
+      <ShowCandidatesProfiles jobId={jobId} type={profileType} />
+    </>
   );
 };
 

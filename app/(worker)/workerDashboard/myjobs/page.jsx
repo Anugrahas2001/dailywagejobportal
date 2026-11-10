@@ -10,23 +10,21 @@ import {
 import Error from "@/components/Error";
 import FilterButtons from "@/components/FilterButtons";
 import useControls from "@/components/hooks/useControls";
+import { useJobActions } from "@/components/hooks/useUserJobAction";
 import Pagination from "@/components/Pagination";
 import MyJobsSkeleton from "@/components/skeltons/MyJobsSkeleton";
 import {
   APPLIED_JOB_STATUS,
   APPLIED_SORT_OPTIONS,
+  PAGE_SIZE,
   SAVED_SORTING_OPTIONS,
 } from "@/constants/constant";
 import { clearAppliedJobsError } from "@/lib/features/workerJobs/appliedjobs/appliedJobSlice";
 import {
   applyToJob,
-  cancelAppliedJobs,
   fetchAppliedJobs,
 } from "@/lib/features/workerJobs/appliedjobs/appliedJobThunk";
-import {
-  fetchJobInvitations,
-  updateJobInvitationStatus,
-} from "@/lib/features/workerJobs/jobinvitations/jobinvitationThunk";
+import { fetchJobInvitations } from "@/lib/features/workerJobs/jobinvitations/jobinvitationThunk";
 import { clearSavedJobsError } from "@/lib/features/workerJobs/savedjobs/savedJobSlice";
 import {
   fetchSavedJobs,
@@ -56,7 +54,8 @@ const page = () => {
     setInitialLoading,
   } = useControls();
 
-  const pageSize = 12;
+  const { handleCancelAppliedJob, handleJobInvitationStatus } = useJobActions();
+
   useEffect(() => {
     setRole(localStorage.getItem("role"));
     setInitialLoading(false);
@@ -80,7 +79,6 @@ const page = () => {
     (state) => state.jobinvitations.status,
   );
 
-  // console.log(savedJobs.length, appliedJobs?.length, "ALL SAVED JOBS");
   const jobs =
     jobType === "Saved"
       ? savedJobs
@@ -106,7 +104,7 @@ const page = () => {
         ? appliedLoadingStatus
         : jobInvitationLoadingStatus;
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
   const defaultLabel = jobType === "Saved" ? "NEWEST_SAVED" : "NEWEST_APPLIED";
   const sortOptions =
@@ -130,7 +128,6 @@ const page = () => {
   }, [jobType, sort, status, page]);
 
   const handleJobStatus = (jobStatus) => {
-    console.log("CLICKED", jobStatus);
     if (jobStatus === "Saved") {
       setJobType("Saved");
     } else if (jobStatus === "Applied") {
@@ -157,8 +154,6 @@ const page = () => {
     }
   };
 
-  console.log(jobType, "JOB TYPE DATA");
-
   const handleToggleSavedJob = (jobId) => {
     const isSavedValue = savedJobs.some((savedJob) => savedJob._id === jobId);
     dispatch(
@@ -170,48 +165,39 @@ const page = () => {
   };
 
   const handleAppliedJobs = async (jobId) => {
-    console.log(jobId, "JOBID DATA");
     await dispatch(applyToJob(jobId)).unwrap();
     setPage(1);
     if (jobType === "Saved") {
-      console.log("ANUGRAHA 1", jobType);
       await dispatch(fetchSavedJobs({ sort, page })).unwrap();
     } else {
       await dispatch(
         fetchAppliedJobs({
           sort,
           status,
-          page: 1,
+          page,
         }),
       ).unwrap();
     }
   };
 
-  const handleCancelAppliedJob = async (jobId) => {
-    await dispatch(cancelAppliedJobs(jobId)).unwrap();
-    setPage(1);
-    console.log("ANUGRAHA 5", jobType);
-    await dispatch(
-      fetchAppliedJobs({
-        sort,
-        status,
-        page: 1,
-      }),
-    ).unwrap();
-    dispatch(fetchAppliedJobs({ sort, status, page }));
-  };
-
-  const handleJobInvitationStatus = ({ status, jobId, employerId }) => {
-    console.log(status, jobId, employerId, "JOB_INVITATION FUNCTION");
-    dispatch(updateJobInvitationStatus({ status, jobId, employerId }));
-    dispatch(fetchJobInvitations({ status: "Sent", page }));
-  };
+  //  const handleCancelAppliedJob = async (jobId) => {
+  //     await dispatch(cancelAppliedJobs(jobId)).unwrap();
+  //     setPage(1);
+  //     console.log("ANUGRAHA 5", jobType);
+  //     await dispatch(
+  //       fetchAppliedJobs({
+  //         sort,
+  //         status,
+  //         page: 1,
+  //       }),
+  //     ).unwrap();
+  //     dispatch(fetchAppliedJobs({ sort, status, page }));
+  //   };
 
   const uniqueJobs = Array.from(
     new Map(jobs.map((job) => [job._id, job])).values(),
   );
 
-  // console.log(uniqueJobs, "UNIQUE UNIQUE");
   return (
     <div className="p-6 m-6 bg-gray-100">
       {loadingStatus === "pending" || initialLoading ? (
@@ -270,7 +256,6 @@ const page = () => {
                     // value="Applied"
                     options={APPLIED_JOB_STATUS}
                     onClick={() => {
-                      console.log("ANUGRAHA 7", jobType);
                       dispatch(fetchAppliedJobs({ sort, status, page }));
                     }}
                   />
@@ -285,10 +270,8 @@ const page = () => {
                   defaultLabel={defaultLabel}
                   onClick={() => {
                     if (jobType === "Applied") {
-                      console.log("ANUGRAHA 8", jobType);
                       dispatch(fetchAppliedJobs({ sort, status, page }));
                     } else {
-                      console.log("ANUGRAHA 3", jobType);
                       dispatch(fetchSavedJobs({ sort, page }));
                     }
                   }}
@@ -301,7 +284,6 @@ const page = () => {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
             {uniqueJobs.length > 0 ? (
               uniqueJobs.map((job) => {
-                console.log(job?.applicationStatus, "APPLICATION STATUS");
                 return (
                   <article
                     className="rounded-lg bg-white p-4 shadow mt-7"
@@ -398,7 +380,11 @@ const page = () => {
                               <button
                                 className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
                                 onClick={() => {
-                                  handleAppliedJobs({ jobId: job._id });
+                                  handleAppliedJobs({
+                                    jobId: job._id,
+                                    status,
+                                    page: 1,
+                                  });
                                 }}
                               >
                                 Apply Now
@@ -407,7 +393,11 @@ const page = () => {
                               <button
                                 className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
                                 onClick={() =>
-                                  handleCancelAppliedJob({ jobId: job._id })
+                                  handleCancelAppliedJob({
+                                    jobId: job._id,
+                                    sort: "Newest",
+                                    page: 1,
+                                  })
                                 }
                               >
                                 Cancel
@@ -428,6 +418,7 @@ const page = () => {
                               status: "Rejected",
                               jobId: job._id,
                               employerId: job.employerId,
+                              page: 1,
                             });
                           }}
                         >
@@ -441,6 +432,7 @@ const page = () => {
                               status: "Accepted",
                               jobId: job._id,
                               employerId: job.employerId,
+                              page: 1,
                             });
                           }}
                         >

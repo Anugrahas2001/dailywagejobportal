@@ -25,6 +25,8 @@ import useControls from "./hooks/useControls";
 import useLoading from "./hooks/useLoading";
 import { JOB_APPLICATION_STATUS } from "@/constants/constant";
 import PaymentModal from "./PaymentModal";
+import Error from "./Error";
+import useError from "./hooks/useError";
 
 const ViewProfile = ({
   workerId,
@@ -35,11 +37,11 @@ const ViewProfile = ({
   jobInvitation,
 }) => {
   const [workerData, setWorkerData] = useState({});
-  console.log(workerData, type, "NEW WORKER DATA");
   const [jobStatus, setJobStatus] = useState("");
   const { loading, setLoading } = useLoading();
   const [showPayment, setShowPayment] = useState(false);
   const [justPaid, setJustPaid] = useState(false);
+  const { error, setError } = useError();
   const {
     router,
     dispatch,
@@ -48,14 +50,6 @@ const ViewProfile = ({
     initialLoading,
     setInitialLoading,
   } = useControls();
-
-  console.log(
-    matchingRate,
-    jobInvitation,
-    typeof jobInvitation,
-    // isInvited,
-    "WORKER DATA AVILABLESSS",
-  );
 
   const fetchUserData = async () => {
     try {
@@ -72,12 +66,15 @@ const ViewProfile = ({
       );
 
       if (!response.ok) {
-        console.log(response, "SOMETHING HAPPENED");
-        return;
+        const data = await res.json().catch(() => ({})); // body may not be JSON
+        const message =
+          data.message ||
+          `Failed to view worker profile (status ${response.status})`;
+        setError(message);
+        return; // stop here, don't touch job state
       }
 
       const { data } = await response.json();
-      console.log(data, "USER DATA");
       setWorkerData(data);
       setJobStatus(data?.status || "");
       setLoading(false);
@@ -104,7 +101,6 @@ const ViewProfile = ({
     console.log("Selected status:", status);
 
     try {
-      console.log(jobId, "JOB ID INSIDE THE UPDATE");
       setLoading(true);
 
       await fetchUserJobDetails({ workerId, status, jobId, type });
@@ -119,8 +115,6 @@ const ViewProfile = ({
   };
 
   const handleJobInvitation = ({ workerId, jobId }) => {
-    console.log(workerId, "WORKER ID");
-
     runWithPending(`sentjobinvite-${workerId}`, async () => {
       try {
         const token = await fetchUserToken();
@@ -137,7 +131,6 @@ const ViewProfile = ({
         const { data } = await response.json();
         // router.replace("/employerDashboard");
         router.back();
-        console.log(data, "RESPONSE DATA ");
         setLoading(false);
       } catch (error) {
         console.log(error, "ERROR DATA");
@@ -163,7 +156,6 @@ const ViewProfile = ({
 
         const { data } = await response.json();
         router.back();
-        console.log(data, "RESPONSE DATA CANCELLED");
         setLoading(false);
       } catch (error) {
         console.log(error, "ERROR DATA");
@@ -257,7 +249,7 @@ const ViewProfile = ({
   };
 
   return (
-    <div className="bg-gray-50 p-4 md:p-8">
+    <div className="bg-gray-100 p-4 md:p-8">
       {loading || initialLoading || !workerData ? (
         <div className="mt-2" role="status" aria-busy="true">
           <span className="sr-only">Loading candidates…</span>
@@ -485,15 +477,13 @@ const ViewProfile = ({
 
             {showSalary &&
               SALARY_ROWS.map(({ key, title, description, format }) => (
-                
-                  <InfoJobCompletionRow
-                    key={key}
-                    title={title}
-                    description={description}
-                    value={workerData?.[key]}
-                    format={format}
-                  />
-                
+                <InfoJobCompletionRow
+                  key={key}
+                  title={title}
+                  description={description}
+                  value={workerData?.[key]}
+                  format={format}
+                />
               ))}
             {/* {showSalary &&
               Number(workerData?.totalSalary) > 0 &&
@@ -595,7 +585,7 @@ const ViewProfile = ({
             )}
           </section>
 
-          {type === "recommendation" && !workerData?.status && (
+          {/* {type === "recommendation" && !workerData?.status && (
             <section className="flex justify-center items-center">
               {jobInvitation === "send" || jobInvitation === "resend" ? (
                 <button
@@ -613,6 +603,7 @@ const ViewProfile = ({
                   Send Job Invitation
                 </button>
               ) : (
+                console.log("CANCEL CANCEL DATA")
                 <button
                   disabled={isPending(`canceljobinvite-${userId}`)}
                   aria-busy={isPending(`canceljobinvite-${userId}`)}
@@ -627,6 +618,40 @@ const ViewProfile = ({
                 >
                   Cancel
                 </button>
+              )}
+            </section>
+          )} */}
+
+          {type === "recommendation" && !workerData?.status && (
+            <section className="flex justify-center items-center">
+              {jobInvitation === "send" || jobInvitation === "resend" ? (
+                <button
+                  disabled={isPending(`sentjobinvite-${userId}`)}
+                  aria-busy={isPending(`sentjobinvite-${userId}`)}
+                  title="Job Invitation"
+                  className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                  onClick={() => {
+                    handleJobInvitation({ workerId: userId, jobId });
+                  }}
+                >
+                  Send Job Invitation
+                </button>
+              ) : (
+                (console.log("CANCEL CANCEL DATA", jobInvitation),
+                console.log({ type, status: workerData?.status, jobInvitation }),
+                (
+                  <button
+                    disabled={isPending(`canceljobinvite-${userId}`)}
+                    aria-busy={isPending(`canceljobinvite-${userId}`)}
+                    title="Job Invitation"
+                    className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                    onClick={() => {
+                      handleCancelJobInvitation({ workerId: userId, jobId });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                ))
               )}
             </section>
           )}
@@ -644,6 +669,7 @@ const ViewProfile = ({
         // employerName={employerName}
         onSuccess={() => setJustPaid(true)}
       />
+      {error && <Error error={error} onClick={() => setError("")} />}
     </div>
   );
 };

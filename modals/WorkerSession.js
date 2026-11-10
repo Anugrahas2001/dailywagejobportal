@@ -15,7 +15,12 @@ const WorkSessionSchema = new mongoose.Schema(
 
     // Rate snapshot taken at hire time
     agreedRate: { type: Number, required: true, min: 0 },
-    rateType: { type: String, enum: SALARY_CREDIT_TYPES.HOURLY, required: true },
+    rateType: {
+      type: String,
+      enum: SALARY_CREDIT_TYPES,
+      default: SALARY_CREDIT_TYPES.HOURLY,
+      required: true,
+    },
     workingStatus: {
       type: String,
       enum: Object.values(WORKER_WORKING_STATUS),

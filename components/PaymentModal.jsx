@@ -55,7 +55,6 @@ export default function PaymentModal({
         body: JSON.stringify({ amount: rupees, workerId, jobId }),
       });
       const order = await res.json();
-      console.log(res, "RESPONSE AFTER CREATING PAYMENT");
       if (!res.ok) throw new Error(order.error || "Could not create order");
 
       // 2. Open Razorpay Checkout
@@ -72,7 +71,6 @@ export default function PaymentModal({
         // 3. Payment done -> send the three values to the verify API
         handler: async (response) => {
           try {
-            console.log(response, "RESPONSE RAZOR PAY DATA");
             const verifyRes = await fetch("/api/razorpay/verify", {
               method: "POST",
               headers: {
@@ -88,7 +86,6 @@ export default function PaymentModal({
               }),
             });
             const data = await verifyRes.json().catch(() => ({}));
-            console.log(data, "=========DATA VALUE==========");
             if (verifyRes.ok && data.verified) {
               setStatus("success");
               onSuccess?.();
@@ -111,8 +108,6 @@ export default function PaymentModal({
 
         modal: { ondismiss: () => setLoading(false) },
       });
-
-      console.log(rzp, "RAZOR PAY OUTPUT");
 
       rzp.on("payment.failed", (resp) => {
         setStatus("failed");

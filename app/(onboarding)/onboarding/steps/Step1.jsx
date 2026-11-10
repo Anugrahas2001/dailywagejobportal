@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DatePicker from "../DatePicker";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -51,6 +51,11 @@ const Step1 = () => {
   const router = useRouter();
   const status = useSelector((state) => state.user.status);
   const error = useSelector((state) => state.user.error);
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    setRole(localStorage.getItem("role"));
+  }, []);
 
   const handleToggle = () => {
     const enabled = !useCurrentLocation;
@@ -162,9 +167,9 @@ const Step1 = () => {
   const borderFor = (hasError) =>
     hasError ? "border-red-500" : "border-gray-300";
 
- if (status === "pending") {
-  return <Step1Skeleton />;
-}
+  if (status === "pending") {
+    return <Step1Skeleton />;
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -293,27 +298,33 @@ const Step1 = () => {
         </div>
 
         {/* Years of Experience */}
-        <InputField
-          label="Years Of Experience"
-          type="number"
-          // className="my-3"
-          placeholder="Enter your total work experience"
-          min={0}
-          max={80}
-          step={1}
-          {...register("yearsOfExperience", {
-            required: "Years of experience is required",
-            valueAsNumber: true,
-            min: {
-              value: 0,
-              message: "Years of experience cannot be negative",
-            },
-            max: { value: 80, message: "Years of experience cannot exceed 80" },
-            validate: (value) =>
-              Number.isInteger(value) || "Please enter a whole number",
-          })}
-          error={errors.yearsOfExperience?.message}
-        />
+
+        {role === "worker" && (
+          <InputField
+            label="Years Of Experience"
+            type="number"
+            // className="my-3"
+            placeholder="Enter your total work experience"
+            min={0}
+            max={80}
+            step={1}
+            {...register("yearsOfExperience", {
+              required: "Years of experience is required",
+              valueAsNumber: true,
+              min: {
+                value: 0,
+                message: "Years of experience cannot be negative",
+              },
+              max: {
+                value: 80,
+                message: "Years of experience cannot exceed 80",
+              },
+              validate: (value) =>
+                Number.isInteger(value) || "Please enter a whole number",
+            })}
+            error={errors.yearsOfExperience?.message}
+          />
+        )}
 
         {/* Use current location */}
         <div className="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2">

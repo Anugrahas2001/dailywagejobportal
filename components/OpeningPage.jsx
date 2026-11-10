@@ -1,4 +1,3 @@
-
 "use client";
 
 import { auth } from "@/lib/firebaseClient";
@@ -9,6 +8,7 @@ import Loading from "./Loading";
 import { useDispatch, useSelector } from "react-redux";
 import { verifyLogin } from "@/lib/features/profiles/userThunk";
 import Button from "./Button";
+import { clearJobsError } from "@/lib/features/jobs/jobSlice";
 
 // Demo credentials, prefilled when a role is selected.
 // Replace these with real demo accounts from your Firebase project.
@@ -67,6 +67,7 @@ const OpeningPage = () => {
   const isOnboardingComplete = useSelector(
     (state) => state.user.isOnboardingCompleted,
   );
+  const error = useSelector((state) => state.user.error);
   const onboardPage = useSelector((state) => state.user.onboardPage);
 
   // --------------------------------------------------
@@ -156,7 +157,7 @@ const OpeningPage = () => {
   }
 
   return (
-    <div className="min-h-screen w-screen bg-slate-50 px-4 py-8">
+    <div className="min-h-screen w-screen bg-gray-100 px-4 py-8">
       {!isAuthenticated && (
         <div className="max-w-3xl mx-auto">
           {/* Change role: only visible after a role is chosen */}
@@ -230,6 +231,9 @@ const OpeningPage = () => {
       )}
 
       {status === "pending" && <Loading />}
+      {error && (
+        <Error error={error} onClick={() => dispatch(clearJobsError())} />
+      )}
     </div>
   );
 };

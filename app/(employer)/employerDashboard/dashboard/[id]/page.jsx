@@ -10,12 +10,10 @@ const page = () => {
   const { res } = jobFetchUseEffcetHook(id); // ✅ top level
 
   if (!res) return <Loading/>;
-  console.log(res, "DASHBOARD DASHBOARD employer");
 
   return (
     <>
       <JobForm mode="Edit" initialData={res} />
-      {/* {loading && <Loading />} */}
     </>
   );
 };

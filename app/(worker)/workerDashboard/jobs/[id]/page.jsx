@@ -8,7 +8,7 @@ const page = () => {
   const type = searchParams.get("type");
   const params = useParams();
   const id = params?.id;
-  console.log(type, id, "CHECK OUT THIS VALUE");
+
   return <JobDetailsPage role="worker" id={id} isModal={true} type={type} />;
 };
 

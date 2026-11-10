@@ -8,11 +8,10 @@ const page = () => {
   const jobId = searchParams.get("jobId");
   const profileType = searchParams.get("type");
 
-  console.log(jobId, profileType, "PROFILE TYPE OF THE USER");
   return (
-    <div>
+    <>
       <ShowCandidatesProfiles jobId={jobId} type={profileType} />
-    </div>
+    </>
   );
 };
 

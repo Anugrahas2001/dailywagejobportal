@@ -34,6 +34,8 @@ import Loading from "./Loading";
 import { supabase } from "@/lib/supabase";
 import useControls from "./hooks/useControls";
 import { MyProfileSkeleton } from "./skeltons/MyProfileSkeleton";
+import Error from "./Error";
+import useError from "./hooks/useError";
 
 /* ---------- helpers ---------- */
 
@@ -304,7 +306,6 @@ const MyProfile = () => {
   const [isEditing, setIsEditing] = useState(""); // "" | "bio" | "skills" | "jobpref
   // bio
   const [editedText, setEditedText] = useState("");
-  console.log(editedText, "BIO VALUE");
   // skills
   const [skill, setSkill] = useState("");
   const [experience, setExperience] = useState("Beginner");
@@ -317,7 +318,8 @@ const MyProfile = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [workingStatus, setWorkingStatus] = useState("");
-  const [error, setError] = useState("");
+  const { error, setError } = useError();
+  const [userRole, setUserRole] = useState(null);
   const fileInputRef = useRef(null);
   const {
     page,
@@ -330,32 +332,101 @@ const MyProfile = () => {
     setInitialLoading,
   } = useControls();
 
-  const loadProfile = useCallback(async () => {
-    setLoading(true);
-    try {
-      const token = await fetchUserToken();
-      const res = await fetch("/api/common/profile", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error(`Request failed (${res.status})`);
-      const { data } = await res.json();
-      console.log(data, "special data");
-      setProfile(data);
-      setWorkingStatus(data?.workingStatus);
-      setLoading(false);
-    } catch (err) {
-      console.error("Profile load failed:", err);
-      setLoading(false);
-    } finally {
-      setInitialLoading(false);
-    }
+  // useEffect(() => {
+  //   setUserRole(localStorage.getItem("role"));
+  // }, []);
+
+  //   const loadProfile = useCallback(async () => {
+  //     setLoading(true);
+  //     try {
+  //       const token = await fetchUserToken();
+  //       const res = await fetch(`/api/common/profile?role=${userRole}`, {
+  //         method: "GET",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       if (!res.ok) {
+  //         const data = await res.json().catch(() => ({})); // body may not be JSON
+  //         const message =
+  //           data.message ||
+  //           `Failed to fetch profile details (status ${res.status})`;
+  //         setError(message);
+  //         return; // stop here, don't touch job state
+  //       }
+  //       const { data } = await res.json();
+  //       console.log(data, "TTTTTAAAAANNNNNNNUUUUUUU");
+  //       setProfile(data);
+  //       setWorkingStatus(data?.workingStatus);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error("Profile load failed:", err);
+  //       setLoading(false);
+  //     } finally {
+  //       setInitialLoading(false);
+  //     }
+  //   }, [userRole]);
+
+  //    useEffect(() => {
+  //     loadProfile();
+  //   }, [userRole]);
+
+  useEffect(() => {
+    setUserRole(localStorage.getItem("role"));
   }, []);
+
+  const loadProfile = useCallback(
+    async (signal) => {
+      if (!userRole) return; // wait until the role has been read
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const token = await fetchUserToken();
+        const res = await fetch(
+          `/api/common/profile?role=${encodeURIComponent(userRole)}`,
+          {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+            signal,
+          },
+        );
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({})); // body may not be JSON
+          setError(
+            errData.message ||
+              `Failed to fetch profile details (status ${res.status})`,
+          );
+          return;
+        }
+
+        const { data } = await res.json();
+        console.log(data, "DATA FETCHED FROM THE DB");
+        setProfile(data);
+        setWorkingStatus(data?.workingStatus ?? null);
+      } catch (err) {
+        if (err.name === "AbortError") return; // request was cancelled, ignore
+        console.error("Profile load failed:", err);
+        setError("Something went wrong while loading your profile.");
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+          setInitialLoading(false);
+        }
+      }
+    },
+    [userRole],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadProfile(controller.signal);
+    return () => controller.abort(); // cancel on role change or unmount
+  }, [loadProfile]);
 
   const saveProfile = async (type, data) => {
     setLoading(true);
     try {
-      console.log(type, data, "UPDATE PROFILE DATA");
       const token = await fetchUserToken();
       const res = await fetch("/api/common/profile", {
         method: "PUT",
@@ -365,7 +436,14 @@ const MyProfile = () => {
         },
         body: JSON.stringify({ type, data }),
       });
-      if (!res.ok) throw new Error(`Update failed (${res.status})`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})); // body may not be JSON
+        const message =
+          data.message ||
+          `Failed to update user profile (status ${res.status})`;
+        setError(message);
+        return; // stop here, don't touch job state
+      }
 
       const json = await res.json();
       setProfile(json.result); // match whatever your API returns
@@ -378,37 +456,16 @@ const MyProfile = () => {
     }
   };
 
-  //
-  useEffect(() => {
-    loadProfile();
-  }, []);
-
   if (loading || !profile || initialLoading) return <MyProfileSkeleton />;
-
-  // if (status === "error" && !profile) {
-  //   return (
-  //     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-  //       <div className="max-w-sm rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-  //         <p className="font-semibold text-gray-900">
-  //           We couldn't load your profile
-  //         </p>
-  //         <p className="mt-1 text-sm text-gray-500">
-  //           Check your connection and try again.
-  //         </p>
-  //         <button
-  //           type="button"
-  //           onClick={loadProfile}
-  //           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-  //         >
-  //           <RefreshCw className="h-4 w-4" /> Try again
-  //         </button>
-  //       </div>
-  //     </main>
-  //   );
-  // }
 
   const user = profile?.user ?? {};
   const savedPreference = profile?.preference ?? {};
+  const jobCounts = profile?.counts ?? {
+    All: 0,
+    Active: 0,
+    Paused: 0,
+    Completed: 0,
+  };
   const replaceName = user?.name?.charAt(0).toUpperCase();
   const pref = isEditing === "jobpref" ? draft : savedPreference;
   const profileImage = user.profileImage;
@@ -432,7 +489,6 @@ const MyProfile = () => {
   const salary = formatSalary(safePref.minSalary, safePref.maxSalary);
   const requiredSkills = JOB_SKILLS?.[safePref.jobCategory] ?? [];
 
-  console.log(skillsDraft, "ALL THE AVAILABLE SKILLS");
   /* ----- bio ----- */
 
   const handleEditBio = () => {
@@ -473,8 +529,6 @@ const MyProfile = () => {
     setSkill("");
     setExperience("");
   };
-
-  console.log(setSkillsDraft, "CHECK ITS VALUE SKILL DRAFT");
 
   const handleRemoveSkills = (val) =>
     setSkillsDraft((prev) => prev.filter((s) => s.skill !== val));
@@ -635,7 +689,6 @@ const MyProfile = () => {
   };
 
   const handleWorkingStatusUpdate = async (status) => {
-    console.log(status, "CHCEK THE WORKING STATUS OF THE USER");
     // const status = e.target.value;
     setWorkingStatus(status);
     const jobId = localStorage.getItem("currentJobId");
@@ -664,11 +717,16 @@ const MyProfile = () => {
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update status");
+        const data = await res.json().catch(() => ({})); // body may not be JSON
+        const message =
+          data.message ||
+          `Failed to worker actions (status ${response.status})`;
+        setError(message);
+        return; // stop here, don't touch job state
       }
+
+      const data = await response.json();
 
       // use the server's value, not what the user clicked
       setWorkingStatus(data.session.workingStatus);
@@ -681,94 +739,42 @@ const MyProfile = () => {
 
   const isEditingPrefs = isEditing === "jobpref";
 
+  const workerDetails = [
+    { label: "Experience", value: user?.yearsOfExperience },
+    { label: "Jobs done", value: profile?.jobsDone ?? "–" },
+    { label: "Saved jobs", value: profile?.savedJobs ?? 0 },
+    { label: "Job invitations", value: profile?.jobInvitations ?? 0 },
+  ];
+
+  const employerDetails = [
+    { label: "Job Posted", value: jobCounts?.All??0 },
+    { label: "Active Jobs", value: jobCounts?.Active ?? 0 },
+    { label: "Paused Jobs", value: jobCounts?.Paused ?? 0 },
+    { label: "Completed Jobs", value: jobCounts?.Completed ?? 0 },
+  ];
+
+  const statsData = userRole === "worker" ? workerDetails : employerDetails;
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl space-y-5">
         {/* Header */}
         <Card className="relative p-6">
-          <select
-            className="absolute right-4 top-4 rounded-lg p-2 text-sm bg-green-500"
-            value={workingStatus}
-            onChange={(e) => handleWorkingStatusUpdate(e.target.value)}
-          >
-            {Object.values(WORKER_WORKING_STATUS).map((status) => (
-              <option key={status} value={status} className="px-1">
-                {status}
-              </option>
-            ))}
-          </select>
+          {userRole === "worker" && (
+            <select
+              className="absolute right-4 top-4 rounded-lg p-2 text-sm bg-green-500"
+              value={workingStatus}
+              onChange={(e) => handleWorkingStatusUpdate(e.target.value)}
+            >
+              {Object.values(WORKER_WORKING_STATUS).map((status) => (
+                <option key={status} value={status} className="px-1">
+                  {status}
+                </option>
+              ))}
+            </select>
+          )}
+
           <div className="flex flex-col items-center text-center">
-            {/* <div className="flex h-28 w-28 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
-              <div className="flex flex-col items-center">
-                <div className="relative h-28 w-28">
-                  <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-gray-200 text-4xl font-bold text-white ring-4 ring-indigo-50">
-                    {previewUrl || user?.profileImage ? (
-                      // <img
-                      //   src={previewUrl || user.profileImage}
-                      //   alt="Profile photo"
-                      //   className="h-40 w-40"
-                      // />
-                      <img
-                        src={previewUrl || user.profileImage}
-                        alt="Profile photo"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <span aria-hidden="true">{replaceName}</span>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    aria-label="Change profile photo"
-                    className="absolute bottom-0 right-3 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
-                  >
-                    <Camera className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <input
-                  id="profile-image-input"
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleImageChange}
-                  disabled={uploading}
-                  className="hidden"
-                />
-
-                {previewUrl && (
-                  <div className="mt-4 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleRemove}
-                      disabled={uploading}
-                      className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleUpload}
-                      disabled={uploading || !file}
-                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {uploading ? "Uploading..." : "Save photo"}
-                    </button>
-                  </div>
-                )}
-
-                {error && (
-                  <p role="alert" className="mt-3 text-sm text-red-600">
-                    {error}
-                  </p>
-                )}
-              </div>
-            </div> */}
-
             <div className="flex flex-col items-center text-center">
               {/* Avatar */}
               <div className="relative h-28 w-28">
@@ -911,232 +917,229 @@ const MyProfile = () => {
         </Card>
 
         {/* Stats */}
+
         <section
           aria-label="Profile statistics"
           className="grid grid-cols-2 gap-3 sm:grid-cols-4"
         >
-          <Stat
-            value={
-              typeof user?.yearsOfExperience === "number"
-                ? `${user.yearsOfExperience} yrs`
-                : null
-            }
-            label="Experience"
-          />
-          <Stat value={profile?.jobsDone ?? "–"} label="Jobs done" />
-          <Stat value={profile?.savedJobs ?? 0} label="Saved jobs" />
-          <Stat value={profile?.jobInvitations ?? 0} label="Job invitations" />
+          {statsData.map(({ label, value }) => (
+            <Stat key={label} value={value} label={label} />
+          ))}
         </section>
 
-        {/* Completeness */}
-        {completeness < 100 && (
-          <Card>
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="font-semibold text-gray-900">
-                  Profile completeness
-                </h2>
-                <p className="mt-0.5 text-sm text-gray-500">
-                  Complete your profile to get better job matches.
-                </p>
-              </div>
-              <span className="text-lg font-bold text-indigo-600">
-                {completeness}%
-              </span>
-            </div>
-            <div
-              className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100"
-              role="progressbar"
-              aria-valuenow={completeness}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Profile completeness"
-            >
-              <div
-                className={`h-full rounded-full transition-all duration-500 ${progressColor(completeness)}`}
-                style={{ width: `${completeness}%` }}
-              />
-            </div>
-            {missing.length > 0 && (
-              <p className="mt-3 text-sm text-gray-600">
-                Still missing:{" "}
-                <span className="font-medium">{missing.join(", ")}</span>
-              </p>
-            )}
-          </Card>
-        )}
-
-        {/* Skills */}
-        <Card>
-          <SectionHeader
-            title="Skills"
-            subtitle="Your professional skills and experience level."
-            editLabel="Edit skills"
-            onEdit={handleSkillEdit}
-          />
-          {skills.length > 0 ? (
-            <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {skills.map((s) => (
-                <li
-                  key={s.skill}
-                  className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-                >
-                  <div className="flex justify-between">
-                    <p className="font-semibold text-gray-900">{s.skill}</p>
-                    {isEditing === "skills" && (
-                      <button
-                        type="button"
-                        aria-label={`Delete skill ${s.skill}`}
-                        onClick={() => handleRemoveSkills(s.skill)}
-                      >
-                        <X className="h-4 w-4 text-red-600" />
-                      </button>
-                    )}
+        {userRole === "worker" && (
+          <>
+            {/* Completeness */}
+            {completeness < 100 && (
+              <Card>
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900">
+                      Profile completeness
+                    </h2>
+                    <p className="mt-0.5 text-sm text-gray-500">
+                      Complete your profile to get better job matches.
+                    </p>
                   </div>
-                  {s.experience && (
-                    <span className="mt-2 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
-                      {s.experience}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-5 rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
-              No skills added yet. Add your skills so employers can find you.
-            </p>
-          )}
-
-          {isEditing === "skills" && (
-            <div className="mt-4 flex w-full flex-col gap-4">
-              {/* Skill selection */}
-              {requiredSkills.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {requiredSkills.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      onClick={() => setSkill(item)}
-                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
-                        skill === item
-                          ? "border-blue-600 bg-blue-600 text-white"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
-                      }`}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  <span className="text-lg font-bold text-indigo-600">
+                    {completeness}%
+                  </span>
                 </div>
+                <div
+                  className="mt-4 h-2 overflow-hidden rounded-full bg-gray-100"
+                  role="progressbar"
+                  aria-valuenow={completeness}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label="Profile completeness"
+                >
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${progressColor(completeness)}`}
+                    style={{ width: `${completeness}%` }}
+                  />
+                </div>
+                {missing.length > 0 && (
+                  <p className="mt-3 text-sm text-gray-600">
+                    Still missing:{" "}
+                    <span className="font-medium">{missing.join(", ")}</span>
+                  </p>
+                )}
+              </Card>
+            )}
+
+            {/* Skills */}
+            <Card>
+              <SectionHeader
+                title="Skills"
+                subtitle="Your professional skills and experience level."
+                editLabel="Edit skills"
+                onEdit={handleSkillEdit}
+              />
+              {skills.length > 0 ? (
+                <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {skills.map((s) => (
+                    <li
+                      key={s.skill}
+                      className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                    >
+                      <div className="flex justify-between">
+                        <p className="font-semibold text-gray-900">{s.skill}</p>
+                        {isEditing === "skills" && (
+                          <button
+                            type="button"
+                            aria-label={`Delete skill ${s.skill}`}
+                            onClick={() => handleRemoveSkills(s.skill)}
+                          >
+                            <X className="h-4 w-4 text-red-600" />
+                          </button>
+                        )}
+                      </div>
+                      {s.experience && (
+                        <span className="mt-2 inline-block rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-600">
+                          {s.experience}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <p className="text-sm text-gray-500">
-                  Choose a job category in your job preferences to see suggested
-                  skills.
+                <p className="mt-5 rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                  No skills added yet. Add your skills so employers can find
+                  you.
                 </p>
               )}
 
-              {/* Experience level */}
-              <div>
-                <p className="mb-3 font-medium">Experience Level</p>
-                <div className="flex flex-wrap gap-5">
-                  {Object.entries(EXPERIENCE_LEVELS).map(([key, value]) => (
-                    <label
-                      key={value}
-                      className="flex cursor-pointer items-center gap-2"
+              {isEditing === "skills" && (
+                <div className="mt-4 flex w-full flex-col gap-4">
+                  {/* Skill selection */}
+                  {requiredSkills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {requiredSkills.map((item) => (
+                        <button
+                          key={item}
+                          type="button"
+                          onClick={() => setSkill(item)}
+                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                            skill === item
+                              ? "border-blue-600 bg-blue-600 text-white"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      Choose a job category in your job preferences to see
+                      suggested skills.
+                    </p>
+                  )}
+
+                  {/* Experience level */}
+                  <div>
+                    <p className="mb-3 font-medium">Experience Level</p>
+                    <div className="flex flex-wrap gap-5">
+                      {Object.entries(EXPERIENCE_LEVELS).map(([key, value]) => (
+                        <label
+                          key={value}
+                          className="flex cursor-pointer items-center gap-2"
+                        >
+                          <input
+                            type="radio"
+                            name="experience"
+                            value={value}
+                            checked={experience === value}
+                            onChange={(e) => setExperience(e.target.value)}
+                            className="accent-blue-600"
+                          />
+                          <span className="text-sm text-gray-700">{key}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Add skill */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleSkillCreation}
+                      disabled={!skill || !experience}
+                      className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      <input
-                        type="radio"
-                        name="experience"
-                        value={value}
-                        checked={experience === value}
-                        onChange={(e) => setExperience(e.target.value)}
-                        className="accent-blue-600"
-                      />
-                      <span className="text-sm text-gray-700">{key}</span>
-                    </label>
-                  ))}
+                      + Add Skill
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Add skill */}
-              <div>
-                <button
-                  type="button"
-                  onClick={handleSkillCreation}
-                  disabled={!skill || !experience}
-                  className="rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  + Add Skill
-                </button>
-              </div>
-            </div>
-          )}
-
-          {isEditing === "skills" && (
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={handleRemoveSkills}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveSkills}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-              >
-                Save
-              </button>
-            </div>
-          )}
-        </Card>
-
-        {/* Job preferences */}
-        <Card>
-          <SectionHeader
-            title="Job preferences"
-            subtitle="The work you're looking for."
-            editLabel="Edit job preferences"
-            onEdit={handleJobPrefEdit}
-          />
-
-          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {PREFERENCE_FIELDS.map((field) => (
-              <PreferenceRow
-                key={field.key ?? field.keys.join("-")}
-                field={field}
-                source={isEditingPrefs ? draft : pref}
-                isEditing={isEditingPrefs}
-                onChange={handleChange}
+              {isEditing === "skills" && (
+                <div className="mt-6 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRemoveSkills}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveSkills}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+            </Card>
+            {/* Job preferences */}
+            <Card>
+              <SectionHeader
+                title="Job preferences"
+                subtitle="The work you're looking for."
+                editLabel="Edit job preferences"
+                onEdit={handleJobPrefEdit}
               />
-            ))}
-          </div>
 
-          {/* {prefError && (
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {PREFERENCE_FIELDS.map((field) => (
+                  <PreferenceRow
+                    key={field.key ?? field.keys.join("-")}
+                    field={field}
+                    source={isEditingPrefs ? draft : pref}
+                    isEditing={isEditingPrefs}
+                    onChange={handleChange}
+                  />
+                ))}
+              </div>
+
+              {/* {prefError && (
             <p role="alert" className="mt-4 text-sm text-red-600">
               {prefError}
             </p>
           )} */}
 
-          {isEditingPrefs && (
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-              >
-                Save
-              </button>
-            </div>
-          )}
-        </Card>
+              {isEditingPrefs && (
+                <div className="mt-6 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+            </Card>
+          </>
+        )}
 
         {/* Contact */}
         {/* <Card>
@@ -1223,6 +1226,7 @@ const MyProfile = () => {
         </Card>
       </div>
       {loading && <Loading />}
+      {error && <Error error={error} onClick={() => setError("")} />}
     </main>
   );
 };

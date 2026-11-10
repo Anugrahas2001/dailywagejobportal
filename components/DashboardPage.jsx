@@ -82,7 +82,6 @@ const DashboardPage = ({ role }) => {
   const empJobs = useSelector(selectAllJobsForEmployer);
 
   const searchAndFilterJobs = useSelector((state) => state.searchJobs.jobs);
-  console.log(searchAndFilterJobs.length, "SEARCH AND FILTER LENGTH");
   const jobs =
     role === "worker"
       ? activeSearch
@@ -128,7 +127,6 @@ const DashboardPage = ({ role }) => {
 
     if (role === "worker") {
       // Worker should initially fetch Active jobs
-      console.log(page, val, "USEEFFCET DATA FETCH ALL JOBS FOR WORKER");
       dispatch(
         fetchActiveJobs({
           page,
@@ -149,9 +147,9 @@ const DashboardPage = ({ role }) => {
   const showSkeleton =
     !jobs ||
     initialLoading ||
-    jobStatus === "pending"||searchAndFilterStatus === "pending";
+    jobStatus === "pending" ||
+    searchAndFilterStatus === "pending";
 
-  // console.log(showSkeleton, loadingStatus, "SHOWING SKELETON OR NOT");
   // if (showSkeleton) return <JobCardSkeleton role={role} />;
 
   const handleToggleSavedJob = (jobId) => {
@@ -171,7 +169,6 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleAppliedJob = (jobId) => {
-    console.log(jobId, "============JOB ID DATA");
     runWithPending(`applyjob-${jobId}`, async () => {
       await dispatch(applyToJob({ jobId })).unwrap();
       setPage(1);
@@ -180,7 +177,6 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleJobEdit = (id) => {
-    console.log(id, "JOB ID FOR EDIT");
     router.push(`/employerDashboard/dashboard/${id}`);
   };
 
@@ -190,7 +186,6 @@ const DashboardPage = ({ role }) => {
   };
 
   const handleDeleteJob = (jobId) => {
-    console.log(jobId, "INITIAL JOBID");
     runWithPending(`deletejob-${jobId}`, async () => {
       try {
         await dispatch(deleteJob({ id: jobId })).unwrap();
@@ -286,7 +281,7 @@ const DashboardPage = ({ role }) => {
         </>
       )}
 
-    {showSkeleton ? (
+      {showSkeleton ? (
         <JobCardSkeleton role={role} />
       ) : jobs.length > 0 ? (
         <>
@@ -529,7 +524,6 @@ const DashboardPage = ({ role }) => {
           )}
         </div>
       )}
-    
     </main>
   );
 };
@@ -540,4 +534,4 @@ export default DashboardPage;
 
 // If you want to write it to the DOM, pass a string instead: loading="false" or loading={value.toString()}.
 
-// If you used to conditionally omit it with loading={condition && value}, pass loading={condition ? value : undefined} instead.   
+// If you used to conditionally omit it with loading={condition && value}, pass loading={condition ? value : undefined} instead.

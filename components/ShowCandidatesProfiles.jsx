@@ -25,18 +25,16 @@ import CandidateCardSkeleton from "./skeltons/CandidateCardSkeleton";
 import useControls from "./hooks/useControls";
 import useLoading from "./hooks/useLoading";
 import { PAGE_SIZE } from "@/constants/constant";
+import Error from "./Error";
 
 const ShowCandidatesProfiles = ({ jobId, type }) => {
   const [applicants, setApplicants] = useState([]);
-  console.log(applicants, "ASE APPLICANTS");
   const [status, setStatus] = useState("All");
   const [title, setTitle] = useState("");
-  const [totalCount, setTotalCount] = useState(0);
   const [expandedSkills, setExpandedSkills] = useState(null);
   const { loading, setLoading } = useLoading();
   const [val, setVal] = useState(20);
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
-
+  const [error, setError] = useState("");
   const {
     page,
     setPage,
@@ -46,9 +44,10 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
     isPending,
     initialLoading,
     setInitialLoading,
+    totalCount,
+    setTotalCount,
   } = useControls();
-
-  console.log(applicants, status, "ALL THE AVALIABLE APPLICANTS");
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
 
   const fetchApplicants = useCallback(async () => {
     if (!jobId || !type) return;
@@ -67,8 +66,16 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         cache: "no-store",
       });
 
+      if (!response.ok) {
+        const data = await res.json().catch(() => ({})); // body may not be JSON
+        const message =
+          data.message ||
+          `Failed to fetch workers profiles (status ${response.status})`;
+        setError(message);
+        return; // stop here, don't touch job state
+      }
+
       const { data, jobTitle, totalCount } = await response.json();
-      if (!response.ok) throw new Error("Failed to fetch applicants");
 
       setApplicants(data);
       setTitle(jobTitle);
@@ -106,7 +113,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   const handleSatusUpdates = async ({ status, workerId, jobId }) => {
     runWithPending(`updatecandidateInvitestatus-${workerId}`, async () => {
       try {
-        console.log(status, workerId, "CHECK THESE 2 VALUES");
         setLoading(true);
         const { workerId: updatedWorkerId } = await fetchUserJobDetails({
           status,
@@ -114,7 +120,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
           jobId,
           type,
         });
-        console.log(updatedWorkerId, "STATUS UPDATED");
         // setApplicants((prev) =>
         //   prev.filter((applicant) => applicant.userId !== updatedWorkerId),
         // );
@@ -136,7 +141,6 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   };
 
   const getButtonClass = (value) => {
-    console.log(value, status, "CHECK THIS VALUE");
     return status === value ? "bg-amber-400" : "bg-gray-500";
   };
 
@@ -224,10 +228,13 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                   invitationSent,
                   invitationCancelled,
                 ) => {
+                  console.log(
+                    invitationSent,
+                    invitationCancelled,
+                    "GET INVITATION STATE DATA",
+                  );
                   if (!invitationSent) return "send";
-                  return invitationCancelled
-                    ? "resend"
-                    : "cancel";
+                  return invitationCancelled ? "resend" : "cancel";
                 };
                 return (
                   // <>
@@ -421,12 +428,13 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                             Job Invitation Sent.
                           </span>
                         )}
-                        
-                        {type === "recommendation" && profile?.applicationStatus && (
-                        <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
-                          {profile.applicationStatus}
-                        </button>
-                      )}
+
+                      {type === "recommendation" &&
+                        profile?.applicationStatus && (
+                          <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
+                            {profile.applicationStatus}
+                          </button>
+                        )}
 
                       {/* Status */}
                       {type === "applications" && profile?.status && (
@@ -492,6 +500,8 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
         page={page}
         totalCount={totalCount}
       />
+
+      {error && <Error error={error} onClick={() => setError("")} />}
     </div>
   );
 };

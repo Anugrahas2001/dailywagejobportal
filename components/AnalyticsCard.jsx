@@ -15,7 +15,7 @@ const AnalyticsCard = ({ dot, text, title, count, onClick }) => {
           <p className="text-sm ml-1 text-gray-500">Total Jobs</p>
         </div>
         <button
-          className="bg-blue-600 cursor-pointer text-white text-sm px-1 md:px-2 py-1 rounded-sm"
+          className="bg-blue-600 cursor-pointer text-white px-2 py-1 rounded-sm"
           onClick={onClick}
         >
           View

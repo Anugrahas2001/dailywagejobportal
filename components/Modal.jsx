@@ -11,23 +11,13 @@ export default function Modal({
   matchingRate,
   type,
   status,
+  jobInvitation,
 }) {
   console.log(jobId, workerId, role, matchingRate, type, "ROLE OF THE USER");
   const router = useRouter();
 
-  const handleMaximize = () => {
-    role === "employer" &&
-      (status && status === "all"
-        ? window.location.assign(
-            `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&status=${status}`,
-          )
-        : window.location.assign(
-            `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&matching=${matchingRate}&jobInvitation=false`,
-          ));
-  };
-
-
-  //  {  role === "worker" &&
+  // const handleMaximize = () => {
+  //   role === "employer" &&
   //     (status && status === "all"
   //       ? window.location.assign(
   //           `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&status=${status}`,
@@ -35,8 +25,28 @@ export default function Modal({
   //       : window.location.assign(
   //           `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&matching=${matchingRate}&jobInvitation=false`,
   //         ));
+
+  //   {
+  //     role === "worker" &&
+  //       type &&
+  //       window.location.assign(`/workerDashboard/jobs/${jobId}?type=${type}`);
+  //   }
   // };
 
+  const handleMaximize = () => {
+    if (role === "employer") {
+      const url =
+        status === "all"
+          ? `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&status=${status}`
+          : `/employerDashboard/viewjobapplication/${workerId}?jobId=${jobId}&type=${type}&matching=${matchingRate}&jobInvitation=${jobInvitation}`;
+      window.location.assign(url);
+      return;
+    }
+
+    if (role === "worker" || type) {
+      window.location.assign(`/workerDashboard/jobs/${jobId}?type=${type}`);
+    }
+  };
 
   return (
     <div
@@ -49,16 +59,16 @@ export default function Modal({
       >
         {/* Modal buttons */}
         <div className="absolute right-3 top-3 z-50 flex items-center gap-2">
-          {role === "employer" && (
-            <button
-              type="button"
-              onClick={handleMaximize}
-              className="cursor-pointer rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
-              title="Open full page"
-            >
-              <Maximize className="h-5 w-5" />
-            </button>
-          )}
+          {/* {role === "employer" && ( */}
+          <button
+            type="button"
+            onClick={handleMaximize}
+            className="cursor-pointer rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
+            title="Open full page"
+          >
+            <Maximize className="h-5 w-5" />
+          </button>
+          {/* )} */}
 
           <button
             type="button"
