@@ -4,7 +4,7 @@ import ViewProfile from "@/components/ViewProfile";
 import { useParams, useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
-const page = () => {
+const ViewJobApplication = () => {
   const params = useParams();
   const workerId = params.id;
   const searchParams = useSearchParams();
@@ -17,8 +17,7 @@ const page = () => {
   console.log(jobInvitation, "JOB INVITATION DATAA");
 
   return (
-    <Suspense fallback={<Loading/>}>
-      <ViewProfile
+    <ViewProfile
       workerId={workerId}
       jobId={jobId}
       type={type}
@@ -26,6 +25,13 @@ const page = () => {
       matchingRate={matchingRate}
       jobInvitation={jobInvitation}
     />
+  );
+};
+
+const page = () => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ViewJobApplication />
     </Suspense>
   );
 };

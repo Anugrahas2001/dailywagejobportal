@@ -4,14 +4,19 @@ import ShowCandidatesProfiles from "@/components/ShowCandidatesProfiles";
 import { useSearchParams } from "next/navigation";
 import React, { Suspense } from "react";
 
-const page = () => {
+function AppliedWorkersContent() {
   const searchParams = useSearchParams();
   const jobId = searchParams.get("jobId");
   const profileType = searchParams.get("type");
 
+  return <ShowCandidatesProfiles jobId={jobId} type={profileType} />;
+}
+
+const page = () => {
+
   return (
     <Suspense fallback={<Loading />}>
-      <ShowCandidatesProfiles jobId={jobId} type={profileType} />
+      <AppliedWorkersContent/>
     </Suspense>
   );
 };

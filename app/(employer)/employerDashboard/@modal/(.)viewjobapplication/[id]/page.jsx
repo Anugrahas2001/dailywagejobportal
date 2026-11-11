@@ -2,9 +2,9 @@
 import Modal from "@/components/Modal";
 import ViewProfile from "@/components/ViewProfile";
 import { useParams, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { Suspense } from "react";
 
-const page = () => {
+const ViewJobApplicationContent = () => {
   const params = useParams();
   const workerId = params.id;
   const searchParams = useSearchParams();
@@ -39,6 +39,14 @@ const page = () => {
       />
       {/* <Footer /> */}
     </Modal>
+  );
+};
+
+const page = () => {
+  return (
+    <Suspense fallback={<Loading />}>
+      <ViewJobApplicationContent />
+    </Suspense>
   );
 };
 
