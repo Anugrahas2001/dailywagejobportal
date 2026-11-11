@@ -1,7 +1,8 @@
 "use client";
+import Loading from "@/components/Loading";
 import ViewProfile from "@/components/ViewProfile";
 import { useParams, useSearchParams } from "next/navigation";
-import React from "react";
+import React, { Suspense } from "react";
 
 const page = () => {
   const params = useParams();
@@ -14,8 +15,10 @@ const page = () => {
   const matchingRate = searchParams.get("matching");
   const jobInvitation = searchParams.get("jobInvitation");
   console.log(jobInvitation, "JOB INVITATION DATAA");
+
   return (
-    <ViewProfile
+    <Suspense fallback={<Loading/>}>
+      <ViewProfile
       workerId={workerId}
       jobId={jobId}
       type={type}
@@ -23,6 +26,7 @@ const page = () => {
       matchingRate={matchingRate}
       jobInvitation={jobInvitation}
     />
+    </Suspense>
   );
 };
 
