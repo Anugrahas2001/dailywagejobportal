@@ -4,6 +4,7 @@ import User from "@/modals/User";
 import { NextResponse } from "next/server";
 
 export async function PUT(request) {
+  // C:\projects\dailywagejob\app\api\common\fcm\route.js
   try {
     await connectDB();
     const { uid } = await verifyFirebaseToken(request);
