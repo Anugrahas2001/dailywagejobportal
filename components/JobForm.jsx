@@ -77,7 +77,6 @@ const JobForm = ({ mode, initialData }) => {
     setInitialLoading,
   } = useControls();
 
-
   const error = useSelector((state) => state.jobs.error);
   const status = useSelector((state) => state.jobs.status);
   // const allJobsStatus = useSelector((state) => state.jobs.status);
@@ -87,6 +86,22 @@ const JobForm = ({ mode, initialData }) => {
     if (initialData) {
       reset(initialData);
     }
+  }, [initialData, reset]);
+
+  useEffect(() => {
+    if (!initialData) return;
+
+    const [lng, lat] = initialData.loc?.coordinates ?? [];
+
+    const hasLocation =
+      typeof lng === "number" &&
+      typeof lat === "number" &&
+      !(lng === 0 && lat === 0);
+
+    reset({
+      ...initialData,
+      useCurrentLocation: hasLocation,
+    });
   }, [initialData, reset]);
 
   const handleDelete = (indx) => {
@@ -99,7 +114,6 @@ const JobForm = ({ mode, initialData }) => {
   };
 
   const handleSkillSelect = (skill) => {
-
     const currentSelectedSkills = watch("skillsRequired");
 
     if (currentSelectedSkills.includes(skill)) {
@@ -151,14 +165,13 @@ const JobForm = ({ mode, initialData }) => {
     setValue("useCurrentLocation", enabled);
     if (enabled) {
       handleCurrentLocation();
-    }
-    {
+    } else {
       setValue("city", "");
       setValue("state", "");
       setValue("country", "");
       setValue("loc", {
         type: "Point",
-        coordinates: [],
+        coordinates: [0, 0],
       });
     }
   };
@@ -214,7 +227,7 @@ const JobForm = ({ mode, initialData }) => {
   };
 
   return (
-    <div className="mx-auto max-w-5xl rounded-lg bg-gray-100 p-6 shadow">
+    <div className="max-w-2xl mx-4 px-4 my-2 space-y-8 md:mx-auto bg-gray-100">
       {/* <h2 className="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
     {mode === "create" ? "Create Job" : "Edit Job"}
   </h2> */}
@@ -224,14 +237,14 @@ const JobForm = ({ mode, initialData }) => {
           <h2 className="text-2xl font-semibold text-gray-900">
             {mode === "create" ? "Create Job" : "Edit Job"}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm md:text-base text-gray-500">
             {mode === "create"
               ? "Post a new opening"
               : "Modify your job posting"}
           </p>
         </div>
         <span
-          className={`ml-auto rounded-full px-3 py-1 text-xs font-medium ${
+          className={`ml-auto rounded-full px-3 py-1 text-sm md:text-base font-medium ${
             mode === "create"
               ? "bg-green-100 text-green-700"
               : "bg-amber-100 text-amber-700"
@@ -278,7 +291,7 @@ const JobForm = ({ mode, initialData }) => {
 
         {/* Description */}
         <div className="md:col-span-2">
-          <label className="mb-2 block text-sm font-medium">
+          <label className="mb-2 block text-sm md:text-base font-medium">
             Job Description
           </label>
 
@@ -300,14 +313,14 @@ const JobForm = ({ mode, initialData }) => {
           />
 
           {errors.jobDescription && (
-            <p className="mt-1 text-sm text-red-500">
+            <p className="mt-1 text-sm md:text-base text-red-500">
               {errors.jobDescription.message}
             </p>
           )}
         </div>
 
         <div className="md:col-span-2 mt-4">
-          <label className="mb-2 block text-sm font-medium">
+          <label className="mb-2 block text-sm md:text-base font-medium">
             Required Skills
           </label>
 
@@ -320,7 +333,7 @@ const JobForm = ({ mode, initialData }) => {
                   handleSkillSelect(skill);
                 }}
                 type="button"
-                className={`rounded-full border px-4 py-2 text-sm transition cursor-pointer
+                className={`rounded-full border px-4 py-2 text-sm md:text-base transition cursor-pointer
     ${
       selectedSkills.includes(skill)
         ? "bg-blue-600 text-white border-blue-600"
@@ -335,7 +348,7 @@ const JobForm = ({ mode, initialData }) => {
         </div>
 
         <div className="space-y-2 md:col-span-2">
-          <label className="block text-sm font-medium mb-1.5">
+          <label className="block text-sm md:text-base font-medium mb-1.5">
             Responsibilities
           </label>
 
@@ -344,7 +357,7 @@ const JobForm = ({ mode, initialData }) => {
               <input
                 placeholder="Enter a responsibility"
                 value={responsibility}
-                className=" w-full px-3 py-3 rounded-lg border text-sm
+                className=" w-full px-3 py-3 rounded-lg border text-sm md:text-base
           placeholder:text-gray-400
           transition-colors duration-150
           focus:outline-none focus:ring-2 focus:ring-offset-0 border-gray-300 focus:ring-blue-200 focus:border-blue-500"
@@ -372,7 +385,7 @@ const JobForm = ({ mode, initialData }) => {
             <ul className="list-disc pl-6 space-y-2">
               {selectedResponsibilities.map((resp, index) => (
                 <li key={index}>
-                  <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+                  <div className="flex items-center text-sm md:text-base justify-between rounded-lg border px-3 py-2">
                     <span>{resp}</span>
 
                     <button
@@ -446,7 +459,7 @@ const JobForm = ({ mode, initialData }) => {
         <div className="flex items-center justify-between rounded-lg border px-3 py-2 my-3">
           <label
             htmlFor="use-current-location"
-            className="text-sm font-medium mb-1.5 cursor-pointer"
+            className="text-sm md:text-base font-medium mb-1.5 cursor-pointer"
           >
             Use Current Location
           </label>
@@ -569,7 +582,7 @@ const JobForm = ({ mode, initialData }) => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full cursor-pointer rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700"
+            className="w-full cursor-pointer text-sm md:text-base my-3  rounded-lg bg-blue-600 py-3 font-semibold text-white hover:bg-blue-700"
           >
             {isSubmitting
               ? mode === "create"

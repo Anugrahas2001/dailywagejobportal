@@ -39,12 +39,12 @@ const FilterButtons = ({
       </button>
 
       <button className="flex gap-2 min-w-40 border rounded-lg px-3 py-2 items-center justify-between">
-        <span>{selectedLabel}</span>
+        <span className="text-sm md:text-base" >{selectedLabel}</span>
         <ChevronDown className="w-4 h-4" />
       </button>
 
       {dropDown && (
-        <div className="absolute left-0 top-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-50">
+        <div className="absolute left-0  top-full w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg z-50">
           {visibleEntries.map(([label, optValue]) => (
             <button
               key={optValue}
@@ -53,7 +53,7 @@ const FilterButtons = ({
                 setDropdownStatus(false);
                 onClick?.();
               }}
-              className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors hover:bg-blue-50 ${
+              className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm md:text-base transition-colors hover:bg-blue-50 ${
                 value === optValue ? "bg-blue-50 font-medium text-blue-600" : ""
               }`}
             >

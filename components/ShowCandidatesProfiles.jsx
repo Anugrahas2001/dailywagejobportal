@@ -154,7 +154,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 md:p-6">
+    <div className="max-w-2xl mx-4 px-4 space-y-8 my-2 md:mx-auto bg-gray-100">
       {/* {(loading || applicants.length ===0) && <CandidateCardSkeleton />} */}
       <div className="mx-auto max-w-6xl">
         {/* Page Header */}
@@ -163,7 +163,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
             {type === "applications" ? "Applicants" : "Recommended Profiles"}
           </h1>
 
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm md:text-base text-gray-500">
             {/* {totalCount} applicant{totalCount !== 1 ? "s" : ""} */}
             {type === "applications"
               ? `${totalCount} Applicant${totalCount !== 1 ? "s" : ""}`
@@ -184,7 +184,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                 key={tab.value}
                 type="button"
                 aria-pressed={status === tab.value}
-                className={`inline-flex items-center justify-center gap-2 rounded cursor-pointer px-3 py-2 text-sm text-white
+                className={`inline-flex items-center justify-center text-sm md:text-base gap-2 rounded cursor-pointer px-3 py-2 text-sm md:text-base text-white
           disabled:cursor-not-allowed disabled:opacity-50 ${getButtonClass(tab.value)}`}
                 onClick={() => {
                   setStatus(tab.value);
@@ -254,7 +254,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         `updatecandidateInvitestatus-${profile?.userId}`,
                       )}
                       title="Reject application"
-                      className="rounded-full cursor-pointer absolute top-2 right-2 p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+                      className="rounded-full cursor-pointer text-sm md:text-base absolute top-2 right-2 p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
                       onClick={() =>
                         handleSatusUpdates({
                           status: "Rejected",
@@ -294,7 +294,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                             {/* </div> */}
                             <div className="flex">
                               <Mail className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
-                              <p className="mt-0.5 text-sm text-gray-600">
+                              <p className="mt-0.5 text-sm md:text-base text-gray-600">
                                 {profile?.email}
                               </p>
                             </div>
@@ -302,7 +302,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                             {profile?.mobileNumber?.number && (
                               <div className="flex">
                                 <Phone className="h-4 w-4 mt-1 mx-1 shrink-0 text-gray-400" />
-                                <p className="mt-0.5 text-sm text-gray-600">
+                                <p className="mt-0.5 text-sm md:text-base text-gray-600">
                                   {profile?.mobileNumber?.code}-
                                   {profile?.mobileNumber?.number}{" "}
                                 </p>
@@ -311,7 +311,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
 
                             <div className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 shrink-0 text-gray-400" />
-                              <p className="mt-0.5 text-sm text-gray-600">
+                              <p className="mt-0.5 text-sm md:text-base text-gray-600">
                                 {profile?.city}, {profile?.state}
                               </p>
                             </div>
@@ -321,7 +321,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     </div>
                     {/* Quick Information */}
                     <div className="mt-3">
-                      <p className="mt-0.5 text-sm text-gray-600">
+                      <p className="mt-0.5 text-sm md:text-base text-gray-600">
                         {profile?.jobTitle}
                       </p>
 
@@ -329,11 +329,11 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         {profile?.jobCategory}
                       </span>
                     </div>
-                    <div className="mt-5 grid grid-cols-1 gap-3 text-sm text-gray-600 sm:grid-cols-4">
+                    <div className="mt-5 grid grid-cols-1 gap-3 text-sm md:text-base text-gray-600 sm:grid-cols-4">
                       {/* Location */}
 
                       {/* Salary */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-sm md:text-base">
                         <Wallet className="h-4 w-4 shrink-0 text-gray-400" />
                         <span>
                           ₹{profile?.minSalary} - ₹{profile?.maxSalary}/day
@@ -341,7 +341,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                       </div>
 
                       {/* Availability */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 text-sm md:text-base">
                         <Calendar className="h-4 w-4 shrink-0 text-gray-400" />
 
                         <span>
@@ -350,7 +350,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                       </div>
 
                       {/* Shift */}
-                      <div className="flex items-center gap-2 col-span-2 mt-2">
+                      <div className="flex items-center gap-2 col-span-2 mt-2 text-sm md:text-base">
                         <Clock className="h-4 w-4 shrink-0 text-gray-400" />
 
                         <span>
@@ -364,7 +364,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                     {/* Skills */}
                     {profile?.skills?.length > 0 && (
                       <div className="mt-5">
-                        <p className="mb-2 text-xs font-medium text-gray-500">
+                        <p className="mb-2 text-sm md:text-base font-medium text-gray-500">
                           Skills
                         </p>
 
@@ -372,7 +372,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                           {visibleSkills?.map((skill) => (
                             <span
                               key={skill?._id}
-                              className="rounded-full bg-gray-100 px-3 py-2 text-xs text-gray-700"
+                              className="rounded-full bg-gray-100 px-3 py-2 text-sm md:text-base text-gray-700"
                             >
                               {skill?.skill}
                             </span>
@@ -386,7 +386,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                                   isExpanded ? null : profile?._id,
                                 )
                               }
-                              className="rounded-full px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                              className="rounded-full px-2 py-1 text-sm md:text-base font-medium text-blue-600 hover:bg-blue-50"
                             >
                               {isExpanded
                                 ? "Show less"
@@ -399,18 +399,18 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                         <div className="mt-4">
                           {profile?.matchPercentage !== undefined && (
                             <div className="mb-4 flex items-center justify-between">
-                              <span className="text-sm font-medium text-gray-600">
+                              <span className="text-sm md:text-base font-medium text-gray-600">
                                 Profile Match
                               </span>
 
                               <div
-                                className={`rounded-full border px-3 py-1 text-sm font-semibold ${
+                                className={`rounded-full border px-3 py-1 text-sm md:text-base font-semibold ${
                                   getMatchStyle(profile.matchPercentage)
                                     .className
                                 }`}
                               >
                                 {profile.matchPercentage}%{" "}
-                                <span className="font-medium">
+                                <span className="font-medium text-sm md:text-base">
                                   {getMatchStyle(profile.matchPercentage).text}
                                 </span>
                               </div>
@@ -431,14 +431,14 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
 
                       {type === "recommendation" &&
                         profile?.applicationStatus && (
-                          <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
+                          <button className="rounded-md bg-blue-600 px-2 text-sm md:text-base py-1 text-center text-white">
                             {profile.applicationStatus}
                           </button>
                         )}
 
                       {/* Status */}
                       {type === "applications" && profile?.status && (
-                        <button className="rounded-md bg-blue-600 px-2 py-1 text-center text-white">
+                        <button className="rounded-md text-sm md:text-base bg-blue-600 px-2 py-1 text-center text-white">
                           {profile.status}
                         </button>
                       )}
@@ -460,7 +460,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
                             `updatecandidateInvitestatus-${profile?.userId}`,
                           )}
                           title="View application"
-                          className="inline-flex items-center justify-center gap-2 cursor-pointer rounded bg-blue-600 px-3 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex items-center text-sm md:text-base justify-center gap-2 cursor-pointer rounded bg-blue-600 px-3 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={() => {
                             if (!profile?.status) {
                               handleSatusUpdates({
@@ -488,7 +488,7 @@ const ShowCandidatesProfiles = ({ jobId, type }) => {
               No Applications Available
             </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm md:text-base text-gray-500">
               There are currently no applicants for this job.
             </p>
           </div>

@@ -211,15 +211,6 @@ const DashboardPage = ({ role }) => {
     <main className="bg-gray-100 p-4 md:py-6 md:px-16">
       <FcmTokenRegistrar />
 
-      {/* {role === "worker" && (
-        <section className="w-full m-3">
-          <SearchAndFilter
-            page={page}
-            onClick={() => setSearchActive((prev) => !prev)}
-          />
-        </section>
-      )} */}
-
       {role === "worker" && (
         <section className="w-full m-3">
           <SearchAndFilter
@@ -242,7 +233,7 @@ const DashboardPage = ({ role }) => {
             <h1 className="mb-4 text-2xl font-bold">Analytics</h1>
             <Link
               href="/employerDashboard/dashboard"
-              className="flex items-center gap-2 rounded-md bg-blue-600 px-2 py-2 md:px-3 md:py-3 text-sm font-semibold text-white hover:bg-blue-700"
+              className="flex items-center gap-2 rounded-md bg-blue-600 px-2 py-2 md:px-3 md:py-3 text-sm md:text-base font-semibold text-white hover:bg-blue-700"
             >
               <Plus className="h-5 w-5" />
               Create New Job
@@ -288,7 +279,7 @@ const DashboardPage = ({ role }) => {
           <section className="grid grid-cols-1 md:grid-cols-3 gap-4 ">
             {jobs.map((job) => {
               const details = (
-                <div className="grid gap-1 text-sm text-gray-500 border-t pt-4">
+                <div className="grid gap-1 text-sm md:text-base text-gray-500 border-t pt-4">
                   <p>
                     📍 {job.city}, {job.state}
                   </p>
@@ -349,7 +340,7 @@ const DashboardPage = ({ role }) => {
                             className={`h-3 w-3 rounded-full px-1 py-1 ${getStatusColor(job.status).dot}`}
                           ></span>
                           <p
-                            className={`text-sm font-medium ${getStatusColor(job.status).text}`}
+                            className={`text-sm md:text-base font-medium ${getStatusColor(job.status).text}`}
                           >
                             {job.status}
                           </p>
@@ -408,7 +399,7 @@ const DashboardPage = ({ role }) => {
                   <div
                     className={`flex justify-between border-t pt-4 flex-${role === "worker" ? "row items-center" : "col"}`}
                   >
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm md:text-base text-gray-500">
                       {getPostedText({ createdAt: job.createdAt })}
                     </p>
 
@@ -417,7 +408,7 @@ const DashboardPage = ({ role }) => {
                         <>
                           <div className="flex w-full justify-between items-center m-1">
                             <Link href={`/${role}Dashboard/jobs/${job._id}`}>
-                              <button className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white">
+                              <button className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:text-base md:px-3 md:py-2 text-white">
                                 View Job
                               </button>
                             </Link>
@@ -507,7 +498,7 @@ const DashboardPage = ({ role }) => {
           <h3 className="text-xl font-semibold text-gray-800">
             No jobs available
           </h3>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm md:text-base text-gray-500">
             {role === "employer"
               ? "You haven't posted any jobs for this status yet."
               : "No jobs match your search right now. Try changing your filters or check back later."}
@@ -516,7 +507,7 @@ const DashboardPage = ({ role }) => {
           {role === "employer" && (
             <Link
               href="/employerDashboard/dashboard"
-              className="mt-5 flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="mt-5 flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm md:text-base font-semibold text-white hover:bg-blue-700"
             >
               <Plus className="h-5 w-5" />
               Create New Job

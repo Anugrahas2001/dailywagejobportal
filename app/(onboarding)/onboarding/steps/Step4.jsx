@@ -101,7 +101,8 @@ const Step4 = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 min-h-screen flex items-center bg-gray-100 justify-center px-5 md:px-16 py-10">
+    <div className="max-w-2xl mx-4 space-y-8 px-4 md:mx-auto min-h-screen flex items-center bg-gray-100 justify-center md:px-16 py-10">
+    {/* // <div className="max-w-2xl mx-auto space-y-8 min-h-screen flex items-center bg-gray-100 justify-center px-5 md:px-16 py-10"> */}
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
@@ -137,10 +138,10 @@ const Step4 = () => {
               className="flex flex-col items-center justify-center gap-2 cursor-pointer text-gray-400 hover:text-gray-500 transition-colors p-6 text-center"
             >
               <ImageIcon className="h-10 w-10" />
-              <span className="text-sm font-medium">
+              <span className="text-sm md:text-base font-medium">
                 Click to select a photo
               </span>
-              <span className="text-xs">
+              <span className="text-sm md:text-base">
                 JPG, PNG or WEBP · up to {MAX_FILE_SIZE_MB}MB
               </span>
             </label>
@@ -158,7 +159,9 @@ const Step4 = () => {
         </div>
 
         {error && (
-          <p className="mt-3 text-sm text-red-500 text-center">{error}</p>
+          <p className="mt-3 text-sm md:text-base text-red-500 text-center">
+            {error}
+          </p>
         )}
 
         <div className="mt-6 flex flex-col gap-2">
@@ -166,7 +169,7 @@ const Step4 = () => {
             type="button"
             onClick={handleUpload}
             disabled={uploading || !file}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-300"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm md:text-base font-semibold text-white shadow-sm transition-colors duration-150 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-300"
           >
             {uploading && (
               <svg
@@ -232,7 +235,7 @@ const Step4 = () => {
                   role === "worker" ? "/workerDashboard" : "/employerDashboard",
                 )
               }
-              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-sm md:text-base text-gray-400 hover:text-gray-600 transition-colors"
             >
               Skip for now
             </button>

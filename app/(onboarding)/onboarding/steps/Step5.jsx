@@ -158,40 +158,35 @@ const Step5 = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
+    <div className="max-w-2xl m-8 space-y-8 md:mx-auto bg-gray-100 flex items-center justify-center px-4">
       <div className="w-full max-w-2xl rounded-2xl bg-white shadow-lg border p-8">
+        {/* // <div className="flex-1 w-full flex items-center justify-center bg-gray-100 px-4 py-10">
+    //   <div className="w-full max-w-2xl rounded-2xl bg-white shadow-lg border p-8"> */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             Face Verification
           </h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-2 text-sm md:text-base text-gray-500">
             Take a clear selfie to verify your identity.
           </p>
         </div>
 
         {!active ? (
           <div className="flex flex-col items-center gap-4">
-            {/* <button
-              onClick={() => setActive(true)}
-              className="rounded-lg bg-blue-600 px-8 py-3 text-white font-medium hover:bg-blue-700 transition"
-            >
-              Start Camera
-            </button> */}
-
             <button
               onClick={async () => {
                 setActive(true);
                 await startCamera();
               }}
-              className="rounded-lg bg-blue-600 px-8 py-3 text-white font-medium hover:bg-blue-700 transition"
+              className="rounded-lg text-sm md:text-base bg-blue-600 px-8 py-3 text-white font-medium hover:bg-blue-700 transition"
             >
               Start Face Verification
             </button>
 
             <button
               onClick={handleSkip}
-              className="text-gray-600 hover:text-black"
+              className="text-gray-600 text-sm md:text-base hover:text-black"
             >
               Skip for now
             </button>
@@ -219,7 +214,7 @@ const Step5 = () => {
                 <button
                   disabled={status === "pending" || loading}
                   onClick={capturePhoto}
-                  className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:bg-gray-400"
+                  className="rounded-lg text-sm md:text-base bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:bg-gray-400"
                 >
                   Capture Selfie
                 </button>
@@ -233,7 +228,7 @@ const Step5 = () => {
                 />
 
                 {verificationStatus === "success" && (
-                  <div className="w-full max-w-lg rounded-lg border border-green-300 bg-green-100 p-4 text-center text-green-700 font-medium">
+                  <div className="w-full text-sm md:text-base max-w-lg rounded-lg border border-green-300 bg-green-100 p-4 text-center text-green-700 font-medium">
                     ✅ Face verification successful! Redirecting...
                   </div>
                 )}
@@ -248,7 +243,7 @@ const Step5 = () => {
                           dispatch(clearOnboardingError());
                           retakePhoto();
                         }}
-                        className="absolute right-2 top-2 rounded p-1 text-red-700 hover:bg-red-200"
+                        className="absolute right-2 top-2 rounded p-1 text-sm md:text-base text-red-700 hover:bg-red-200"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -257,7 +252,7 @@ const Step5 = () => {
                     </div>
                     <button
                       onClick={handleSkip}
-                      className="text-gray-600 hover:text-black"
+                      className="text-gray-600 text-sm md:text-base hover:text-black"
                     >
                       Skip for now
                     </button>
@@ -270,18 +265,11 @@ const Step5 = () => {
                       retakePhoto();
                       dispatch(clearOnboardingError());
                     }}
-                    className="rounded-lg border border-gray-300 px-6 py-3 hover:bg-gray-100"
+                    className="rounded-lg border text-sm md:text-base border-gray-300 px-6 py-3 hover:bg-gray-100"
                   >
                     Retake
                   </button>
 
-                  {/* <button
-                    onClick={handleFaceVerification}
-                    disabled={verifying}
-                    className="rounded-lg bg-green-600 px-6 py-3 cursor-pointer text-white hover:bg-green-700"
-                  >
-                    {verifying ? "Verifying Face" : "Verify Face"}
-                  </button> */}
                   {verificationStatus !== "failed" && (
                     <Button
                       loadingText="Verifying Face..."

@@ -43,14 +43,19 @@ export default function Modal({
       return;
     }
 
-    if (role === "worker" || type) {
-      window.location.assign(`/workerDashboard/jobs/${jobId}?type=${type}`);
+    if (role === "worker") {
+      if (type === null) {
+        window.location.assign(`/workerDashboard/jobs/${jobId}`);
+      } else {
+        window.location.assign(`/workerDashboard/jobs/${jobId}?type=${type}`);
+      }
+      return;
     }
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center m-3 justify-center bg-black/50 p-4"
       onClick={() => router.back()}
     >
       <div

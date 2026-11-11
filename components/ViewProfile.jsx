@@ -37,6 +37,7 @@ const ViewProfile = ({
   jobInvitation,
 }) => {
   const [workerData, setWorkerData] = useState({});
+  console.log(workerData, "WORKER DATA DATA WORKER");
   const [jobStatus, setJobStatus] = useState("");
   const { loading, setLoading } = useLoading();
   const [showPayment, setShowPayment] = useState(false);
@@ -249,10 +250,9 @@ const ViewProfile = ({
   };
 
   return (
-    <div className="bg-gray-100 p-4 md:p-8">
+    <div className="max-w-2xl mx-4 my-2 px-4 space-y-8 md:mx-auto bg-gray-100">
       {loading || initialLoading || !workerData ? (
         <div className="mt-2" role="status" aria-busy="true">
-          <span className="sr-only">Loading candidates…</span>
           <div className="motion-safe:animate-pulse" aria-hidden="true">
             <ViewProfileSkeleton />
           </div>
@@ -622,9 +622,10 @@ const ViewProfile = ({
             </section>
           )} */}
 
-          {type === "recommendation" && !workerData?.status && (
+          {type === "recommendation" && (
             <section className="flex justify-center items-center">
-              {jobInvitation === "send" || jobInvitation === "resend" ? (
+              {(jobInvitation === "send" || jobInvitation === "resend") &&
+              !workerData?.status ? (
                 <button
                   disabled={isPending(`sentjobinvite-${userId}`)}
                   aria-busy={isPending(`sentjobinvite-${userId}`)}
@@ -637,21 +638,17 @@ const ViewProfile = ({
                   Send Job Invitation
                 </button>
               ) : (
-                (console.log("CANCEL CANCEL DATA", jobInvitation),
-                console.log({ type, status: workerData?.status, jobInvitation }),
-                (
-                  <button
-                    disabled={isPending(`canceljobinvite-${userId}`)}
-                    aria-busy={isPending(`canceljobinvite-${userId}`)}
-                    title="Job Invitation"
-                    className="m-3 rounded-md bg-blue-600 p-3 text-white"
-                    onClick={() => {
-                      handleCancelJobInvitation({ workerId: userId, jobId });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                ))
+                <button
+                  disabled={isPending(`canceljobinvite-${userId}`)}
+                  aria-busy={isPending(`canceljobinvite-${userId}`)}
+                  title="Job Invitation"
+                  className="m-3 rounded-md bg-blue-600 p-3 text-white"
+                  onClick={() => {
+                    handleCancelJobInvitation({ workerId: userId, jobId });
+                  }}
+                >
+                  Cancel
+                </button>
               )}
             </section>
           )}

@@ -7,7 +7,6 @@ import Step2Skeleton from "@/components/skeltons/Step2Skeleton";
 import {
   JOB_SKILLS,
   JOINING_TYPES,
-  SALARY_CREDIT_TYPES,
   SHIFT_TYPE_OPTIONS,
 } from "@/constants/constant";
 import { clearOnboardingError } from "@/lib/features/profiles/userSlice";
@@ -61,7 +60,7 @@ const Step2 = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-4 space-y-8 md:mx-auto px-4 bg-gray-100">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Complete Your Job Preferences
@@ -147,22 +146,6 @@ const Step2 = () => {
           error={errors.shiftType?.message}
         />
 
-        {/* <SelectField
-          label="Salary Credit Type"
-          options={Object.entries(SALARY_CREDIT_TYPES).map(([key, value]) => ({
-            label: key,
-            value: value,
-          }))}
-          {...register("salaryCreditType", {
-            required: "Please select a salary credit type",
-          })}
-          error={errors.salaryCreditType?.message}
-        /> */}
-
-        {/* {errors.salaryCreditType && (
-          <p className="text-red-500"></p>
-        )} */}
-
         <SelectField
           label="Joining Period"
           options={Object.entries(JOINING_TYPES).map(([key, value]) => ({
@@ -176,14 +159,6 @@ const Step2 = () => {
         />
 
         <div className="flex justify-center w-full">
-          {/* <button
-            disabled={status === "pending"}
-            type="submit"
-            className="w-72 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            {status === "pending" ? "Submitting..." : "Submit"}
-          </button> */}
-
           <Button loadingText="Submitting..." loading={status === "pending"}>
             Submit
           </Button>

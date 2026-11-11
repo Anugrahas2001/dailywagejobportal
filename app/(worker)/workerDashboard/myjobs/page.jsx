@@ -198,52 +198,37 @@ const page = () => {
     new Map(jobs.map((job) => [job._id, job])).values(),
   );
 
+  const jobTabs = [
+    { label: "Saved", value: "Saved" },
+    { label: "Applied", value: "Applied" },
+    { label: "Invitations", value: "JobInvitation" },
+    { label: "Accepted", value: "Accepted" },
+  ];
+
   return (
-    <div className="p-6 m-6 bg-gray-100">
+    <div className="p-6 bg-gray-100">
       {loadingStatus === "pending" || initialLoading ? (
         <MyJobsSkeleton />
       ) : (
         <>
-          <div className="flex">
-            <button
-              onClick={() => {
-                handleJobStatus("Saved");
-              }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Saved" ? "bg-blue-500" : "bg-gray-400"}`}
-            >
-              Saved
-            </button>
-            <button
-              onClick={() => {
-                handleJobStatus("Applied");
-              }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Applied" ? "bg-blue-500" : "bg-gray-400"}`}
-            >
-              Applied
-            </button>
-
-            <button
-              // onClick={handleJobInvitations}
-              onClick={() => {
-                handleJobStatus("JobInvitation");
-              }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "JobInvitation" ? "bg-blue-500" : "bg-gray-400"}`}
-            >
-              Invitations
-            </button>
-            <button
-              // onClick={handleJobInvitations}
-              onClick={() => {
-                handleJobStatus("Accepted");
-              }}
-              className={`px-3 py-1 rounded-lg m-2 hover:bg-blue-500 text-white ${jobType === "Accepted" ? "bg-blue-500" : "bg-gray-400"}`}
-            >
-              Accepted
-            </button>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:flex md:justify-center md:gap-3">
+            {jobTabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => handleJobStatus(tab.value)}
+                className={`px-3 py-2 md:px-6 md:py-2.5 text-sm md:text-base font-medium rounded-lg transition-colors duration-150 ${
+                  jobType === tab.value
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
           {jobType !== "JobInvitation" && jobType !== "Accepted" && (
             <div className="relative inline-block">
-              <div className="flex items-center gap-2 mt-3">
+              {/* <div className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center md:gap-3 md:justify-start">
                 {jobType === "Applied" && (
                   <FilterButtons
                     title="Status"
@@ -254,6 +239,39 @@ const page = () => {
                     defaultLabel="APPLIED"
                     // statusVal="Applied"
                     // value="Applied"
+                    options={APPLIED_JOB_STATUS}
+                    onClick={() => {
+                      dispatch(fetchAppliedJobs({ sort, status, page }));
+                    }}
+                  />
+                )}
+
+                <FilterButtons
+                  title="Sort"
+                  setDropdownStatus={setShowSortDropdown}
+                  dropDown={showSortDropdown}
+                  setValue={setSort}
+                  value={sort}
+                  defaultLabel={defaultLabel}
+                  onClick={() => {
+                    if (jobType === "Applied") {
+                      dispatch(fetchAppliedJobs({ sort, status, page }));
+                    } else {
+                      dispatch(fetchSavedJobs({ sort, page }));
+                    }
+                  }}
+                  options={sortOptions}
+                />
+              </div> */}
+              <div className="mt-3 grid md:grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center md:gap-3 md:justify-start">
+                {jobType === "Applied" && (
+                  <FilterButtons
+                    title="Status"
+                    setDropdownStatus={setShowStatusDropdown}
+                    dropDown={showStatusDropdown}
+                    value={status}
+                    setValue={setStatus}
+                    defaultLabel="APPLIED"
                     options={APPLIED_JOB_STATUS}
                     onClick={() => {
                       dispatch(fetchAppliedJobs({ sort, status, page }));
@@ -410,9 +428,38 @@ const page = () => {
                       </div>
                     ) : (
                       // jobInviteType === "sent" && (
-                      <div className="flex justify-between mt-3">
+                      // <div className="flex justify-between mt-3">
+                      //   <button
+                      //     className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                      //     onClick={() => {
+                      //       handleJobInvitationStatus({
+                      //         status: "Rejected",
+                      //         jobId: job._id,
+                      //         employerId: job.employerId,
+                      //         page: 1,
+                      //       });
+                      //     }}
+                      //   >
+                      //     Reject
+                      //   </button>
+
+                      //   <button
+                      //     className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                      //     onClick={() => {
+                      //       handleJobInvitationStatus({
+                      //         status: "Accepted",
+                      //         jobId: job._id,
+                      //         employerId: job.employerId,
+                      //         page: 1,
+                      //       });
+                      //     }}
+                      //   >
+                      //     Accept
+                      //   </button>
+                      // </div>
+                      <div className="mt-auto flex justify-between border-t border-gray-200 pt-4">
                         <button
-                          className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                          className="cursor-pointer rounded-sm bg-blue-600 p-2 text-white"
                           onClick={() => {
                             handleJobInvitationStatus({
                               status: "Rejected",
@@ -426,7 +473,7 @@ const page = () => {
                         </button>
 
                         <button
-                          className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                          className="cursor-pointer rounded-sm bg-blue-600 p-2 text-white"
                           onClick={() => {
                             handleJobInvitationStatus({
                               status: "Accepted",
@@ -453,11 +500,11 @@ const page = () => {
                   <p className="mt-2 text-sm text-gray-500">
                     {`You haven't ${getMessage(jobType)} any jobs yet.`}
                   </p>
-                  <Link href="/employerDashboard/dashboard">
+                  {/* <Link href="/employerDashboard/dashboard">
                     <button className="mt-6 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
                       Create Job
                     </button>
-                  </Link>
+                  </Link> */}
                 </div>
               </div>
             )}

@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { verifyLogin } from "@/lib/features/profiles/userThunk";
 import Button from "./Button";
 import { clearJobsError } from "@/lib/features/jobs/jobSlice";
+import OpeningSkeleton from "./skeltons/OpeningSkeleton";
 
 // Demo credentials, prefilled when a role is selected.
 // Replace these with real demo accounts from your Firebase project.
@@ -153,7 +154,8 @@ const OpeningPage = () => {
   // 4. Loading while authentication is being checked
   // --------------------------------------------------
   if (!authChecked) {
-    return <Loading />;
+    // return <Loading />;
+    return <OpeningSkeleton />;
   }
 
   return (
@@ -166,7 +168,7 @@ const OpeningPage = () => {
               <button
                 type="button"
                 onClick={handleChangeRole}
-                className="text-blue-600 hover:underline text-base md:text-lg"
+                className="text-blue-600 hover:underline text-sm md:text-base"
               >
                 Change role
               </button>
@@ -177,7 +179,7 @@ const OpeningPage = () => {
             Welcome to Work Now
           </h1>
 
-          <h3 className="mt-2 text-center text-red-700 font-medium">
+          <h3 className="mt-2 text-center text-red-700 text-sm md:text-base font-medium">
             {selectedRole
               ? "Enter your details to continue"
               : "Select Your Role"}
@@ -195,7 +197,9 @@ const OpeningPage = () => {
                 <h2 className="mt-3 text-lg font-semibold text-black">
                   {r.title}
                 </h2>
-                <p className="text-sm text-slate-500">{r.description}</p>
+                <p className="text-sm md:text-base text-slate-500">
+                  {r.description}
+                </p>
               </div>
             ))}
           </div>
@@ -203,16 +207,16 @@ const OpeningPage = () => {
           {/* Demo credentials directly below the selected icon */}
           {selectedRole && (
             <div className="mt-6 w-full max-w-sm mx-auto text-center">
-              <p className="text-base text-slate-600">
+              <p className="text-sm md:text-base text-slate-600">
                 Try the app with these demo credentials
               </p>
 
-              <div className="mt-3 rounded-xl border flex flex-col justify-between border-gray-200 bg-white p-4 text-left text-sm shadow-sm space-y-2">
-                <p className="text-slate-700">
+              <div className="mt-3 rounded-xl border flex flex-col justify-between border-gray-200 bg-white p-4 text-left text-sm md:text-base shadow-sm space-y-2">
+                <p className="text-slate-700 text-sm md:text-base">
                   <span className="font-semibold">Email: </span>
                   {`demo${selectedRole}@gmail.com`}
                 </p>
-                <p className="text-slate-700">
+                <p className="text-slate-700 text-sm md:text-base">
                   <span className="font-semibold">Password: </span>
                   {`Demo${selectedRole}@01`}
                 </p>

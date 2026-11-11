@@ -102,7 +102,7 @@ const Step3 = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 bg-gray-100">
+    <div className="max-w-2xl mx-4 px-4 space-y-8 md:mx-auto bg-gray-100">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Tell Us About Your Skills
@@ -138,7 +138,7 @@ const Step3 = () => {
 
         {skillsRequired.length > 0 && (
           <div className="md:col-span-2 mt-4">
-            <p className="mb-2 block text-sm font-medium">Required Skills</p>
+            <p className="mb-2 block text-sm md:text-base font-semibold">Required Skills</p>
 
             <div className="flex flex-wrap gap-2 w-full mt-4">
               {skillsRequired.map((item) => (
@@ -146,7 +146,7 @@ const Step3 = () => {
                   key={item}
                   onClick={() => setSkill(item)}
                   type="button"
-                  className={`rounded-full border px-4 py-2 text-sm transition cursor-pointer ${
+                  className={`rounded-full border px-4 py-2 text-sm md:text-base transition cursor-pointer ${
                     skill === item
                       ? "bg-blue-600 text-white border-blue-600"
                       : "bg-white text-gray-700 hover:bg-blue-50"
@@ -165,7 +165,7 @@ const Step3 = () => {
           value={skill}
           onChange={(e) => setSkill(e.target.value)}
           placeholder="Or type your own skill"
-          className="w-full rounded-lg border px-3 py-2 text-sm"
+          className="w-full rounded-lg border px-3 py-2 text-sm md:text-base"
         />
 
         <div className="px-4">
@@ -177,7 +177,7 @@ const Step3 = () => {
             {Object.entries(EXPERIENCE_LEVELS).map(([key, value]) => (
               <label
                 key={key}
-                className="flex items-center gap-2 cursor-pointer"
+                className="flex items-center gap-2 cursor-pointer text-sm md:text-base"
               >
                 <input
                   type="radio"
@@ -194,13 +194,13 @@ const Step3 = () => {
 
         <button
           type="button"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-white"
+          className="rounded-lg bg-blue-600 px-4 py-2 text-sm md:text-base text-white"
           onClick={handleSkillCreation}
         >
           + Add Skill
         </button>
 
-        {formError && <p className="text-sm text-red-500">{formError}</p>}
+        {formError && <p className="text-sm md:text-base text-red-500">{formError}</p>}
       </div>
 
       {/* Cards */}
@@ -210,24 +210,24 @@ const Step3 = () => {
             <div key={item.skill} className="rounded-lg border">
               <div className="flex justify-center pt-3">
                 <h2>Skill:</h2>
-                <h2 className="mx-2">{item.skill}</h2>
+                <h2 className="mx-2 text-sm md:text-base">{item.skill}</h2>
               </div>
               <div className="flex justify-center">
                 <h2>Experience:</h2>
-                <h2 className="mx-2">{item.experience}</h2>
+                <h2 className="mx-2 text-sm md:text-base">{item.experience}</h2>
               </div>
               <div className="flex justify-center gap-2 m-3">
                 <button
                   type="button"
                   onClick={() => handleEdit(index)}
-                  className="rounded-lg bg-blue-600 px-3 py-1 text-white"
+                  className="rounded-lg bg-blue-600 px-3 py-1 text-sm md:text-base text-white"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDelete(index)}
-                  className="rounded-lg bg-blue-600 px-3 py-1 text-white"
+                  className="rounded-lg bg-blue-600 text-sm md:text-base px-3 py-1 text-white"
                 >
                   Delete
                 </button>
@@ -237,7 +237,7 @@ const Step3 = () => {
         </div>
       )}
 
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm md:text-base text-gray-500">
         {skills.length}/{MAX_SKILLS} skills added (minimum {MIN_SKILLS})
       </p>
 

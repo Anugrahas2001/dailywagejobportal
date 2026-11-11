@@ -160,10 +160,10 @@ const Step1 = () => {
   };
 
   const fieldWrapper = "flex flex-col gap-1.5 w-full";
-  const fieldLabel = "text-sm font-medium text-gray-700";
+  const fieldLabel = "text-sm md:text-base font-medium text-gray-700";
   const fieldInput =
-    "w-full rounded-lg border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
-  const fieldError = "text-red-500 text-sm";
+    "w-full rounded-lg border bg-white px-3 py-2 text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500";
+  const fieldError = "text-red-500 text-sm md:text-base";
   const borderFor = (hasError) =>
     hasError ? "border-red-500" : "border-gray-300";
 
@@ -172,7 +172,7 @@ const Step1 = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8">
+    <div className="max-w-2xl mx-4 px-4 space-y-8 md:mx-auto bg-gray-100">
       <div className="mb-8 mt-6">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
           Complete Your Profile
@@ -263,7 +263,7 @@ const Step1 = () => {
           </label>
 
           <div className="flex gap-2">
-            <div className="flex items-center justify-center rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 select-none">
+            <div className="flex items-center justify-center rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm md:text-base font-medium text-gray-700 select-none">
               +91
             </div>
 
@@ -330,7 +330,7 @@ const Step1 = () => {
         <div className="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2">
           <label
             htmlFor="use-current-location"
-            className="text-sm font-medium text-gray-700 cursor-pointer"
+            className="text-sm md:text-base font-medium text-gray-700 cursor-pointer"
           >
             Use Current Location
           </label>
@@ -341,7 +341,7 @@ const Step1 = () => {
             role="switch"
             aria-checked={useCurrentLocation}
             onClick={handleToggle}
-            className={`relative h-6 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500 cursor-pointer ${
+            className={`relative h-6 w-12 text-sm md:text-base shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500 cursor-pointer ${
               useCurrentLocation ? "bg-green-500" : "bg-gray-300"
             }`}
           >
@@ -349,7 +349,7 @@ const Step1 = () => {
               {useCurrentLocation ? "Disable" : "Enable"} current location
             </span>
             <span
-              className={`pointer-events-none absolute top-1 left-0 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
+              className={`pointer-events-none text-sm md:text-base absolute top-1 left-0 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
                 useCurrentLocation ? "translate-x-7" : "translate-x-1"
               }`}
             />
@@ -429,7 +429,7 @@ const Step1 = () => {
         />
 
         {/* Submit */}
-        <div className="flex justify-center w-full pt-2 pb-6">
+        <div className="flex justify-center w-full pt-2">
           <Button loadingText="Submitting..." loading={status === "pending"}>
             Submit
           </Button>
@@ -445,288 +445,3 @@ const Step1 = () => {
 };
 
 export default Step1;
-
-// return (
-//   <div className="mx-5 md:mx-16">
-//     <div className="mb-8 mt-6">
-//       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-//         Complete Your Profile
-//       </h1>
-//       <p className="mt-2 text-sm md:text-base text-gray-500">
-//         {/* Tell us a bit about yourself so we can personalize your experience. */}
-//         Please provide your personal details to set up your account.
-//       </p>
-//     </div>
-//     <form onSubmit={handleSubmit(handleStep1Onboarding)}>
-//       <InputField
-//         label="Name"
-//         placeholder="Enter Your Name"
-//         {...register("name", {
-//           required: "Name is required",
-//           minLength: {
-//             value: 3,
-//             message: "Name must be at least 3 characters",
-//           },
-//           maxLength: {
-//             value: 50,
-//             message: "Name cannot exceed 50 characters",
-//           },
-//           pattern: {
-//             value: /^[A-Za-z ]+$/,
-//             message: "Only alphabets are allowed",
-//           },
-//           validate: (value) =>
-//             value.trim().length > 0 || "Name cannot be empty",
-//         })}
-//         error={errors.name?.message}
-//       />
-
-//       <SelectField
-//         label="Gender"
-//         options={Object.entries(GENDER_TYPES).map(([key, value]) => ({
-//           label: key,
-//           value: value,
-//         }))}
-//         placeholder={"Select a gender"}
-//         {...register("gender", {
-//           required: "Please select a gender",
-//         })}
-//         error={errors.gender?.message}
-//       />
-
-//       {/* {errors.gender && <p></p>} */}
-
-//       <div className="flex flex-col gap-1.5 w-full">
-//         <label htmlFor="dob" className="text-sm font-medium">
-//           Date of Birth
-//         </label>
-
-//         <Controller
-//           name="dob"
-//           control={control}
-//           rules={{
-//             required: "Date of birth is required",
-//             validate: (value) => {
-//               if (!value) return "Date of birth is required";
-
-//               const today = new Date();
-//               let age = today.getFullYear() - value.getFullYear();
-//               const monthDiff = today.getMonth() - value.getMonth();
-//               const dayDiff = today.getDate() - value.getDate();
-
-//               // Adjust age if birthday hasn't occurred yet this year
-//               if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
-//                 age--;
-//               }
-
-//               if (age < 18) {
-//                 return "You must be at least 18 years old";
-//               }
-
-//               return true;
-//             },
-//           }}
-//           render={({ field }) => (
-//             <DatePicker
-//               id="dob"
-//               value={field.value}
-//               onChange={field.onChange}
-//               className={`border rounded-md px-3 py-2 text-sm ${
-//                 errors.dob ? "border-red-500" : "border-gray-300"
-//               }`}
-//             />
-//           )}
-//         />
-
-//         {errors.dob && (
-//           <p className="text-red-500 text-sm mt-1">{errors.dob.message}</p>
-//         )}
-//       </div>
-
-//       <div>
-//         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-//           Mobile Number
-//           <span className="text-gray-400 font-normal"> (optional)</span>
-//         </label>
-
-//         <div className="flex gap-2">
-//           {/* Fixed country code display */}
-//           <div className="flex items-center justify-center rounded-lg border bg-gray-50 px-3 text-sm font-medium text-gray-700 select-none">
-//             +91
-//           </div>
-
-//           {/* Hidden field to send code along with the form data */}
-//           <InputField
-//             type="hidden"
-//             value="+91"
-//             {...register("mobileNumber.code")}
-//           />
-
-//           <InputField
-//             type="tel"
-//             placeholder="Enter 10-digit mobile number"
-//             maxLength={10}
-//             className={`flex-1 rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-//               errors.mobileNumber?.number
-//                 ? "border-red-500"
-//                 : "border-gray-300"
-//             }`}
-//             {...register("mobileNumber.number", {
-//               validate: (value) => {
-//                 if (!value) return true; // optional — empty is fine
-//                 if (!/^[6-9]\d{9}$/.test(value)) {
-//                   return "Enter a valid 10-digit mobile number";
-//                 }
-//                 return true;
-//               },
-//             })}
-//           />
-//         </div>
-
-//         {errors.mobileNumber?.number && (
-//           <p className="text-red-500 text-sm mt-1">
-//             {errors.mobileNumber.number.message}
-//           </p>
-//         )}
-//       </div>
-//       <InputField
-//         label="Years Of Experience"
-//         type="number"
-//         placeholder="Enter your total work experience"
-//         min={0}
-//         max={80}
-//         step={1}
-//         {...register("yearsOfExperience", {
-//           required: "Years of experience is required",
-//           valueAsNumber: true,
-//           min: {
-//             value: 0,
-//             message: "Years of experience cannot be negative",
-//           },
-//           max: { value: 80, message: "Years of experience cannot exceed 80" },
-//           validate: (value) =>
-//             Number.isInteger(value) || "Please enter a whole number",
-//         })}
-//         error={errors.yearsOfExperience?.message}
-//       />
-
-//       <div className="flex items-center justify-between rounded-lg border p-2 mb-4">
-//         <label
-//           htmlFor="use-current-location"
-//           className="text-sm font-medium cursor-pointer"
-//         >
-//           Use Current Location
-//         </label>
-
-//         <button
-//           type="button"
-//           id="use-current-location"
-//           role="switch"
-//           aria-checked={useCurrentLocation}
-//           onClick={handleToggle}
-//           className={`relative h-6 w-12 shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-green-500 cursor-pointer ${
-//             useCurrentLocation ? "bg-green-500" : "bg-gray-300"
-//           }`}
-//         >
-//           <span className="sr-only">
-//             {useCurrentLocation ? "Disable" : "Enable"} current location
-//           </span>
-//           <span
-//             className={`pointer-events-none absolute top-1 left-0 h-4 w-4 rounded-full bg-white shadow-md transition-transform duration-200 ease-in-out ${
-//               useCurrentLocation ? "translate-x-7" : "translate-x-1"
-//             }`}
-//           />
-//         </button>
-//       </div>
-
-//       <InputField
-//         label="City"
-//         placeholder="Enter Your City"
-//         {...register("city", {
-//           required: "City is required",
-//           minLength: {
-//             value: 2,
-//             message: "City name must be at least 2 characters",
-//           },
-//           maxLength: {
-//             value: 50,
-//             message: "City name cannot exceed 50 characters",
-//           },
-//           pattern: {
-//             value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
-//             message: "State can only contain letters and single spaces",
-//           },
-//           validate: (value) =>
-//             value.trim().length > 0 || "State cannot be empty",
-//         })}
-//         error={errors.city?.message}
-//       />
-
-//       <InputField
-//         label="State"
-//         placeholder="Enter Your State"
-//         {...register("state", {
-//           required: "State is required",
-//           minLength: {
-//             value: 2,
-//             message: "State must be at least 2 characters long",
-//           },
-//           maxLength: {
-//             value: 50,
-//             message: "State cannot exceed 50 characters",
-//           },
-//           pattern: {
-//             value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
-//             message: "State can only contain letters and single spaces",
-//           },
-//           validate: (value) =>
-//             value.trim().length > 0 || "State cannot be empty",
-//         })}
-//         error={errors.state?.message}
-//       />
-
-//       <div>
-//         <InputField
-//           label="Country"
-//           placeholder="Enter Your Country"
-//           {...register("country", {
-//             required: "Country is required",
-//             minLength: {
-//               value: 2,
-//               message: "Country name must be at least 2 characters long",
-//             },
-//             maxLength: {
-//               value: 50,
-//               message: "Country name cannot exceed 50 characters",
-//             },
-//             pattern: {
-//               value: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
-//               message: "Country can only contain letters and single spaces",
-//             },
-//             validate: (value) =>
-//               value.trim().length > 0 || "Country cannot be empty",
-//           })}
-//           error={errors.country?.message}
-//         />
-//       </div>
-
-//       <div className="flex justify-center w-full">
-//         {/* <button
-//           disabled={status === "pending"}
-//           type="submit"
-//           className="w-72 rounded-lg cursor-pointer bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
-//         >
-//           {status === "pending" ? "Submitting..." : "Submit"}
-//         </button> */}
-
-//         <Button loadingText="Submitting..." loading={status === "pending"}>
-//           Submit
-//         </Button>
-//       </div>
-//     </form>
-//     {(status === "pending" || loading) && <Loading />}
-//     {error && (
-//       <Error error={error} onClick={() => dispatch(clearOnboardingError())} />
-//     )}
-//   </div>
-// );

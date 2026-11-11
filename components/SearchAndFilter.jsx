@@ -2,7 +2,7 @@
 
 import { filterOptions } from "@/constants/constant";
 import { fetchSearchAndFilterResults } from "@/lib/features/searchFilter/searchJobsThunk";
-import { SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
@@ -140,19 +140,24 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
             onChange={handleInputChange}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Enter here..."
-            className="w-full rounded-lg py-2 outline-none md:px-3"
+            className="w-full rounded-lg py-2 text-sm outline-none md:px-3"
           />
         </div>
 
         <button
           type="button"
           onClick={handleSearch}
-          className={` mr-1 flex items-center gap-2 rounded-lg
-            border border-gray-300
-            px-2 py-2
-            hover:bg-gray-100
-            md:mr-2 md:px-4 ${showFilter && "bg-blue-500"}`}
+          aria-label="Search"
+          className={`mr-1 flex items-center gap-2 rounded-lg
+    border border-gray-300
+    px-2 py-2
+    hover:bg-gray-100 text-sm
+    md:mr-2 md:px-4 ${showFilter ? "bg-blue-500" : ""}`}
         >
+          {/* Mobile: icon only */}
+          <Search className="h-4 w-4 sm:hidden" />
+
+          {/* Desktop: text only */}
           <span className="hidden sm:inline">Search</span>
         </button>
         <SlidersHorizontal
@@ -218,7 +223,7 @@ const SearchAndFilter = ({ page, onClick, onClear }) => {
                       className="
         ml-1 flex h-4 w-4 cursor-pointer
         items-center justify-center
-        rounded-full text-xs
+        rounded-full text-sm
         text-white/80
         hover:bg-white/20 hover:text-white
       "

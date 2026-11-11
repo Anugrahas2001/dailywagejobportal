@@ -10,10 +10,11 @@ import useLoading from "./hooks/useLoading";
 import { PAGE_SIZE } from "@/constants/constant";
 import Error from "./Error";
 import useError from "./hooks/useError";
+import { BellOff } from "lucide-react";
 
 const ShowNotifications = () => {
   const [notifications, setNotifications] = useState([]);
-   const {error, setError}=useError();
+  const { error, setError } = useError();
   const { loading, setLoading } = useLoading();
   const {
     page,
@@ -24,7 +25,8 @@ const ShowNotifications = () => {
     isPending,
     initialLoading,
     setInitialLoading,
-    totalCount, setTotalCount
+    totalCount,
+    setTotalCount,
   } = useControls();
   const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 0;
 
@@ -158,20 +160,31 @@ const ShowNotifications = () => {
   // );
 
   return (
-    <div className="mx-auto mt-4 flex w-full bg-gray-100 max-w-2xl flex-col gap-3">
+    <div className="mx-auto mt-4 flex w-full my-2 bg-gray-100 max-w-2xl flex-col gap-3">
       {initialLoading || loading ? (
         <NotificationsListSkeleton />
       ) : (
         <>
           {notifications.length === 0 ? (
-            <p className="py-10 text-center text-sm text-gray-500">
-              No notifications yet
-            </p>
+            <div className="flex flex-col bg-white items-center rounded-md m-3 justify-center px-6 py-12 text-center md:py-16">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 md:h-20 md:w-20">
+                <BellOff className="h-8 w-8 text-blue-500 md:h-10 md:w-10" />
+              </div>
+
+              <h3 className="text-base font-semibold text-gray-900 md:text-lg">
+                No notifications yet
+              </h3>
+
+              <p className="mt-1 max-w-xs text-sm text-gray-500 md:text-base">
+                When you get job updates, invitations, or messages, they'll show
+                up here.
+              </p>
+            </div>
           ) : (
             notifications.map((notif) => (
               <div
                 key={notif?._id}
-                className={`group relative flex items-start cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                className={`group relative flex items-start text-sm cursor-pointer gap-4 overflow-hidden rounded-2xl border p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
                   notif?.isRead
                     ? "border-gray-100 bg-white"
                     : "border-indigo-100 bg-indigo-50/60"
@@ -200,7 +213,7 @@ const ShowNotifications = () => {
                     <h3 className="truncate text-sm font-semibold text-gray-900">
                       {notif?.title}
                     </h3>
-                    <span className="shrink-0 whitespace-nowrap text-xs font-medium text-gray-400">
+                    <span className="shrink-0 whitespace-nowrap text-xs md:text-sm font-medium text-gray-400">
                       {timeAgo(notif?.createdAt)}
                     </span>
                   </div>

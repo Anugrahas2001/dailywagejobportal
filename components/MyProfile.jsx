@@ -126,8 +126,10 @@ const PREFERENCE_FIELDS = [
   },
 ];
 
+console.log(PREFERENCE_FIELDS, "PREFERENCE DATA VALUES");
+
 const inputClass =
-  "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 " +
+  "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm md:text-base text-gray-900 " +
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-600";
 
 /* ---------- small building blocks ---------- */
@@ -144,7 +146,9 @@ const SectionHeader = ({ title, subtitle, onEdit, editLabel }) => (
   <div className="flex items-start justify-between gap-3">
     <div>
       <h2 className="text-lg font-bold text-gray-900">{title}</h2>
-      {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
+      {subtitle && (
+        <p className="mt-0.5 text-sm md:text-base text-gray-500">{subtitle}</p>
+      )}
     </div>
     {onEdit && (
       <button
@@ -242,7 +246,9 @@ const PreferenceRow = ({ field, source, isEditing, onChange }) => {
     <div className="flex items-start gap-3">
       <Icon className="mt-1 h-5 w-5 text-gray-400" />
       <div className="min-w-0 flex-1">
-        <span className="text-sm text-gray-500">{field.label}</span>
+        <span className="text-sm md:text-base text-gray-500">
+          {field.label}
+        </span>
         {isEditing ? (
           renderEditor()
         ) : (
@@ -258,7 +264,7 @@ const PreferenceRow = ({ field, source, isEditing, onChange }) => {
 const Stat = ({ value, label }) => (
   <div className="rounded-xl border border-gray-200 bg-white p-4 text-center shadow-sm">
     <p className="text-2xl font-bold text-gray-900">{value ?? "–"}</p>
-    <p className="mt-1 text-sm text-gray-500">{label}</p>
+    <p className="mt-1 text-sm md:text-base text-gray-500">{label}</p>
   </div>
 );
 
@@ -276,7 +282,7 @@ const ContactRow = ({
       <Icon className="h-5 w-5" />
     </div>
     <div className="min-w-0 flex-1">
-      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-sm md:text-base text-gray-500">{label}</p>
       {editor ?? (
         <p
           className={`mt-0.5 font-medium text-gray-900 ${breakAll ? "break-all" : ""}`}
@@ -741,13 +747,13 @@ const MyProfile = () => {
 
   const workerDetails = [
     { label: "Experience", value: user?.yearsOfExperience },
-    { label: "Jobs done", value: profile?.jobsDone ?? "–" },
-    { label: "Saved jobs", value: profile?.savedJobs ?? 0 },
-    { label: "Job invitations", value: profile?.jobInvitations ?? 0 },
+    { label: "Jobs Done", value: profile?.jobsDone ?? 0 },
+    { label: "Saved Jobs", value: profile?.savedJobs ?? 0 },
+    { label: "Job Invitations", value: profile?.jobInvitations ?? 0 },
   ];
 
   const employerDetails = [
-    { label: "Job Posted", value: jobCounts?.All??0 },
+    { label: "Job Posted", value: jobCounts?.All ?? 0 },
     { label: "Active Jobs", value: jobCounts?.Active ?? 0 },
     { label: "Paused Jobs", value: jobCounts?.Paused ?? 0 },
     { label: "Completed Jobs", value: jobCounts?.Completed ?? 0 },
@@ -756,14 +762,14 @@ const MyProfile = () => {
   const statsData = userRole === "worker" ? workerDetails : employerDetails;
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="max-w-2xl mx-4 px-4 my-2 space-y-8 md:mx-auto bg-gray-100">
       <div className="mx-auto max-w-5xl space-y-5">
         {/* Header */}
         <Card className="relative p-6">
           {userRole === "worker" && (
             <select
-              className="absolute right-4 top-4 rounded-lg p-2 text-sm bg-green-500"
-              value={workingStatus}
+              className="absolute right-4 top-4 rounded-lg p-2 text-sm md:text-base bg-green-500"
+              value={workingStatus ?? ""}
               onChange={(e) => handleWorkingStatusUpdate(e.target.value)}
             >
               {Object.values(WORKER_WORKING_STATUS).map((status) => (
@@ -795,7 +801,7 @@ const MyProfile = () => {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                   aria-label="Change profile photo"
-                  className="absolute bottom-0 right-0 rounded-full bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
+                  className="absolute bottom-0 right-0 rounded-full text-sm md:text-base bg-white p-2 text-gray-700 shadow-md ring-1 ring-gray-200 hover:bg-gray-100 disabled:opacity-50"
                 >
                   <Camera className="h-5 w-5" />
                 </button>
@@ -819,7 +825,7 @@ const MyProfile = () => {
                     type="button"
                     onClick={handleRemove}
                     disabled={uploading}
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm md:text-base font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -828,7 +834,7 @@ const MyProfile = () => {
                     type="button"
                     onClick={handleUpload}
                     disabled={uploading || !file}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm md:text-base font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {uploading ? "Uploading..." : "Save photo"}
                   </button>
@@ -836,7 +842,10 @@ const MyProfile = () => {
               )}
 
               {error && (
-                <p role="alert" className="mt-3 text-sm text-red-600">
+                <p
+                  role="alert"
+                  className="mt-3 text-sm md:text-base text-red-600"
+                >
                   {error}
                 </p>
               )}
@@ -853,7 +862,7 @@ const MyProfile = () => {
                 />
               )}
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-gray-500">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm md:text-base text-gray-500">
               {pref.jobTitle && (
                 <span className="font-medium capitalize text-gray-700">
                   {pref.jobTitle}
@@ -866,7 +875,7 @@ const MyProfile = () => {
               )}
               {age !== null && <span>{age} yrs old</span>}
             </div>
-            <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm">
+            <div className="mt-3 flex flex-wrap justify-center gap-4 text-sm md:text-base">
               {salary && (
                 <span className="font-semibold text-green-600">{salary}</span>
               )}
@@ -888,7 +897,7 @@ const MyProfile = () => {
                 value={editedText}
                 onChange={(e) => setEditedText(e.target.value)}
                 rows={4}
-                className="mt-3 w-full rounded-lg border border-gray-200 p-3"
+                className="mt-3 w-full rounded-lg border text-sm md:text-base border-gray-200 p-3"
               />
               <div className="mt-2 flex gap-2">
                 <button
@@ -910,7 +919,7 @@ const MyProfile = () => {
               </div>
             </>
           ) : (
-            <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-gray-700">
+            <p className="mt-3 whitespace-pre-line text-sm md:text-base leading-relaxed text-gray-700">
               {bio || <span className="text-gray-400">No bio added yet.</span>}
             </p>
           )}
@@ -934,10 +943,10 @@ const MyProfile = () => {
               <Card>
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="font-semibold text-gray-900">
+                    <h2 className="font-semibold text-lg text-gray-900">
                       Profile completeness
                     </h2>
-                    <p className="mt-0.5 text-sm text-gray-500">
+                    <p className="mt-0.5 text-sm md:text-base text-gray-500">
                       Complete your profile to get better job matches.
                     </p>
                   </div>
@@ -959,7 +968,7 @@ const MyProfile = () => {
                   />
                 </div>
                 {missing.length > 0 && (
-                  <p className="mt-3 text-sm text-gray-600">
+                  <p className="mt-3 text-sm md:text-base text-gray-600">
                     Still missing:{" "}
                     <span className="font-medium">{missing.join(", ")}</span>
                   </p>
@@ -1003,7 +1012,7 @@ const MyProfile = () => {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-5 rounded-xl border border-dashed border-gray-300 p-4 text-sm text-gray-500">
+                <p className="mt-5 rounded-xl border border-dashed border-gray-300 p-4 text-sm md:text-base text-gray-500">
                   No skills added yet. Add your skills so employers can find
                   you.
                 </p>
@@ -1019,7 +1028,7 @@ const MyProfile = () => {
                           key={item}
                           type="button"
                           onClick={() => setSkill(item)}
-                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                          className={`cursor-pointer rounded-full border px-4 py-2 text-sm md:text-base transition ${
                             skill === item
                               ? "border-blue-600 bg-blue-600 text-white"
                               : "border-gray-300 bg-white text-gray-700 hover:bg-blue-50"
@@ -1030,7 +1039,7 @@ const MyProfile = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm md:text-base text-gray-500">
                       Choose a job category in your job preferences to see
                       suggested skills.
                     </p>
@@ -1053,7 +1062,9 @@ const MyProfile = () => {
                             onChange={(e) => setExperience(e.target.value)}
                             className="accent-blue-600"
                           />
-                          <span className="text-sm text-gray-700">{key}</span>
+                          <span className="text-sm md:text-base text-gray-700">
+                            {key}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -1078,14 +1089,14 @@ const MyProfile = () => {
                   <button
                     type="button"
                     onClick={handleRemoveSkills}
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm md:text-base font-medium text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveSkills}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm md:text-base font-medium text-white hover:bg-indigo-700"
                   >
                     Save
                   </button>
@@ -1114,7 +1125,7 @@ const MyProfile = () => {
               </div>
 
               {/* {prefError && (
-            <p role="alert" className="mt-4 text-sm text-red-600">
+            <p role="alert" className="mt-4 text-sm md:text-base text-red-600">
               {prefError}
             </p>
           )} */}
@@ -1124,14 +1135,14 @@ const MyProfile = () => {
                   <button
                     type="button"
                     onClick={handleCancel}
-                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="rounded-lg border border-gray-300 px-4 py-2 text-sm md:text-base font-medium text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={handleSave}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm md:text-base font-medium text-white hover:bg-indigo-700"
                   >
                     Save
                   </button>
@@ -1171,7 +1182,7 @@ const MyProfile = () => {
                   <div>
                     <div className="mt-1 flex items-center gap-2">
                       {user?.mobileNumber?.code && (
-                        <span className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
+                        <span className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm md:text-base text-gray-600">
                           {user.mobileNumber.code}
                         </span>
                       )}
@@ -1198,14 +1209,14 @@ const MyProfile = () => {
                       <button
                         type="button"
                         onClick={handleCancelPhone}
-                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm md:text-base font-medium text-gray-700 hover:bg-gray-50"
                       >
                         Cancel
                       </button>
                       <button
                         type="button"
                         onClick={handleSavePhone}
-                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700"
+                        className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm md:text-base font-medium text-white hover:bg-indigo-700"
                       >
                         Save
                       </button>

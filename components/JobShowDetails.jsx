@@ -16,7 +16,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   const [workStatus, setWorkStatus] = useState("");
   const [images, setImages] = useState([]); // [{ file, preview }]
   const [uploading, setUploading] = useState(false);
-  const {error, setError}=useError();
+  const { error, setError } = useError();
   const [uploadError, setUploadError] = useState("");
   const [uploadedImages, setUploadedImages] = useState([]);
   const [job, setJob] = useState(null);
@@ -239,11 +239,11 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
   };
 
   return (
-    <div className="max-w-5xl bg-gray-100 mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-2xl mx-4 px-4 space-y-8 md:mx-auto my-2 bg-gray-100">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">{job.jobName}</h1>
-        <p className="text-gray-600 mt-1">{job.jobCategory}</p>
+        <p className="text-gray-600 text-lg mt-1">{job.jobCategory}</p>
       </div>
 
       {/* Basic Details */}
@@ -293,11 +293,11 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
       <div>
         <h2 className="text-xl font-semibold mb-3">Skills Required</h2>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 text-sm md:text-base">
           {job.skillsRequired?.map((skill, index) => (
             <span
               key={index}
-              className="rounded-full bg-blue-100 text-blue-700 px-4 py-2 text-sm"
+              className="rounded-full bg-blue-100 text-blue-700 px-4 py-2 text-sm md:text-base"
             >
               {skill}
             </span>
@@ -309,7 +309,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
       <div>
         <h2 className="text-xl font-semibold mb-3">Responsibilities</h2>
 
-        <ul className="list-disc list-inside space-y-2">
+        <ul className="list-disc list-inside space-y-2 text-sm md:text-base">
           {job.responsibilities?.map((item, index) => (
             <li key={index} className="text-gray-700">
               {item}
@@ -324,7 +324,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
             <button
               disabled={isPending(`application-${job._id}`)}
               aria-busy={isPending(`application-${job._id}`)}
-              className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+              className="rounded-lg cursor-pointer text-sm md:text-base bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
               onClick={() => handleJobApplication(job._id)}
             >
               Apply Now
@@ -383,7 +383,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
             //       accept="image/*"
             //       multiple
             //       onChange={handleImageChange}
-            //       className="block w-full text-sm"
+            //       className="block w-full text-sm md:text-base"
             //     />
 
             //     {images.length > 0 && (
@@ -409,7 +409,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
             //     )}
 
             //     {uploadError && (
-            //       <p className="text-sm text-red-600">{uploadError}</p>
+            //       <p className="text-sm md:text-base text-red-600">{uploadError}</p>
             //     )}
             //     <button
             //       type="button"
@@ -429,13 +429,13 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <label
                   htmlFor={`status-${job._id}`}
-                  className="text-sm font-semibold text-gray-800"
+                  className="text-sm md:text-base font-semibold text-gray-800"
                 >
                   Worker job status
                 </label>
                 <select
                   id={`status-${job._id}`}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-56"
+                  className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm md:text-base text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 sm:w-56"
                   value={workStatus}
                   onChange={(e) =>
                     handleJobWorkingStatus({ e, jobId: job._id })
@@ -456,10 +456,10 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
               {/* Photos */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-800">
+                  <h3 className="text-sm md:text-base font-semibold text-gray-800">
                     Work photos
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs md:text-sm text-gray-500">
                     Max 5 images, 5MB each
                   </p>
                 </div>
@@ -467,7 +467,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                 {/* Already uploaded */}
                 {uploadedImages.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <p className="text-sm md:text-base font-medium uppercase tracking-wide text-gray-500">
                       Uploaded ({uploadedImages.length})
                     </p>
                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -496,10 +496,12 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                   htmlFor={`photos-${job._id}`}
                   className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-center transition hover:border-blue-400 hover:bg-blue-50"
                 >
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm md:text-base font-medium text-gray-700">
                     Click to choose photos
                   </span>
-                  <span className="text-xs text-gray-500">PNG, JPG, WEBP</span>
+                  <span className="text-xs md:text-sm text-gray-500">
+                    PNG, JPG, WEBP
+                  </span>
                   <input
                     id={`photos-${job._id}`}
                     type="file"
@@ -513,7 +515,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                 {/* Selected previews */}
                 {images.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    <p className="text-sm md:text-base font-medium uppercase tracking-wide text-gray-500">
                       Ready to upload ({images.length}/5)
                     </p>
                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
@@ -541,7 +543,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                 {uploadError && (
                   <p
                     role="alert"
-                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm md:text-base text-red-700"
                   >
                     {uploadError}
                   </p>
@@ -551,7 +553,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                   type="button"
                   disabled={uploading || images.length === 0}
                   onClick={() => handleUploadImages(job._id)}
-                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm md:text-base font-medium text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   {uploading
                     ? "Uploading..."
@@ -565,14 +567,14 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
             <button
               disabled={isPending(`application-${job._id}`)}
               aria-busy={isPending(`application-${job._id}`)}
-              className="rounded-lg cursor-pointer bg-blue-600 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+              className="rounded-lg cursor-pointer bg-blue-600 text-sm md:text-base px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
               onClick={() => handleJobApplication(job._id)}
             >
               Apply Now
             </button>
           ) : type === "Applied" ? (
             <button
-              className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:px-3 md:py-2 text-white"
+              className="rounded bg-blue-600 cursor-pointer px-1 py-1 text-sm md:text-base md:px-3 md:py-2 text-white"
               onClick={() =>
                 handleCancelAppliedJob({ jobId: job._id, sort: "Newest" })
               }
@@ -583,7 +585,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
             <div className="mt-3 w-full mx-4">
               <div className="flex justify-between mx-4 p-2">
                 <button
-                  className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                  className="bg-blue-600 text-white p-2 text-sm md:text-base rounded-sm cursor-pointer"
                   onClick={() => {
                     handleJobInvitationStatus({
                       status: "Rejected",
@@ -596,7 +598,7 @@ export default function JobDetailsPage({ id, role, isModal, type }) {
                 </button>
 
                 <button
-                  className="bg-blue-600 text-white p-2 rounded-sm cursor-pointer"
+                  className="bg-blue-600 text-white p-2 text-sm md:text-base rounded-sm cursor-pointer"
                   onClick={() => {
                     handleJobInvitationStatus({
                       status: "Accepted",

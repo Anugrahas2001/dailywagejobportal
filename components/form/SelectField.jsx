@@ -14,7 +14,7 @@ const SelectField = ({
   return (
     <div className="mb-4">
       {label && (
-        <label htmlFor={selectId} className="block text-sm font-medium mb-1.5">
+        <label htmlFor={selectId} className="block text-sm md:text-base font-medium mb-1.5">
           {label}
         </label>
       )}
@@ -28,7 +28,7 @@ const SelectField = ({
         // aria-invalid={!!error}
         // aria-describedby={error ? `${selectId}-error` : undefined}
         className={`
-          w-full px-3 py-2 rounded-lg border text-sm bg-white
+          w-full px-3 py-2 rounded-lg border text-sm md:text-base bg-white
           transition-colors duration-150
           focus:outline-none focus:ring-2 focus:ring-offset-0
           ${
@@ -56,7 +56,7 @@ const SelectField = ({
       {error && (
         <span
           id={`${selectId}-error`}
-          className="block text-red-500 text-xs mt-1"
+          className="block text-red-500 text-sm md:text-base mt-1"
         >
           {error}
         </span>

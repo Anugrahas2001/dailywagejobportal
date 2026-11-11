@@ -1,19 +1,3 @@
-// import React from "react";
-
-// const InputField = ({ label, type = "text",placeholder, error, ...props }) => {
-//   console.log(props, "FROM INPUT FIELD");
-//   return (
-//     <div className="flex justify-around items-center mb-3">
-//       <label className="font-medium">{label}</label>
-
-//       <input type={type} placeholder={placeholder} {...props} className="border rounded-lg p-2 w-72" />
-//       {error && <span className="text-red-500 text-sm">{error}</span>}
-//     </div>
-//   );
-// };
-
-// export default InputField;
-
 
 import React from "react";
 
@@ -33,7 +17,7 @@ const InputField = ({
       {label && (
         <label 
           htmlFor={inputId} 
-          className="block text-sm font-medium mb-1.5"
+          className="block text-sm md:text-base font-medium mb-1.5"
         >
           {label}
         </label>
@@ -46,7 +30,7 @@ const InputField = ({
         aria-invalid={!!error}
         aria-describedby={error ? `${inputId}-error` : undefined}
         className={`
-          w-full px-3 py-2 rounded-lg border text-sm
+          w-full px-3 py-2 rounded-lg border text-sm md:text-base
           placeholder:text-gray-400
           transition-colors duration-150
           focus:outline-none focus:ring-2 focus:ring-offset-0
@@ -62,7 +46,7 @@ const InputField = ({
       {error && (
         <span 
           id={`${inputId}-error`} 
-          className="block text-red-500 text-xs mt-1"
+          className="block text-red-500 text-sm md:text-base mt-1"
         >
           {error}
         </span>

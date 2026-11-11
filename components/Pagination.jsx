@@ -1,15 +1,14 @@
 import React from "react";
 
 const Pagination = ({ onClick, totalPages, page, totalCount }) => {
-  
   return (
-    <div className="border-t mt-4">
-      <p className="text-sm mt-3">
+    <div className="border-t my-3 mx-2">
+      <p className="text-xs md:text-sm m-3">
         Page {page} of {totalPages} ({totalCount} total items)
       </p>
       <div className="flex justify-around items-center">
         <button
-          className="bg-blue-500 text-white rounded-lg px-3 py-1 cursor-pointer"
+          className="bg-blue-500 text-white rounded-lg px-3 py-1 text-sm md:text-base cursor-pointer"
           onClick={() => onClick(page - 1)}
           disabled={page === 1}
         >
@@ -22,8 +21,8 @@ const Pagination = ({ onClick, totalPages, page, totalCount }) => {
               onClick={() => onClick(p)}
               className={
                 p === page
-                  ? "px-3 py-1 rounded-md bg-blue-600 text-white font-bold cursor-pointer"
-                  : "px-3 py-1 rounded-md bg-gray-500 text-gray-700 font-normal cursor-pointer hover:bg-gray-200"
+                  ? "px-3 py-1 rounded-md bg-blue-600 text-xs md:text-sm text-white font-bold cursor-pointer"
+                  : "px-3 py-1 rounded-md bg-gray-500 text-xs md:text-sm text-gray-700 font-normal cursor-pointer hover:bg-gray-200"
               }
             >
               {p}
@@ -32,7 +31,7 @@ const Pagination = ({ onClick, totalPages, page, totalCount }) => {
         </div>
 
         <button
-          className="bg-blue-500 text-white rounded-lg px-3 py-1 cursor-pointer"
+          className="bg-blue-500 text-white rounded-lg text-sm md:text-base px-3 py-1 cursor-pointer"
           onClick={() => onClick(page + 1)}
           disabled={page === totalPages}
         >

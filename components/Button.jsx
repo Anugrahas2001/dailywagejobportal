@@ -15,7 +15,7 @@ export default function Button({
       {...props}
       disabled={disabled || loading}
       aria-busy={loading}
-      className={`inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-sm text-white
+      className={`inline-flex items-center cursor-pointer m-3 justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-sm md:text-base text-white
         disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {/* {loading && <Loader2 className="h-4 w-4 animate-spin" />} */}
@@ -25,12 +25,12 @@ export default function Button({
   );
 }
 
-
-
-{/* <Button
+{
+  /* <Button
   loading={isPending(`apply-${job._id}`)}
   loadingText="Applying..."
   onClick={() => handleAppliedJob(job._id)}
 >
   Apply Now
-</Button> */}
+</Button> */
+}
